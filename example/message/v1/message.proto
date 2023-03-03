@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package message.v1;
+
+// DirtyNess describes how dirty a sink is
+enum Dirtyness {
+    // unknown amount of dirtyness
+    DIRTYNESS_UNSPECIFIED = 0;
+    // no dirtyness
+    DIRTYNESS_CLEAN = 1;
+}
+
+// Engine of a car
+message Engine {
+    // brand name
+    string brand = 1;
+    // how dirty is the sink
+    Dirtyness dirtyness = 2;
+}
+
+// Car message
+message Car {
+    // kitchen sink
+    Engine engine = 1;
+    // name of the kitchen
+    string name = 2;
+}
+
+// Kitchen holds all possible Protobuf field types
+message Kitchen {
+    // brand of kitchen
+    string brand = 1;
+}

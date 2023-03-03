@@ -1,0 +1,11 @@
+version: v1
+name: buf.build/crewlinker/protoc-gen-dynamodb
+lint:
+  use:
+    - DEFAULT
+    - COMMENTS
+    - UNARY_RPC
+    - PACKAGE_NO_IMPORT_CYCLE
+breaking:
+  use:
+    - FILE
