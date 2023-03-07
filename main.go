@@ -20,9 +20,9 @@ func main() {
 			return fmt.Errorf("failed to setup logging: %w", err)
 		}
 
-		opts := generator.Options{}
+		opts := generator.Config{}
 
-		gen, err := generator.New(logs, opts)
+		gen, err := generator.NewGenerator(logs, opts)
 		if err != nil {
 			return fmt.Errorf("failed to initialize generator: %w", err)
 		}

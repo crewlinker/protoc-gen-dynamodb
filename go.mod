@@ -3,8 +3,9 @@ module github.com/crewlinker/protoc-gen-dynamodb
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.15
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.18.5
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.16
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.18.6
+	github.com/dave/jennifer v1.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/magefile/mage v1.14.0
 	github.com/onsi/ginkgo/v2 v2.8.4

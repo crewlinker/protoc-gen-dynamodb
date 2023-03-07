@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package message.v1;
-
+import "google/protobuf/duration.proto";
 // DirtyNess describes how dirty a sink is
 enum Dirtyness {
     // unknown amount of dirtyness
@@ -26,8 +26,101 @@ message Car {
     string name = 2;
 }
 
+// Appliance in the kitchen
+message Appliance{
+    // brand of the appliance
+    string brand = 1;
+}
+
 // Kitchen holds all possible Protobuf field types
 message Kitchen {
     // brand of kitchen
     string brand = 1;
+    // is the kitchen renovated
+    bool is_renovated = 2;
+    // some data
+    bytes qr_code = 3;
+
+    // small knife count
+    int32 num_small_knifes = 4;
+    // sharp kife count
+    fixed32 num_sharp_knifes = 5;
+    // blunt knife count
+    uint32 num_blunt_knifes = 6;
+
+    // num small forks
+    int64 num_small_forks = 7;
+    // num medium forks
+    fixed64 num_medium_forks = 8;
+    // large forks count
+    uint64 num_large_forks = 9;
+
+    // how many of the tiles are black
+    float percent_black_tiles = 10;
+    // precent white tiles
+    double percent_white_tiles = 11;
+    // dirtyness enum
+    Dirtyness dirtyness = 12;
+
+    // map with messages
+    map<int64,Appliance> furniture = 13;
+    // map with numbers
+    map<string,int64> calendar = 14;
+
+    // nested message
+    Engine washer_engine = 15;
+    // extra nested message to test recursion
+    Kitchen extra_kitchen = 16;
+    
+    // well-known imported messages
+    // google.protobuf.Duration timer = 17;
+    // map<string,google.protobuf.Duration> clocks = 18;
+
+    // (repeated)list of messages
+    // (repeated)list of int64s
+
+    // @TODO: repeated
+    // @TODO: Any?
+    // @TODO: Timestamp
+}
+
+// Empty message
+message Empty {}
+
+// MapGalore holds hopefully most of the map combinations. They are in particular difficult
+// to generate valid code for.
+message MapGalore {
+    // all supported key types
+    // int64/int64
+    map<int64,int64> int64int64  = 1;
+    // uint64/uint64
+    map<uint64,uint64> uint64uint64  = 2;
+    // fixed64/fixed64
+    map<fixed64,fixed64> fixed64fixed64  = 3;
+    // sint64/sint64
+    map<sint64,sint64> sint64sint64  = 4;
+    // sfixed64/sfixed64
+    map<sfixed64,sfixed64> sfixed64sfixed64  = 5;
+    // int32/int32
+    map<int32,int32> int32int32  = 6;
+    // uint32/uint32
+    map<uint32,uint32> uint32uint32  = 7;
+    // fixed32/fixed32
+    map<fixed32,fixed32> fixed32fixed32  = 8;
+    // sint32/sint32
+    map<sint32,sint32> sint32sint32  = 9;
+    // sfixed32/sfixed32
+    map<sfixed32,sfixed32> sfixed32sfixed32  = 10;
+    // string/string
+    map<string,string> stringstring = 11;
+    // bool/bool
+    map<bool,bool> boolbool = 12;
+
+    // rest of supported value types
+    // string/bytes
+    map<string,bytes> stringbytes = 13;
+    // string/double
+    map<string,double> stringdouble = 14;
+    // string/float
+    map<string,float> stringfloat = 15;
 }

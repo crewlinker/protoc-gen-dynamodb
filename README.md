@@ -9,6 +9,10 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Generate table definitions
 - Use protobuf field numbers
 - use official 'attributevalue' with ability to customize its behaviour
+- Wide(r) range of types support: everything in the canonical json table
+  - Including maps with all basic types, including bool as keys
+- No external dependencies of the generated code except the aws SDK
+- Allow messages external to the package to be usable as field messages without problem
 
 ## Ideas
 
@@ -20,3 +24,14 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Generate methods for just generating "Key" attribute maps
 - Generate methods for creating put/get items for transactions
 - Generate methods for handling dynamodb stream Lambda events, use: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#FromDynamoDBStreamsMap
+- Allow nested messages to be stored as protojson/protobinary instead of nested maps
+- Similar to: https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema
+
+## Backlog
+
+- [ ] SHOULD Add test that errors when unsupported map type is used
+- [ ] SHOULD Make sure generated error handling prints the field name and a more descriptive error
+- [ ] SHOULD allow customizing the encoder/decoder options
+- [ ] MUST add file header that states that the file is generated
+- [ ] SHOULD make it configurable on how to handle nil/empty fields like json
+- [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used in fields without problem

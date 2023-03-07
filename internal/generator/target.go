@@ -3,78 +3,74 @@ package generator
 import (
 	"fmt"
 	"io"
-	"text/template"
+	"strings"
 
+	//lint:ignore ST1001 we want expressive meta code
+	. "github.com/dave/jennifer/jen"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
-// TargetDesc describes generation of a single protobuf file
-type TargetDesc struct {
-	*protogen.File
-	Items []*ItemDesc
-}
-
-// ItemFieldDesc describes the field of a dynamodb item
-type ItemFieldDesc struct {
-	DynamoName string            // name in Dynamo table
-	GoName     string            // name in Go code
-	Message    *protogen.Message // if the fields type is another message
-}
-
-// ItemDesc describes the DynamoDB item and keys for generation
-type ItemDesc struct {
-	GoIdent protogen.GoIdent // type identifier in Go code
-	Fields  []*ItemFieldDesc // protobuf defined fields
-}
+const (
+	attributevalues = "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	dynamodbtypes   = "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+)
 
 // Target facilitates generation from a single protobuf file
 type Target struct {
-	src  *protogen.File
-	logs *zap.Logger
-	tmpl *template.Template
-}
-
-// generateItemField generates an item descriptor from a proto message
-func (tg *Target) generateItemField(pgf *protogen.Field) (*ItemFieldDesc, error) {
-	desc := &ItemFieldDesc{
-		DynamoName: fmt.Sprintf("%d", pgf.Desc.Number()),
-		GoName:     pgf.GoName,
-		Message:    pgf.Message,
+	src    *protogen.File
+	logs   *zap.Logger
+	idents struct {
+		marshal   string
+		unmarshal string
 	}
-
-	return desc, nil
-}
-
-// generateItem generates an item descriptor from a proto message
-func (tg *Target) generateItem(pgm *protogen.Message) (*ItemDesc, error) {
-	desc := &ItemDesc{GoIdent: pgm.GoIdent}
-	for _, field := range pgm.Fields {
-		itemf, err := tg.generateItemField(field)
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate item field: %w", err)
-		}
-		desc.Fields = append(desc.Fields, itemf)
-	}
-
-	return desc, nil
 }
 
 // Generate peforms the actual code generation
 func (tg *Target) Generate(w io.Writer) error {
-	tg.logs.Info("generating DynamoDB helpers") // @TODO log src and destination
-	desc := &TargetDesc{File: tg.src}
-	for _, msg := range tg.src.Messages {
-		item, err := tg.generateItem(msg)
-		if err != nil {
-			return fmt.Errorf("failed to generate item from message: %w", err)
+	f := NewFile(string(tg.src.GoPackageName))
+
+	tg.idents.marshal, tg.idents.unmarshal =
+		fmt.Sprintf("%s_marshal_dynamo_item", strings.ToLower(tg.src.GoDescriptorIdent.GoName)),
+		fmt.Sprintf("%s_unmarshal_dynamo_item", strings.ToLower(tg.src.GoDescriptorIdent.GoName))
+
+	// generate a single marshal function for messages. This way we can handle externally included messages
+	// and locally generated message in the same way.
+	f.Func().Id(tg.idents.marshal).
+		Params(Id("x").Any()).
+		Params(Map(String()).Qual(dynamodbtypes, "AttributeValue"), Error()).
+		Block(
+			If(List(Id("mx"), Id("ok")).Op(":=").Id("x").Assert(Interface(
+				Id("MarshalDynamoItem").Params().Params(Map(String()).Qual(dynamodbtypes, "AttributeValue"), Error()),
+			)), Id("ok")).Block(
+				Return(Id("mx").Dot("MarshalDynamoItem").Call()),
+			),
+			Return(Nil(), Nil()),
+		)
+
+	// generate a single unmarshal function per proto file so we can unmarshal external messages and
+	// messages local to the package in the same way.
+	f.Func().Id(tg.idents.unmarshal).
+		Params(Id("m").Map(String()).Qual(dynamodbtypes, "AttributeValue"), Id("x").Any()).
+		Params(Error()).
+		Block(
+			If(List(Id("mx"), Id("ok")).Op(":=").Id("x").Assert(Interface(
+				Id("UnmarshalDynamoItem").Params(Map(String()).Qual(dynamodbtypes, "AttributeValue")).Params(Error()),
+			)), Id("ok")).Block(
+				Return(Id("mx").Dot("UnmarshalDynamoItem").Call(Id("m"))),
+			),
+			Return(Nil()),
+		)
+
+	// generate per message marshal/unmarshal code
+	for _, m := range tg.src.Messages {
+		if err := tg.genMessageMarshal(f, m); err != nil {
+			return fmt.Errorf("failed to generate marshal: %w", err)
 		}
-		desc.Items = append(desc.Items, item)
+		if err := tg.genMessageUnmarshal(f, m); err != nil {
+			return fmt.Errorf("failed to generate unmarshal: %w", err)
+		}
 	}
 
-	if err := tg.tmpl.ExecuteTemplate(w, "dynamo.gotmpl", desc); err != nil {
-		return fmt.Errorf("failed to generate resolving code: %w", err)
-	}
-
-	return nil
+	return f.Render(w)
 }
