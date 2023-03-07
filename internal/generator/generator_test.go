@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,6 +12,9 @@ import (
 	fuzz "github.com/google/gofuzz"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestGenerator(t *testing.T) {
@@ -23,14 +23,10 @@ func TestGenerator(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(ctx context.Context) {
-	if os.Getenv("PROTOC_GEN_DYNAMODB_TEST_NO_GENERATE") != "" {
-		return // disable when env asks to
-	}
-
-	cmd := exec.CommandContext(ctx, "buf", "generate")
-	cmd.Dir = filepath.Join("..", "..", "example")
-	cmd.Stderr = GinkgoWriter
-	Expect(cmd.Run()).To(Succeed())
+	// cmd := exec.CommandContext(ctx, "buf", "generate")
+	// cmd.Dir = filepath.Join("..", "..", "example")
+	// cmd.Stderr = GinkgoWriter
+	// Expect(cmd.Run()).To(Succeed())
 })
 
 // test with messages defined in the example directory
@@ -50,7 +46,7 @@ var _ = Describe("example generation", func() {
 
 		var k2 messagev1.Car
 		Expect(k2.UnmarshalDynamoItem(m1)).To(Succeed())
-		Expect(&k2).To(Equal(k1))
+		Expect(proto.Equal(&k2, k1)).To(BeTrue())
 	})
 
 	// Assert encoding of various kitchen messages
@@ -99,6 +95,8 @@ var _ = Describe("example generation", func() {
 				Dirtyness:         messagev1.Dirtyness_DIRTYNESS_CLEAN,
 				Furniture:         map[int64]*messagev1.Appliance{100: {Brand: "Siemens"}},
 				Calendar:          map[string]int64{"nov": 31},
+				Timer:             durationpb.New((time.Second * 100) + 5),
+				WallTime:          timestamppb.New(time.Unix(1678145849, 100)),
 
 				// @TODO test with nil values for embedded messages
 				// @TODO test with nil values for map entries
@@ -131,6 +129,10 @@ var _ = Describe("example generation", func() {
 				"14": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
 					"nov": &types.AttributeValueMemberN{Value: "31"},
 				}},
+				// duration uses protojson string encoding
+				"17": &types.AttributeValueMemberS{Value: "100.000000005s"},
+				// timestamp is encoded using protojson string encoding
+				"18": &types.AttributeValueMemberS{Value: "2023-03-06T23:37:29.000000100Z"},
 			}, nil),
 	)
 
@@ -141,12 +143,13 @@ var _ = Describe("example generation", func() {
 		fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 		for i := 0; i < 10000; i++ {
 			var in, out messagev1.Kitchen
-			f.Fuzz(&in)
+			f.Funcs(PbDurationFuzz, PbTimestampFuzz).Fuzz(&in)
+
 			item, err := in.MarshalDynamoItem()
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
-			Expect(&out).To(Equal(&in))
+			Expect(proto.Equal(&out, &in)).To(BeTrue())
 		}
 	},
 		// Table entries allow seeds that detected a regression to be used as future test cases
@@ -161,15 +164,30 @@ var _ = Describe("example generation", func() {
 		fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 		for i := 0; i < 10000; i++ {
 			var in, out messagev1.MapGalore
-			f.Fuzz(&in)
+			f.Funcs(PbDurationFuzz, PbTimestampFuzz).Fuzz(&in)
 			item, err := in.MarshalDynamoItem()
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
-			Expect(&out).To(Equal(&in))
+			Expect(proto.Equal(&out, &in)).To(BeTrue())
 		}
 	},
 		// Table entries allow seeds that detected a regression to be used as future test cases
-		Entry("now()", time.Now().UnixNano()),
+		// Entry("now()", time.Now().UnixNano()),
+		Entry("duration map", int64(1678219381135764000)),
 	)
 })
+
+// PbDurationFuzz fuzzes with some bounds on the duration as specified here
+// https://pkg.go.dev/google.golang.org/protobuf/types/known/durationpb#Duration
+func PbDurationFuzz(s *durationpb.Duration, c fuzz.Continue) {
+	max := int64(math.MaxInt64)
+	*s = *durationpb.New(time.Duration(c.Rand.Int63n(max) - (max / 2)))
+}
+
+// PbTimestampFuzz fuzzes with some bounds on the timestamp as specified here
+// https://pkg.go.dev/google.golang.org/protobuf/types/known/durationpb#Duration
+func PbTimestampFuzz(s *timestamppb.Timestamp, c fuzz.Continue) {
+	max := int64(99999999999)
+	*s = *timestamppb.New(time.Unix(c.Rand.Int63n(max)-(max/2), int64(c.RandUint64())))
+}

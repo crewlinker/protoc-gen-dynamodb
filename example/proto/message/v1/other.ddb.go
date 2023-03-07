@@ -3,23 +3,58 @@ package messagev1
 import (
 	"fmt"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	protojson "google.golang.org/protobuf/encoding/protojson"
+	proto "google.golang.org/protobuf/proto"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	"strconv"
 )
 
-func file_message_v1_other_proto_marshal_dynamo_item(x any) (map[string]types.AttributeValue, error) {
+// file_message_v1_other_proto_marshal_dynamo_item marshals into DynamoDB attribute value maps
+func file_message_v1_other_proto_marshal_dynamo_item(x proto.Message) (types.AttributeValue, error) {
 	if mx, ok := x.(interface {
 		MarshalDynamoItem() (map[string]types.AttributeValue, error)
 	}); ok {
-		return mx.MarshalDynamoItem()
+		mm, err := mx.MarshalDynamoItem()
+		return &types.AttributeValueMemberM{Value: mm}, err
 	}
-	return nil, nil
+	switch xt := x.(type) {
+	case *durationpb.Duration, *timestamppb.Timestamp:
+		xjson, err := protojson.Marshal(xt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal duration: %w", err)
+		}
+		xjsons, err := strconv.Unquote(string(xjson))
+		if err != nil {
+			return nil, fmt.Errorf("failed to unquote marshalled duration: %w", err)
+		}
+		return &types.AttributeValueMemberS{Value: xjsons}, nil
+	default:
+		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
+	}
 }
-func file_message_v1_other_proto_unmarshal_dynamo_item(m map[string]types.AttributeValue, x any) error {
+
+// file_message_v1_other_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps
+func file_message_v1_other_proto_unmarshal_dynamo_item(m types.AttributeValue, x proto.Message) error {
 	if mx, ok := x.(interface {
 		UnmarshalDynamoItem(map[string]types.AttributeValue) error
 	}); ok {
-		return mx.UnmarshalDynamoItem(m)
+		mm, ok := m.(*types.AttributeValueMemberM)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal: no map attribute provided")
+		}
+		return mx.UnmarshalDynamoItem(mm.Value)
 	}
-	return nil
+	switch xt := x.(type) {
+	case *durationpb.Duration, *timestamppb.Timestamp:
+		ms, ok := m.(*types.AttributeValueMemberS)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal duration: no string attribute provided")
+		}
+		return protojson.Unmarshal([]byte(strconv.Quote(ms.Value)), x)
+	default:
+		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
+	}
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -30,7 +65,14 @@ func (x *OtherKitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, e
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'AnotherKitchen': %w", err)
 		}
-		m["16"] = &types.AttributeValueMemberM{Value: m16}
+		m["16"] = m16
+	}
+	if x.OtherTimer != nil {
+		m17, err := file_message_v1_other_proto_marshal_dynamo_item(x.OtherTimer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'OtherTimer': %w", err)
+		}
+		m["17"] = m17
 	}
 	return m, nil
 }
@@ -38,14 +80,17 @@ func (x *OtherKitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, e
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	if m["16"] != nil {
-		m16, ok := m["16"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'AnotherKitchen': no map attribute provided")
-		}
 		x.AnotherKitchen = new(Kitchen)
-		err = file_message_v1_other_proto_unmarshal_dynamo_item(m16.Value, x.AnotherKitchen)
+		err = file_message_v1_other_proto_unmarshal_dynamo_item(m["16"], x.AnotherKitchen)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'AnotherKitchen': %w", err)
+		}
+	}
+	if m["17"] != nil {
+		x.OtherTimer = new(durationpb.Duration)
+		err = file_message_v1_other_proto_unmarshal_dynamo_item(m["17"], x.OtherTimer)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'OtherTimer': %w", err)
 		}
 	}
 	return nil

@@ -10,5 +10,5 @@ message OtherKitchen {
     // extra nested message to test recursion
     Kitchen another_kitchen = 16;
     // well-known imported messages
-    // google.protobuf.Duration other_timer = 17;
+    google.protobuf.Duration other_timer = 17;
 }

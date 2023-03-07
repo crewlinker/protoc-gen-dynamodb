@@ -123,16 +123,17 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 		// call UnmarshalDynamoItem recursively. But it can also be that the map value is null.
 		loop = append(loop,
 			Var().Id("mv").Op("*").Add(tg.fieldGoType(val)),
-			// we need to check at runtime if the map value is null, or a map
+
+			// map values have the special case that members can be null, in that case we don't want to
+			// call the unmarshal and just assign the map value to be nil.
 			Switch(Id("vt").Op(":=").Id("v").Assert(Type())).Block(
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")).Block(
-					Id("mv").Op("=").Op("&").Add(tg.fieldGoType(val)).Values(),
-					Err().Op("=").Id(tg.idents.unmarshal).Call(Id("vt").Dot("Value"), Id("mv")),
-				),
 				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")).Block(
 					Id("mv").Op("=").Nil(),
 				),
-				Default().Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map value for field '"+f.GoName+"': not a dynamo map or NULL"))),
+				Default().Block(
+					Id("mv").Op("=").Op("&").Add(tg.fieldGoType(val)).Values(),
+					Err().Op("=").Id(tg.idents.unmarshal).Call(Id("vt"), Id("mv")),
+				),
 			),
 		)
 	default:
@@ -172,13 +173,8 @@ func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("!=").Nil()).Block(
-			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("ok")). // assert to Map value
-											Op(":=").Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")),
-			If(Op("!").Id("ok")).Block(
-				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': no map attribute provided"))),
-			),
 			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Id(tg.idents.unmarshal).Call(Id(fmt.Sprintf("m%d", f.Desc.Number())).Dot("Value"), Id("x").Dot(f.GoName)),
+			Err().Op("=").Id(tg.idents.unmarshal).Call(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))), Id("x").Dot(f.GoName)),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
 			),

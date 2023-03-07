@@ -56,8 +56,7 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 			// marshal non-nil map value by calling the centrally generated function
 			List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
 			errhandle,
-			Id(mid).Dot("Value").Index(Id("mk")).Op("=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberM").Values(
-				Dict{Id("Value"): Id("mv")}),
+			Id(mid).Dot("Value").Index(Id("mk")).Op("=").Id("mv"),
 		)
 	default:
 		loop = append(loop,
@@ -89,8 +88,7 @@ func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
-			Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberM").Values(
-				Dict{Id("Value"): Id(fmt.Sprintf("m%d", f.Desc.Number()))}),
+			Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("=").Id(fmt.Sprintf("m%d", f.Desc.Number())),
 		),
 	}
 }

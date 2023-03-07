@@ -13,6 +13,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
   - Including maps with all basic types, including bool as keys
 - No external dependencies of the generated code except the aws SDK
 - Allow messages external to the package to be usable as field messages without problem
+- Support well-knowns, but are generated to maps with strings for their fields, instead of field numbers
 
 ## Ideas
 

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package message.v1;
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
 // DirtyNess describes how dirty a sink is
 enum Dirtyness {
     // unknown amount of dirtyness
@@ -72,16 +74,16 @@ message Kitchen {
     // extra nested message to test recursion
     Kitchen extra_kitchen = 16;
     
-    // well-known imported messages
-    // google.protobuf.Duration timer = 17;
-    // map<string,google.protobuf.Duration> clocks = 18;
+    // well-known Duration
+    google.protobuf.Duration timer = 17;
+    // well-known Timestamp
+    google.protobuf.Timestamp wall_time = 18;
 
     // (repeated)list of messages
     // (repeated)list of int64s
 
     // @TODO: repeated
     // @TODO: Any?
-    // @TODO: Timestamp
 }
 
 // Empty message
@@ -123,4 +125,9 @@ message MapGalore {
     map<string,double> stringdouble = 14;
     // string/float
     map<string,float> stringfloat = 15;
+
+    // string/duration
+    map<string,google.protobuf.Duration> stringduration = 16;
+    // string/duration
+    map<string,google.protobuf.Timestamp> stringtimestamp = 17;
 }
