@@ -5,6 +5,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
 
 // DirtyNess describes how dirty a sink is
 enum Dirtyness {
@@ -89,8 +90,8 @@ message Kitchen {
     google.protobuf.Any some_any = 21;
     // well-known FieldMask field
     google.protobuf.FieldMask some_mask = 22;
-
-    // @TODO: Any?
+    // struct value
+    google.protobuf.Value some_value = 23;
 }
 
 // Empty message
@@ -137,4 +138,10 @@ message MapGalore {
     map<string,google.protobuf.Duration> stringduration = 16;
     // string/duration
     map<string,google.protobuf.Timestamp> stringtimestamp = 17;
+}
+
+// Message for testing structpb value marshalling
+message ValueGalore {
+    // struct value
+    google.protobuf.Value some_value = 1;
 }

@@ -9,6 +9,7 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 )
@@ -45,6 +46,8 @@ func file_message_v1_message_proto_marshal_dynamo_item(x proto.Message) (a types
 		return mv, nil
 	case *fieldmaskpb.FieldMask:
 		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
+	case *structpb.Value:
+		return attributevalue.Marshal(xt.AsInterface())
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -88,6 +91,45 @@ func file_message_v1_message_proto_unmarshal_dynamo_item(m types.AttributeValue,
 			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
 		}
 		xt.Paths = ss.Value
+		return nil
+	case *structpb.Value:
+		var vv any
+		switch m.(type) {
+		case *types.AttributeValueMemberL:
+			vx := []any{}
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberM:
+			vx := map[string]any{}
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberS:
+			var vx string
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberBOOL:
+			var vx bool
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberN:
+			var vx float64
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberNULL:
+			sv, _ := structpb.NewValue(nil)
+			*xt = *sv
+			return nil
+		default:
+			return fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
+		}
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+		}
+		sv, err := structpb.NewValue(vv)
+		if err != nil {
+			return fmt.Errorf("failed to init structpb value: %w", err)
+		}
+		*xt = *sv
 		return nil
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
@@ -306,6 +348,13 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 		m["22"] = m22
 	}
+	if x.SomeValue != nil {
+		m23, err := file_message_v1_message_proto_marshal_dynamo_item(x.SomeValue)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'SomeValue': %w", err)
+		}
+		m["23"] = m23
+	}
 	return m, nil
 }
 
@@ -448,6 +497,13 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		err = file_message_v1_message_proto_unmarshal_dynamo_item(m["22"], x.SomeMask)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeMask': %w", err)
+		}
+	}
+	if m["23"] != nil {
+		x.SomeValue = new(structpb.Value)
+		err = file_message_v1_message_proto_unmarshal_dynamo_item(m["23"], x.SomeValue)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'SomeValue': %w", err)
 		}
 	}
 	return nil
@@ -668,6 +724,31 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 				return fmt.Errorf("failed to unmarshal map value for field 'Stringtimestamp': %w", err)
 			}
 			x.Stringtimestamp[string(mk)] = &mv
+		}
+	}
+	return nil
+}
+
+// MarshalDynamoItem marshals dat into a dynamodb attribute map
+func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if x.SomeValue != nil {
+		m1, err := file_message_v1_message_proto_marshal_dynamo_item(x.SomeValue)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'SomeValue': %w", err)
+		}
+		m["1"] = m1
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	if m["1"] != nil {
+		x.SomeValue = new(structpb.Value)
+		err = file_message_v1_message_proto_unmarshal_dynamo_item(m["1"], x.SomeValue)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'SomeValue': %w", err)
 		}
 	}
 	return nil

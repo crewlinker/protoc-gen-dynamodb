@@ -9,6 +9,7 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 )
@@ -45,6 +46,8 @@ func file_message_v1_other_proto_marshal_dynamo_item(x proto.Message) (a types.A
 		return mv, nil
 	case *fieldmaskpb.FieldMask:
 		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
+	case *structpb.Value:
+		return attributevalue.Marshal(xt.AsInterface())
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -88,6 +91,45 @@ func file_message_v1_other_proto_unmarshal_dynamo_item(m types.AttributeValue, x
 			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
 		}
 		xt.Paths = ss.Value
+		return nil
+	case *structpb.Value:
+		var vv any
+		switch m.(type) {
+		case *types.AttributeValueMemberL:
+			vx := []any{}
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberM:
+			vx := map[string]any{}
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberS:
+			var vx string
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberBOOL:
+			var vx bool
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberN:
+			var vx float64
+			err = attributevalue.Unmarshal(m, &vx)
+			vv = vx
+		case *types.AttributeValueMemberNULL:
+			sv, _ := structpb.NewValue(nil)
+			*xt = *sv
+			return nil
+		default:
+			return fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
+		}
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+		}
+		sv, err := structpb.NewValue(vv)
+		if err != nil {
+			return fmt.Errorf("failed to init structpb value: %w", err)
+		}
+		*xt = *sv
 		return nil
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)

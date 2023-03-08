@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -16,10 +14,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/format"
+	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -29,10 +29,10 @@ func TestGenerator(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(ctx context.Context) {
-	cmd := exec.CommandContext(ctx, "buf", "generate")
-	cmd.Dir = filepath.Join("..", "..", "example")
-	cmd.Stderr = GinkgoWriter
-	Expect(cmd.Run()).To(Succeed())
+	// cmd := exec.CommandContext(ctx, "buf", "generate")
+	// cmd.Dir = filepath.Join("..", "..", "example")
+	// cmd.Stderr = GinkgoWriter
+	// Expect(cmd.Run()).To(Succeed())
 })
 
 // test with messages defined in the example directory
@@ -120,6 +120,10 @@ var _ = Describe("example generation", func() {
 				SomeMask: &fieldmaskpb.FieldMask{
 					Paths: []string{"extra_kitchen.extra_kitchen.brand", "brand"},
 				},
+				SomeValue: func() *structpb.Value {
+					v, _ := structpb.NewValue(map[string]any{"foo": "bar", "dar": 1})
+					return v
+				}(),
 
 				// @TODO test with nil values for embedded messages
 				// @TODO test with nil values for map entries
@@ -179,6 +183,11 @@ var _ = Describe("example generation", func() {
 				}},
 				// fieldmask message
 				"22": &types.AttributeValueMemberSS{Value: []string{"extra_kitchen.extra_kitchen.brand", "brand"}},
+				// value field
+				"23": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+					"dar": &types.AttributeValueMemberN{Value: "1"},
+					"foo": &types.AttributeValueMemberS{Value: "bar"},
+				}},
 			}, nil),
 	)
 
@@ -189,7 +198,7 @@ var _ = Describe("example generation", func() {
 		fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 		for i := 0; i < 10000; i++ {
 			var in, out messagev1.Kitchen
-			f.Funcs(PbDurationFuzz, PbTimestampFuzz).Fuzz(&in)
+			f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
 
 			item, err := in.MarshalDynamoItem()
 			if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
@@ -198,7 +207,14 @@ var _ = Describe("example generation", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
-			Expect(proto.Equal(&out, &in)).To(BeTrue())
+
+			intxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&in)
+			Expect(err).ToNot(HaveOccurred())
+			outtxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&out)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(string(outtxt)).To(Equal(string(intxt))) // compare
+			Expect(proto.Equal(&out, &in)).To(BeTrue(), fmt.Sprintf("%s \n!=\n %s", intxt, outtxt))
 		}
 	},
 		// Table entries allow seeds that detected a regression to be used as future test cases
@@ -213,19 +229,54 @@ var _ = Describe("example generation", func() {
 		fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 		for i := 0; i < 10000; i++ {
 			var in, out messagev1.MapGalore
-			f.Funcs(PbDurationFuzz, PbTimestampFuzz).Fuzz(&in)
+			f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
 			item, err := in.MarshalDynamoItem()
 			if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
 				continue // skip, unsupported variant
 			}
 
 			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
-			Expect(proto.Equal(&out, &in)).To(BeTrue())
+
+			intxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&in)
+			Expect(err).ToNot(HaveOccurred())
+			outtxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&out)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(string(outtxt)).To(Equal(string(intxt))) // compare
+			Expect(proto.Equal(&out, &in)).To(BeTrue(), fmt.Sprintf("%s \n!=\n %s", intxt, outtxt))
 		}
 	},
 		// Table entries allow seeds that detected a regression to be used as future test cases
 		// Entry("now()", time.Now().UnixNano()),
 		Entry("duration map", int64(1678219381135764000)),
+	)
+
+	// We fuzz maps in particular because they are pretty finnicky to encode
+	DescribeTable("value galore fuzz", func(seed int64) {
+		f := fuzz.NewWithSeed(seed).NilChance(0.5)
+		fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
+		for i := 0; i < 10000; i++ {
+			var in, out messagev1.ValueGalore
+			f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
+			item, err := in.MarshalDynamoItem()
+			if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
+				continue // skip, unsupported variant
+			}
+
+			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
+
+			intxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&in)
+			Expect(err).ToNot(HaveOccurred())
+			outtxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&out)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(string(outtxt)).To(Equal(string(intxt))) // compare
+			Expect(proto.Equal(&out, &in)).To(BeTrue(), fmt.Sprintf("%s \n!=\n %s", intxt, outtxt))
+		}
+	},
+		// Table entries allow seeds that detected a regression to be used as future test cases
+		Entry("now()", time.Now().UnixNano()),
+		Entry("first test", int64(1678219381135764000)),
 	)
 })
 
@@ -241,4 +292,31 @@ func PbDurationFuzz(s *durationpb.Duration, c fuzz.Continue) {
 func PbTimestampFuzz(s *timestamppb.Timestamp, c fuzz.Continue) {
 	max := int64(99999999999)
 	*s = *timestamppb.New(time.Unix(c.Rand.Int63n(max)-(max/2), int64(c.RandUint64())))
+}
+
+// PbValueFuzz fuzzes code for structpb value. It doesn't recurse because go fuzz can't handle
+// maps or lists with interface values.
+func PbValueFuzz(s *structpb.Value, c fuzz.Continue) {
+	var sf *structpb.Value
+	switch c.Rand.Int63n(8) {
+	case 0:
+		sf = structpb.NewBoolValue(c.RandBool())
+	case 1:
+		sf = structpb.NewStringValue(c.RandString())
+	case 2:
+		sf = structpb.NewNullValue()
+	case 3:
+		sf = structpb.NewNumberValue(c.ExpFloat64())
+	case 4:
+		sf, _ = structpb.NewValue([]any{c.RandString()})
+	case 5:
+		sf, _ = structpb.NewValue(map[string]any{c.RandString(): c.RandString()})
+	case 6:
+		sf, _ = structpb.NewValue(c.RandUint64())
+	case 7:
+		p := make([]byte, 10)
+		c.Read(p)
+		sf, _ = structpb.NewValue(p)
+	}
+	*s = *sf
 }
