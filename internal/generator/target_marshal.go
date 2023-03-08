@@ -14,6 +14,13 @@ import (
 func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 	key := f.Message.Fields[0]
 	val := f.Message.Fields[1]
+
+	// if the map value is not a message. We don't need to faciliate recursing so
+	// we can just unmarshal it as a basic value.
+	if val.Message == nil {
+		return tg.genBasicFieldMarshal(f)
+	}
+
 	mid := fmt.Sprintf("m%d", f.Desc.Number())
 	errhandle := If(Err().Op("!=").Nil()).Block(
 		Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map value of field '"+f.GoName+"': %w"), Err())),

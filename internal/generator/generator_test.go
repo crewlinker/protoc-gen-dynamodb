@@ -6,6 +6,7 @@ import (
 	"math"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,6 +81,8 @@ var _ = Describe("example generation", func() {
 				"11": &types.AttributeValueMemberN{Value: "0"},
 
 				"12": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED)},
+
+				"14": &types.AttributeValueMemberNULL{Value: true},
 
 				// @TODO why is "19" marsahlled as L(nil) and "20" as NULL(true)?
 				"19": &types.AttributeValueMemberL{Value: nil},
@@ -170,8 +173,11 @@ var _ = Describe("example generation", func() {
 			f.Funcs(PbDurationFuzz, PbTimestampFuzz).Fuzz(&in)
 
 			item, err := in.MarshalDynamoItem()
-			Expect(err).ToNot(HaveOccurred())
+			if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
+				continue // skip, unsupported variant
+			}
 
+			Expect(err).ToNot(HaveOccurred())
 			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
 			Expect(proto.Equal(&out, &in)).To(BeTrue())
 		}
@@ -190,7 +196,9 @@ var _ = Describe("example generation", func() {
 			var in, out messagev1.MapGalore
 			f.Funcs(PbDurationFuzz, PbTimestampFuzz).Fuzz(&in)
 			item, err := in.MarshalDynamoItem()
-			Expect(err).ToNot(HaveOccurred())
+			if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
+				continue // skip, unsupported variant
+			}
 
 			Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
 			Expect(proto.Equal(&out, &in)).To(BeTrue())

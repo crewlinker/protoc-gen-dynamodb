@@ -38,3 +38,4 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used in fields without problem
 - [ ] SHOULD turn panics into errors (or add catch mechanism)
 - [ ] SHOULD add support of StringSets, NumberSets, ByteSets etc
+- [ ] SHOUDL error when marshalling map of messages and the key is an empty string (not allowed)

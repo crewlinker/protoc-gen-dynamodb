@@ -61,6 +61,13 @@ func (tg *Target) fieldGoType(f *protogen.Field) *Statement {
 func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 	key := f.Message.Fields[0]
 	val := f.Message.Fields[1]
+
+	// if the map value is not a message. We don't need to faciliate recursing so
+	// we can just unmarshal it as a basic value.
+	if val.Message == nil {
+		return tg.genBasicFieldUnmarshal(f)
+	}
+
 	mid := fmt.Sprintf("m%d", f.Desc.Number())
 	valtypid := tg.fieldGoType(val)
 	if val.Message != nil {

@@ -204,17 +204,9 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 		m["13"] = m13
 	}
-	if x.Calendar != nil {
-		m14 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Calendar {
-			mk := k
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Calendar': %w", err)
-			}
-			m14.Value[mk] = mv
-		}
-		m["14"] = m14
+	m["14"], err = attributevalue.Marshal(x.Calendar)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Calendar': %w", err)
 	}
 	if x.WasherEngine != nil {
 		m15, err := file_message_v1_message_proto_marshal_dynamo_item(x.WasherEngine)
@@ -339,21 +331,9 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 			x.Furniture[int64(mk)] = mv
 		}
 	}
-	if m["14"] != nil {
-		x.Calendar = make(map[string]int64)
-		m14, ok := m["14"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Calendar': no map attribute provided")
-		}
-		for k, v := range m14.Value {
-			mk := k
-			var mv int64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Calendar': %w", err)
-			}
-			x.Calendar[string(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["14"], &x.Calendar)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Calendar': %w", err)
 	}
 	if m["15"] != nil {
 		x.WasherEngine = new(Engine)
@@ -422,185 +402,65 @@ func (x *Empty) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err erro
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Int64Int64 != nil {
-		m1 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Int64Int64 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Int64Int64': %w", err)
-			}
-			m1.Value[mk] = mv
-		}
-		m["1"] = m1
+	m["1"], err = attributevalue.Marshal(x.Int64Int64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Int64Int64': %w", err)
 	}
-	if x.Uint64Uint64 != nil {
-		m2 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Uint64Uint64 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Uint64Uint64': %w", err)
-			}
-			m2.Value[mk] = mv
-		}
-		m["2"] = m2
+	m["2"], err = attributevalue.Marshal(x.Uint64Uint64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Uint64Uint64': %w", err)
 	}
-	if x.Fixed64Fixed64 != nil {
-		m3 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Fixed64Fixed64 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Fixed64Fixed64': %w", err)
-			}
-			m3.Value[mk] = mv
-		}
-		m["3"] = m3
+	m["3"], err = attributevalue.Marshal(x.Fixed64Fixed64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Fixed64Fixed64': %w", err)
 	}
-	if x.Sint64Sint64 != nil {
-		m4 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Sint64Sint64 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Sint64Sint64': %w", err)
-			}
-			m4.Value[mk] = mv
-		}
-		m["4"] = m4
+	m["4"], err = attributevalue.Marshal(x.Sint64Sint64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Sint64Sint64': %w", err)
 	}
-	if x.Sfixed64Sfixed64 != nil {
-		m5 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Sfixed64Sfixed64 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Sfixed64Sfixed64': %w", err)
-			}
-			m5.Value[mk] = mv
-		}
-		m["5"] = m5
+	m["5"], err = attributevalue.Marshal(x.Sfixed64Sfixed64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Sfixed64Sfixed64': %w", err)
 	}
-	if x.Int32Int32 != nil {
-		m6 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Int32Int32 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Int32Int32': %w", err)
-			}
-			m6.Value[mk] = mv
-		}
-		m["6"] = m6
+	m["6"], err = attributevalue.Marshal(x.Int32Int32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Int32Int32': %w", err)
 	}
-	if x.Uint32Uint32 != nil {
-		m7 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Uint32Uint32 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Uint32Uint32': %w", err)
-			}
-			m7.Value[mk] = mv
-		}
-		m["7"] = m7
+	m["7"], err = attributevalue.Marshal(x.Uint32Uint32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Uint32Uint32': %w", err)
 	}
-	if x.Fixed32Fixed32 != nil {
-		m8 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Fixed32Fixed32 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Fixed32Fixed32': %w", err)
-			}
-			m8.Value[mk] = mv
-		}
-		m["8"] = m8
+	m["8"], err = attributevalue.Marshal(x.Fixed32Fixed32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Fixed32Fixed32': %w", err)
 	}
-	if x.Sint32Sint32 != nil {
-		m9 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Sint32Sint32 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Sint32Sint32': %w", err)
-			}
-			m9.Value[mk] = mv
-		}
-		m["9"] = m9
+	m["9"], err = attributevalue.Marshal(x.Sint32Sint32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Sint32Sint32': %w", err)
 	}
-	if x.Sfixed32Sfixed32 != nil {
-		m10 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Sfixed32Sfixed32 {
-			mk := fmt.Sprintf("%d", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Sfixed32Sfixed32': %w", err)
-			}
-			m10.Value[mk] = mv
-		}
-		m["10"] = m10
+	m["10"], err = attributevalue.Marshal(x.Sfixed32Sfixed32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Sfixed32Sfixed32': %w", err)
 	}
-	if x.Stringstring != nil {
-		m11 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Stringstring {
-			mk := k
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Stringstring': %w", err)
-			}
-			m11.Value[mk] = mv
-		}
-		m["11"] = m11
+	m["11"], err = attributevalue.Marshal(x.Stringstring)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Stringstring': %w", err)
 	}
-	if x.Boolbool != nil {
-		m12 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Boolbool {
-			mk := fmt.Sprintf("%t", k)
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Boolbool': %w", err)
-			}
-			m12.Value[mk] = mv
-		}
-		m["12"] = m12
+	m["12"], err = attributevalue.Marshal(x.Boolbool)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Boolbool': %w", err)
 	}
-	if x.Stringbytes != nil {
-		m13 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Stringbytes {
-			mk := k
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Stringbytes': %w", err)
-			}
-			m13.Value[mk] = mv
-		}
-		m["13"] = m13
+	m["13"], err = attributevalue.Marshal(x.Stringbytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Stringbytes': %w", err)
 	}
-	if x.Stringdouble != nil {
-		m14 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Stringdouble {
-			mk := k
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Stringdouble': %w", err)
-			}
-			m14.Value[mk] = mv
-		}
-		m["14"] = m14
+	m["14"], err = attributevalue.Marshal(x.Stringdouble)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Stringdouble': %w", err)
 	}
-	if x.Stringfloat != nil {
-		m15 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Stringfloat {
-			mk := k
-			mv, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Stringfloat': %w", err)
-			}
-			m15.Value[mk] = mv
-		}
-		m["15"] = m15
+	m["15"], err = attributevalue.Marshal(x.Stringfloat)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'Stringfloat': %w", err)
 	}
 	if x.Stringduration != nil {
 		m16 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
@@ -639,283 +499,65 @@ func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err 
 
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
-	if m["1"] != nil {
-		x.Int64Int64 = make(map[int64]int64)
-		m1, ok := m["1"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Int64Int64': no map attribute provided")
-		}
-		for k, v := range m1.Value {
-			mk, err := strconv.ParseInt(k, 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Int64Int64': %w", err)
-			}
-			var mv int64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Int64Int64': %w", err)
-			}
-			x.Int64Int64[int64(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["1"], &x.Int64Int64)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Int64Int64': %w", err)
 	}
-	if m["2"] != nil {
-		x.Uint64Uint64 = make(map[uint64]uint64)
-		m2, ok := m["2"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Uint64Uint64': no map attribute provided")
-		}
-		for k, v := range m2.Value {
-			mk, err := strconv.ParseUint(k, 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Uint64Uint64': %w", err)
-			}
-			var mv uint64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Uint64Uint64': %w", err)
-			}
-			x.Uint64Uint64[uint64(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["2"], &x.Uint64Uint64)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Uint64Uint64': %w", err)
 	}
-	if m["3"] != nil {
-		x.Fixed64Fixed64 = make(map[uint64]uint64)
-		m3, ok := m["3"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Fixed64Fixed64': no map attribute provided")
-		}
-		for k, v := range m3.Value {
-			mk, err := strconv.ParseUint(k, 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Fixed64Fixed64': %w", err)
-			}
-			var mv uint64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Fixed64Fixed64': %w", err)
-			}
-			x.Fixed64Fixed64[uint64(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["3"], &x.Fixed64Fixed64)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Fixed64Fixed64': %w", err)
 	}
-	if m["4"] != nil {
-		x.Sint64Sint64 = make(map[int64]int64)
-		m4, ok := m["4"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Sint64Sint64': no map attribute provided")
-		}
-		for k, v := range m4.Value {
-			mk, err := strconv.ParseInt(k, 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Sint64Sint64': %w", err)
-			}
-			var mv int64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Sint64Sint64': %w", err)
-			}
-			x.Sint64Sint64[int64(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["4"], &x.Sint64Sint64)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Sint64Sint64': %w", err)
 	}
-	if m["5"] != nil {
-		x.Sfixed64Sfixed64 = make(map[int64]int64)
-		m5, ok := m["5"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Sfixed64Sfixed64': no map attribute provided")
-		}
-		for k, v := range m5.Value {
-			mk, err := strconv.ParseInt(k, 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Sfixed64Sfixed64': %w", err)
-			}
-			var mv int64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Sfixed64Sfixed64': %w", err)
-			}
-			x.Sfixed64Sfixed64[int64(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["5"], &x.Sfixed64Sfixed64)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Sfixed64Sfixed64': %w", err)
 	}
-	if m["6"] != nil {
-		x.Int32Int32 = make(map[int32]int32)
-		m6, ok := m["6"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Int32Int32': no map attribute provided")
-		}
-		for k, v := range m6.Value {
-			mk, err := strconv.ParseInt(k, 10, 32)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Int32Int32': %w", err)
-			}
-			var mv int32
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Int32Int32': %w", err)
-			}
-			x.Int32Int32[int32(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["6"], &x.Int32Int32)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Int32Int32': %w", err)
 	}
-	if m["7"] != nil {
-		x.Uint32Uint32 = make(map[uint32]uint32)
-		m7, ok := m["7"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Uint32Uint32': no map attribute provided")
-		}
-		for k, v := range m7.Value {
-			mk, err := strconv.ParseUint(k, 10, 32)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Uint32Uint32': %w", err)
-			}
-			var mv uint32
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Uint32Uint32': %w", err)
-			}
-			x.Uint32Uint32[uint32(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["7"], &x.Uint32Uint32)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Uint32Uint32': %w", err)
 	}
-	if m["8"] != nil {
-		x.Fixed32Fixed32 = make(map[uint32]uint32)
-		m8, ok := m["8"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Fixed32Fixed32': no map attribute provided")
-		}
-		for k, v := range m8.Value {
-			mk, err := strconv.ParseUint(k, 10, 32)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Fixed32Fixed32': %w", err)
-			}
-			var mv uint32
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Fixed32Fixed32': %w", err)
-			}
-			x.Fixed32Fixed32[uint32(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["8"], &x.Fixed32Fixed32)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Fixed32Fixed32': %w", err)
 	}
-	if m["9"] != nil {
-		x.Sint32Sint32 = make(map[int32]int32)
-		m9, ok := m["9"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Sint32Sint32': no map attribute provided")
-		}
-		for k, v := range m9.Value {
-			mk, err := strconv.ParseInt(k, 10, 32)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Sint32Sint32': %w", err)
-			}
-			var mv int32
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Sint32Sint32': %w", err)
-			}
-			x.Sint32Sint32[int32(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["9"], &x.Sint32Sint32)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Sint32Sint32': %w", err)
 	}
-	if m["10"] != nil {
-		x.Sfixed32Sfixed32 = make(map[int32]int32)
-		m10, ok := m["10"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Sfixed32Sfixed32': no map attribute provided")
-		}
-		for k, v := range m10.Value {
-			mk, err := strconv.ParseInt(k, 10, 32)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Sfixed32Sfixed32': %w", err)
-			}
-			var mv int32
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Sfixed32Sfixed32': %w", err)
-			}
-			x.Sfixed32Sfixed32[int32(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["10"], &x.Sfixed32Sfixed32)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Sfixed32Sfixed32': %w", err)
 	}
-	if m["11"] != nil {
-		x.Stringstring = make(map[string]string)
-		m11, ok := m["11"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Stringstring': no map attribute provided")
-		}
-		for k, v := range m11.Value {
-			mk := k
-			var mv string
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Stringstring': %w", err)
-			}
-			x.Stringstring[string(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["11"], &x.Stringstring)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Stringstring': %w", err)
 	}
-	if m["12"] != nil {
-		x.Boolbool = make(map[bool]bool)
-		m12, ok := m["12"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Boolbool': no map attribute provided")
-		}
-		for k, v := range m12.Value {
-			var mk bool
-			switch k {
-			case "true":
-				mk = true
-			case "false":
-				mk = false
-			default:
-				return fmt.Errorf("failed to unmarshal map key for field 'Boolbool': not 'true' or 'false' value")
-			}
-			var mv bool
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Boolbool': %w", err)
-			}
-			x.Boolbool[bool(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["12"], &x.Boolbool)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Boolbool': %w", err)
 	}
-	if m["13"] != nil {
-		x.Stringbytes = make(map[string][]byte)
-		m13, ok := m["13"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Stringbytes': no map attribute provided")
-		}
-		for k, v := range m13.Value {
-			mk := k
-			var mv []byte
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Stringbytes': %w", err)
-			}
-			x.Stringbytes[string(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["13"], &x.Stringbytes)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Stringbytes': %w", err)
 	}
-	if m["14"] != nil {
-		x.Stringdouble = make(map[string]float64)
-		m14, ok := m["14"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Stringdouble': no map attribute provided")
-		}
-		for k, v := range m14.Value {
-			mk := k
-			var mv float64
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Stringdouble': %w", err)
-			}
-			x.Stringdouble[string(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["14"], &x.Stringdouble)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Stringdouble': %w", err)
 	}
-	if m["15"] != nil {
-		x.Stringfloat = make(map[string]float32)
-		m15, ok := m["15"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Stringfloat': no map attribute provided")
-		}
-		for k, v := range m15.Value {
-			mk := k
-			var mv float32
-			err = attributevalue.Unmarshal(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Stringfloat': %w", err)
-			}
-			x.Stringfloat[string(mk)] = mv
-		}
+	err = attributevalue.Unmarshal(m["15"], &x.Stringfloat)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Stringfloat': %w", err)
 	}
 	if m["16"] != nil {
 		x.Stringduration = make(map[string]*durationpb.Duration)
