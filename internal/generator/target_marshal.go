@@ -106,6 +106,43 @@ func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
 	}
 }
 
+// genListFieldMarshal generates marshal code for a repeated field
+func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
+	mid := fmt.Sprintf("m%d", f.Desc.Number())
+
+	// if its not a list of messages, they are basic types and we can just
+	// marshal it as normal
+	if f.Message == nil {
+		return tg.genBasicFieldMarshal(f)
+	}
+
+	// for messages we loop over each item and marshal them one by one
+	return []Code{
+		Id(mid).Op(":=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberL").Values(),
+		For(List(Id("k"), Id("v")).Op(":=").Range().Id("x").Dot(f.GoName)).Block(
+
+			// the value can also be nil, append null attribute and continue
+			If(Id("v").Op("==").Nil()).Block(
+
+				Id(mid).Dot("Value").Op("=").
+					Append(Id(mid).Dot("Value"), Op("&").Qual(dynamodbtypes, "AttributeValueMemberNULL").Values(
+						Dict{Id("Value"): Lit(true)})),
+
+				Continue(), // next map item
+			),
+
+			// else, marshal the item
+			List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
+			),
+			Id(mid).Dot("Value").Op("=").
+				Append(Id(mid).Dot("Value"), Id("mv")),
+		),
+		Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("=").Id(mid),
+	}
+}
+
 // generateMessageMarshal generates the logic for marshalling messages into dynamo items
 func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 
@@ -115,6 +152,9 @@ func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 	// generate field marshalling code
 	for _, field := range m.Fields {
 		switch {
+		case field.Desc.IsList():
+			// lists are repeated fields
+			body = append(body, tg.genListFieldMarshal(field)...)
 		case field.Desc.IsMap():
 			// field map is technically a message but we marshal it differently
 			body = append(body, tg.genMapFieldMarshal(field)...)

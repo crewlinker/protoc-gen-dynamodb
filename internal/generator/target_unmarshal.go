@@ -196,6 +196,45 @@ func (tg *Target) genBasicFieldUnmarshal(f *protogen.Field) []Code {
 	}
 }
 
+// genListFieldUnmarshal generates Unmarshal code for a repeated field
+func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
+	mid := fmt.Sprintf("m%d", f.Desc.Number())
+
+	// if its not a list of messages, no recursing is necessary and we can just
+	// unmarshal like a basic type
+	if f.Message == nil {
+		return tg.genBasicFieldUnmarshal(f)
+	}
+
+	// for messages we loop over each item and unmarshal them one by one
+	return []Code{
+		If(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("!=").Nil()).Block(
+			List(Id(mid), Id("ok")).Op(":=").Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Assert(Op("*").Qual(dynamodbtypes, " AttributeValueMemberL")),
+			If(Op("!").Id("ok")).Block(
+				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': no list attribute provided"))),
+			),
+			For(List(Id("k"), Id("v")).Op(":=").Range().Id(mid).Dot("Value")).Block(
+				// for list items, they can also be NULL attributes, so we take special
+				// care of that scenario.
+				If(List(Id("_"), Id("ok")).Op(":=").Id("v").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")), Id("ok")).Block(
+					Id("x").Dot(f.GoName).Op("=").Append(Id("x").Dot(f.GoName), Nil()),
+					Continue(),
+				),
+				// else, init empty message and ummarshal into it
+				Var().Id("mv").Add(tg.fieldGoType(f)),
+				Err().Op("=").Id(tg.idents.unmarshal).Call(
+					Id("v"),
+					Op("&").Id("mv"),
+				),
+				If(Err().Op("!=").Nil()).Block(
+					Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
+				),
+				Id("x").Dot(f.GoName).Op("=").Append(Id("x").Dot(f.GoName), Op("&").Id("mv")),
+			),
+		),
+	}
+}
+
 // genMessageUnmarshal generates the unmarshaling logic
 func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 	var body []Code
@@ -203,6 +242,8 @@ func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 	// generate unmarschalling code per field kind
 	for _, field := range m.Fields {
 		switch {
+		case field.Desc.IsList(): // repeated fields
+			body = append(body, tg.genListFieldUnmarshal(field)...)
 		case field.Desc.IsMap(): // map
 			body = append(body, tg.genMapFieldUnmarshal(field)...)
 		case field.Message != nil: // (nested) message

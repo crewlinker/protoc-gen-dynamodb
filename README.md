@@ -36,3 +36,5 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - [ ] MUST add file header that states that the file is generated
 - [ ] SHOULD make it configurable on how to handle nil/empty fields like json
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used in fields without problem
+- [ ] SHOULD turn panics into errors (or add catch mechanism)
+- [ ] SHOULD add support of StringSets, NumberSets, ByteSets etc

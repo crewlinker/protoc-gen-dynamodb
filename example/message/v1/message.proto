@@ -79,6 +79,11 @@ message Kitchen {
     // well-known Timestamp
     google.protobuf.Timestamp wall_time = 18;
 
+    // nested list of messages
+    repeated Engine appliance_engines = 19;
+    // repeated basic type
+    repeated string other_brands = 20;
+
     // (repeated)list of messages
     // (repeated)list of int64s
 

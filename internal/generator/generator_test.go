@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -23,10 +25,10 @@ func TestGenerator(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(ctx context.Context) {
-	// cmd := exec.CommandContext(ctx, "buf", "generate")
-	// cmd.Dir = filepath.Join("..", "..", "example")
-	// cmd.Stderr = GinkgoWriter
-	// Expect(cmd.Run()).To(Succeed())
+	cmd := exec.CommandContext(ctx, "buf", "generate")
+	cmd.Dir = filepath.Join("..", "..", "example")
+	cmd.Stderr = GinkgoWriter
+	Expect(cmd.Run()).To(Succeed())
 })
 
 // test with messages defined in the example directory
@@ -78,6 +80,10 @@ var _ = Describe("example generation", func() {
 				"11": &types.AttributeValueMemberN{Value: "0"},
 
 				"12": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED)},
+
+				// @TODO why is "19" marsahlled as L(nil) and "20" as NULL(true)?
+				"19": &types.AttributeValueMemberL{Value: nil},
+				"20": &types.AttributeValueMemberNULL{Value: true},
 			}, nil),
 		Entry("with values",
 			&messagev1.Kitchen{
@@ -97,6 +103,8 @@ var _ = Describe("example generation", func() {
 				Calendar:          map[string]int64{"nov": 31},
 				Timer:             durationpb.New((time.Second * 100) + 5),
 				WallTime:          timestamppb.New(time.Unix(1678145849, 100)),
+				ApplianceEngines:  []*messagev1.Engine{{Brand: "Kooks"}, {Brand: "Simens"}},
+				OtherBrands:       []string{"Bosch", "Magimix"},
 
 				// @TODO test with nil values for embedded messages
 				// @TODO test with nil values for map entries
@@ -133,6 +141,22 @@ var _ = Describe("example generation", func() {
 				"17": &types.AttributeValueMemberS{Value: "100.000000005s"},
 				// timestamp is encoded using protojson string encoding
 				"18": &types.AttributeValueMemberS{Value: "2023-03-06T23:37:29.000000100Z"},
+				// repeated nested message
+				"19": &types.AttributeValueMemberL{Value: []types.AttributeValue{
+					&types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+						"1": &types.AttributeValueMemberS{Value: "Kooks"},
+						"2": &types.AttributeValueMemberN{Value: "0"},
+					}},
+					&types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+						"1": &types.AttributeValueMemberS{Value: "Simens"},
+						"2": &types.AttributeValueMemberN{Value: "0"},
+					}},
+				}},
+				// basic slice
+				"20": &types.AttributeValueMemberL{Value: []types.AttributeValue{
+					&types.AttributeValueMemberS{Value: "Bosch"},
+					&types.AttributeValueMemberS{Value: "Magimix"},
+				}},
 			}, nil),
 	)
 

@@ -244,6 +244,23 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 		m["18"] = m18
 	}
+	m19 := &types.AttributeValueMemberL{}
+	for k, v := range x.ApplianceEngines {
+		if v == nil {
+			m19.Value = append(m19.Value, &types.AttributeValueMemberNULL{Value: true})
+			continue
+		}
+		mv, err := file_message_v1_message_proto_marshal_dynamo_item(v)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal item '%d' of field 'ApplianceEngines': %w", k, err)
+		}
+		m19.Value = append(m19.Value, mv)
+	}
+	m["19"] = m19
+	m["20"], err = attributevalue.Marshal(x.OtherBrands)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal field 'OtherBrands': %w", err)
+	}
 	return m, nil
 }
 
@@ -365,6 +382,28 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'WallTime': %w", err)
 		}
+	}
+	if m["19"] != nil {
+		m19, ok := m["19"].(*types.AttributeValueMemberL)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal field 'ApplianceEngines': no list attribute provided")
+		}
+		for k, v := range m19.Value {
+			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+				x.ApplianceEngines = append(x.ApplianceEngines, nil)
+				continue
+			}
+			var mv Engine
+			err = file_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal item '%d' of field 'ApplianceEngines': %w", k, err)
+			}
+			x.ApplianceEngines = append(x.ApplianceEngines, &mv)
+		}
+	}
+	err = attributevalue.Unmarshal(m["20"], &x.OtherBrands)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'OtherBrands': %w", err)
 	}
 	return nil
 }
