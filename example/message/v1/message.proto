@@ -3,6 +3,7 @@ syntax = "proto3";
 package message.v1;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
 // DirtyNess describes how dirty a sink is
 enum Dirtyness {
@@ -84,10 +85,9 @@ message Kitchen {
     // repeated basic type
     repeated string other_brands = 20;
 
-    // (repeated)list of messages
-    // (repeated)list of int64s
-
-    // @TODO: repeated
+    // well-known Any field
+    google.protobuf.Any some_any = 21;
+    
     // @TODO: Any?
 }
 

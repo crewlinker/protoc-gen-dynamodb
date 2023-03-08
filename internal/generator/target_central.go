@@ -12,7 +12,7 @@ func (tg *Target) genCentralMarshal(f *File) error {
 	f.Commentf("%s marshals into DynamoDB attribute value maps", tg.idents.marshal)
 	f.Func().Id(tg.idents.marshal).
 		Params(Id("x").Qual("google.golang.org/protobuf/proto", "Message")).
-		Params(Qual(dynamodbtypes, "AttributeValue"), Error()).
+		Params(Id("a").Qual(dynamodbtypes, "AttributeValue"), Id("err").Error()).
 		Block(
 			// if the passed in type implements the marshal interface we can call it directly
 			If(List(Id("mx"), Id("ok")).Op(":=").Id("x").Assert(Interface(
@@ -34,9 +34,26 @@ func (tg *Target) genCentralMarshal(f *File) error {
 					),
 					List(Id("xjsons"), Err()).Op(":=").Qual("strconv", "Unquote").Call(String().Call(Id("xjson"))),
 					If(Err().Op("!=").Nil()).Block(
-						Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to unquote marshalled duration: %w"), Err())),
+						Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to unquote value: %w"), Err())),
 					),
 					Return(Op("&").Qual(dynamodbtypes, "AttributeValueMemberS").Values(Dict{Id("Value"): Id("xjsons")}), Nil()),
+				),
+
+				// Any type is just marshalled as a map using the stdlib method
+				Case(
+					Op("*").Qual("google.golang.org/protobuf/types/known/anypb", "Any"),
+				).Block(
+					Id("mv").Op(":=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberM").Values(
+						Dict{Id("Value"): Map(String()).Qual(dynamodbtypes, "AttributeValue").Values()}),
+					List(Id("mv").Dot("Value").Index(Lit("1")), Err()).Op("=").Qual(attributevalues, "Marshal").Call(Id("xt").Dot("TypeUrl")),
+					If(Err().Op("!=").Nil()).Block(
+						Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal Any's TypeURL field: %w"), Err())),
+					),
+					List(Id("mv").Dot("Value").Index(Lit("2")), Err()).Op("=").Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")),
+					If(Err().Op("!=").Nil()).Block(
+						Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal Any's Value field: %w"), Err())),
+					),
+					Return(Id("mv"), Nil()),
 				),
 
 				// or, any other type, return unsupported message
@@ -55,7 +72,7 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 	f.Commentf("%s unmarshals DynamoDB attribute value maps", tg.idents.marshal)
 	f.Func().Id(tg.idents.unmarshal).
 		Params(Id("m").Qual(dynamodbtypes, "AttributeValue"), Id("x").Qual("google.golang.org/protobuf/proto", "Message")).
-		Params(Error()).
+		Params(Id("err").Error()).
 		Block(
 			// assert to Unmarshaller interface, if so hand off unmarshalling
 			If(List(Id("mx"), Id("ok")).Op(":=").Id("x").Assert(Interface(
@@ -83,6 +100,32 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 					Return(Qual("google.golang.org/protobuf/encoding/protojson", "Unmarshal").Call(
 						Index().Byte().Call(Qual("strconv", "Quote").Call(Id("ms").Dot("Value"))),
 						Id("x"))),
+				),
+
+				// Any type is unmarshalled in a specific way
+				Case(
+					Op("*").Qual("google.golang.org/protobuf/types/known/anypb", "Any"),
+				).Block(
+					List(Id("mm"), Id("ok")).Op(":=").Id("m").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")),
+					If(Op("!").Id("ok")).Block(
+						Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal duration: no map attribute provided"))),
+					),
+
+					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(
+						Id("mm").Dot("Value").Index(Lit("1")),
+						Op("&").Id("xt").Dot("TypeUrl")),
+					If(Err().Op("!=").Nil()).Block(
+						Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal Any's TypeURL field: %w"), Err())),
+					),
+
+					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(
+						Id("mm").Dot("Value").Index(Lit("2")),
+						Op("&").Id("xt").Dot("Value")),
+					If(Err().Op("!=").Nil()).Block(
+						Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal Any's Value field: %w"), Err())),
+					),
+
+					Return(Nil()),
 				),
 
 				// or, any other type, return unsupported message

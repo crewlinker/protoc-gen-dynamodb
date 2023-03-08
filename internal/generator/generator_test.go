@@ -15,7 +15,9 @@ import (
 	fuzz "github.com/google/gofuzz"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -60,6 +62,8 @@ var _ = Describe("example generation", func() {
 		} else {
 			Expect(err).To(MatchError(expErr))
 		}
+
+		format.MaxLength = 0
 		Expect(m).To(Equal(exp))
 	},
 		Entry("zero value",
@@ -108,6 +112,14 @@ var _ = Describe("example generation", func() {
 				WallTime:          timestamppb.New(time.Unix(1678145849, 100)),
 				ApplianceEngines:  []*messagev1.Engine{{Brand: "Kooks"}, {Brand: "Simens"}},
 				OtherBrands:       []string{"Bosch", "Magimix"},
+
+				SomeAny: func() *anypb.Any {
+					m, err := anypb.New(&messagev1.Engine{Brand: "Kikch"})
+					if err != nil {
+						panic(err)
+					}
+					return m
+				}(),
 
 				// @TODO test with nil values for embedded messages
 				// @TODO test with nil values for map entries
@@ -159,6 +171,11 @@ var _ = Describe("example generation", func() {
 				"20": &types.AttributeValueMemberL{Value: []types.AttributeValue{
 					&types.AttributeValueMemberS{Value: "Bosch"},
 					&types.AttributeValueMemberS{Value: "Magimix"},
+				}},
+				// any message
+				"21": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+					"1": &types.AttributeValueMemberS{Value: "type.googleapis.com/message.v1.Engine"},
+					"2": &types.AttributeValueMemberB{Value: []byte{10, 5, 75, 105, 107, 99, 104}},
 				}},
 			}, nil),
 	)
