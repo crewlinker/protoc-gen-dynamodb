@@ -192,6 +192,9 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		m13 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.Furniture {
 			mk := fmt.Sprintf("%d", k)
+			if mk == "" {
+				return nil, fmt.Errorf("failed to marshal map key of field 'Furniture': map key cannot be empty")
+			}
 			if v == nil {
 				m13.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
@@ -317,18 +320,16 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map key for field 'Furniture': %w", err)
 			}
-			var mv *Appliance
-			switch vt := v.(type) {
-			case *types.AttributeValueMemberNULL:
-				mv = nil
-			default:
-				mv = &Appliance{}
-				err = file_message_v1_message_proto_unmarshal_dynamo_item(vt, mv)
+			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+				x.Furniture[int64(mk)] = nil
+				continue
 			}
+			var mv Appliance
+			err = file_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'Furniture': %w", err)
 			}
-			x.Furniture[int64(mk)] = mv
+			x.Furniture[int64(mk)] = &mv
 		}
 	}
 	err = attributevalue.Unmarshal(m["14"], &x.Calendar)
@@ -466,6 +467,9 @@ func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err 
 		m16 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.Stringduration {
 			mk := k
+			if mk == "" {
+				return nil, fmt.Errorf("failed to marshal map key of field 'Stringduration': map key cannot be empty")
+			}
 			if v == nil {
 				m16.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
@@ -482,6 +486,9 @@ func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err 
 		m17 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.Stringtimestamp {
 			mk := k
+			if mk == "" {
+				return nil, fmt.Errorf("failed to marshal map key of field 'Stringtimestamp': map key cannot be empty")
+			}
 			if v == nil {
 				m17.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
@@ -567,18 +574,16 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 		}
 		for k, v := range m16.Value {
 			mk := k
-			var mv *durationpb.Duration
-			switch vt := v.(type) {
-			case *types.AttributeValueMemberNULL:
-				mv = nil
-			default:
-				mv = &durationpb.Duration{}
-				err = file_message_v1_message_proto_unmarshal_dynamo_item(vt, mv)
+			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+				x.Stringduration[string(mk)] = nil
+				continue
 			}
+			var mv durationpb.Duration
+			err = file_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'Stringduration': %w", err)
 			}
-			x.Stringduration[string(mk)] = mv
+			x.Stringduration[string(mk)] = &mv
 		}
 	}
 	if m["17"] != nil {
@@ -589,18 +594,16 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 		}
 		for k, v := range m17.Value {
 			mk := k
-			var mv *timestamppb.Timestamp
-			switch vt := v.(type) {
-			case *types.AttributeValueMemberNULL:
-				mv = nil
-			default:
-				mv = &timestamppb.Timestamp{}
-				err = file_message_v1_message_proto_unmarshal_dynamo_item(vt, mv)
+			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+				x.Stringtimestamp[string(mk)] = nil
+				continue
 			}
+			var mv timestamppb.Timestamp
+			err = file_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'Stringtimestamp': %w", err)
 			}
-			x.Stringtimestamp[string(mk)] = mv
+			x.Stringtimestamp[string(mk)] = &mv
 		}
 	}
 	return nil

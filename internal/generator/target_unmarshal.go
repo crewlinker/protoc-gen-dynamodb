@@ -68,16 +68,9 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 		return tg.genBasicFieldUnmarshal(f)
 	}
 
-	mid := fmt.Sprintf("m%d", f.Desc.Number())
-	valtypid := tg.fieldGoType(val)
-	if val.Message != nil {
-		valtypid = Op("*").Add(valtypid) // in case it's a message, pointer ref
-	}
-
+	// generate loop code for unmarshalling the map key
 	var loop []Code
 	var addUnmarshalKeyErr bool
-
-	// generate loop code for unmarshalling the map key
 	switch key.Desc.Kind() {
 	case protoreflect.StringKind:
 		loop = append(loop, Id("mk").Op(":=").
@@ -112,7 +105,6 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 					Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map key for field '"+f.GoName+"': not 'true' or 'false' value"))),
 				),
 			))
-
 	default:
 		panic("unsupported key type for map: " + key.Desc.Kind().String())
 	}
@@ -123,41 +115,31 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 		))
 	}
 
-	// generate loop code for unmarshalling the map value
-	switch {
-	case val.Message != nil:
-		// in case the map value is a message we need to type cast it to AttributeValueMemberM, and then
-		// call UnmarshalDynamoItem recursively. But it can also be that the map value is null.
-		loop = append(loop,
-			Var().Id("mv").Op("*").Add(tg.fieldGoType(val)),
-
-			// map values have the special case that members can be null, in that case we don't want to
-			// call the unmarshal and just assign the map value to be nil.
-			Switch(Id("vt").Op(":=").Id("v").Assert(Type())).Block(
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")).Block(
-					Id("mv").Op("=").Nil(),
-				),
-				Default().Block(
-					Id("mv").Op("=").Op("&").Add(tg.fieldGoType(val)).Values(),
-					Err().Op("=").Id(tg.idents.unmarshal).Call(Id("vt"), Id("mv")),
-				),
-			),
-		)
-	default:
-		loop = append(loop,
-			Var().Id("mv").Add(valtypid),
-			Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("v"), Op("&").Id("mv")))
-	}
-
-	// handle key unmarshal errors, and assign resulting map (finally)
+	// unmarshal the map values
 	loop = append(loop,
+		// if the map value is NULL, we just assign nil and don't attempt to unmarshal it
+		If(List(Id("_"), Id("ok")).Op(":=").Id("v").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")), Id("ok")).Block(
+			Id("x").Dot(f.GoName).Index(tg.fieldGoType(key).Call(Id("mk"))).Op("=").Nil(),
+			Continue(),
+		),
+
+		// else, we unmarshal into a not-nil message
+		Var().Id("mv").Add(tg.fieldGoType(val)),
+		Err().Op("=").Id(tg.idents.unmarshal).Call(Id("v"), Op("&").Id("mv")),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map value for field '"+f.GoName+"': %w"), Err())),
 		),
+
 		// assign map value while type casting to map key, the cast is only necessary because ParseInt always
 		// returns 64-bit values while we sometime wanna assign 32-bit values. It should downcast at worst
-		Id("x").Dot(f.GoName).Index(tg.fieldGoType(key).Call(Id("mk"))).Op("=").Id("mv"),
+		Id("x").Dot(f.GoName).Index(tg.fieldGoType(key).Call(Id("mk"))).Op("=").Op("&").Id("mv"),
 	)
+
+	mid := fmt.Sprintf("m%d", f.Desc.Number())
+	valtypid := tg.fieldGoType(val)
+	if val.Message != nil {
+		valtypid = Op("*").Add(valtypid) // in case it's a message, pointer ref
+	}
 
 	return []Code{
 

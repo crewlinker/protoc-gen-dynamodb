@@ -34,8 +34,8 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - [ ] SHOULD Make sure generated error handling prints the field name and a more descriptive error
 - [ ] SHOULD allow customizing the encoder/decoder options
 - [ ] MUST add file header that states that the file is generated
-- [ ] SHOULD make it configurable on how to handle nil/empty fields like json
+- [ ] SHOULD make it configurable on how to handle nil/empty fields like stdlib json package
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used in fields without problem
 - [ ] SHOULD turn panics into errors (or add catch mechanism)
 - [ ] SHOULD add support of StringSets, NumberSets, ByteSets etc
-- [ ] SHOUDL error when marshalling map of messages and the key is an empty string (not allowed)
+- [x] SHOUDL error when marshalling map of messages and the key is an empty string (not allowed)

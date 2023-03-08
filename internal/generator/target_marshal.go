@@ -14,17 +14,13 @@ import (
 func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 	key := f.Message.Fields[0]
 	val := f.Message.Fields[1]
+	mid := fmt.Sprintf("m%d", f.Desc.Number())
 
 	// if the map value is not a message. We don't need to faciliate recursing so
 	// we can just unmarshal it as a basic value.
 	if val.Message == nil {
 		return tg.genBasicFieldMarshal(f)
 	}
-
-	mid := fmt.Sprintf("m%d", f.Desc.Number())
-	errhandle := If(Err().Op("!=").Nil()).Block(
-		Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map value of field '"+f.GoName+"': %w"), Err())),
-	)
 
 	// marshal the map key into a string (only map key type supported id Dynamo). For numbers it will be
 	// base-10 encoded, bool values will be "true" or "false" and strings are just used as keys directly.
@@ -49,29 +45,29 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 		panic("unsupported map key: " + key.Desc.Kind().String())
 	}
 
-	// marshal the map value
-	switch {
-	case val.Message != nil:
-		loop = append(loop,
-			// if the map value is nill, we encode as a null attribute value
-			If(Id("v").Op("==").Nil()).Block(
-				Id(mid).Dot("Value").Index(Id("mk")).Op("=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberNULL").Values(
-					Dict{Id("Value"): Lit(true)}),
-				Continue(), // next map item
-			),
+	// error when the resulting map key is an empty string, this also errors the marshalling logic
+	// in the official Go SDK
+	loop = append(loop, If(Id("mk").Op("==").Lit("")).Block(
+		Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map key of field '"+f.GoName+"': map key cannot be empty"))),
+	))
 
-			// marshal non-nil map value by calling the centrally generated function
-			List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
-			errhandle,
-			Id(mid).Dot("Value").Index(Id("mk")).Op("=").Id("mv"),
-		)
-	default:
-		loop = append(loop,
-			List(Id("mv"), Err()).Op(":=").Qual(attributevalues, "Marshal").Call(Id("v")),
-			errhandle,
-			Id(mid).Dot("Value").Index(Id("mk")).Op("=").Id("mv"),
-		)
-	}
+	// marshal the map value. It makes a special case to check for null attribute value since
+	// this needs to just be decoded as nil.
+	loop = append(loop,
+		// if the map value is nill, we encode as a null attribute value
+		If(Id("v").Op("==").Nil()).Block(
+			Id(mid).Dot("Value").Index(Id("mk")).Op("=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberNULL").Values(
+				Dict{Id("Value"): Lit(true)}),
+			Continue(), // next map item
+		),
+
+		// marshal non-nil map value by calling the centrally generated function
+		List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
+		If(Err().Op("!=").Nil()).Block(
+			Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map value of field '"+f.GoName+"': %w"), Err())),
+		),
+		Id(mid).Dot("Value").Index(Id("mk")).Op("=").Id("mv"),
+	)
 
 	return []Code{
 		// only marshal the map at all if it's not nil at runtime
