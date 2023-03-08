@@ -39,7 +39,7 @@ func (tg *Target) genCentralMarshal(f *File) error {
 					Return(Op("&").Qual(dynamodbtypes, "AttributeValueMemberS").Values(Dict{Id("Value"): Id("xjsons")}), Nil()),
 				),
 
-				// Any type is just marshalled as a map using the stdlib method
+				// Any type is marshalled using field numbers, into a map
 				Case(
 					Op("*").Qual("google.golang.org/protobuf/types/known/anypb", "Any"),
 				).Block(
@@ -54,6 +54,14 @@ func (tg *Target) genCentralMarshal(f *File) error {
 						Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal Any's Value field: %w"), Err())),
 					),
 					Return(Id("mv"), Nil()),
+				),
+
+				// FieldMask type is marshalled as a string set
+				Case(
+					Op("*").Qual("google.golang.org/protobuf/types/known/fieldmaskpb", "FieldMask"),
+				).Block(
+					Return(Op("&").Qual(dynamodbtypes, "AttributeValueMemberSS").Values(
+						Dict{Id("Value"): Id("xt").Dot("Paths")}), Nil()),
 				),
 
 				// or, any other type, return unsupported message
@@ -102,7 +110,7 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 						Id("x"))),
 				),
 
-				// Any type is unmarshalled in a specific way
+				// Any type is unmarshalled using field numbers
 				Case(
 					Op("*").Qual("google.golang.org/protobuf/types/known/anypb", "Any"),
 				).Block(
@@ -125,6 +133,19 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 						Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal Any's Value field: %w"), Err())),
 					),
 
+					Return(Nil()),
+				),
+
+				// FieldMask type is unmarshalled from a stringset
+				Case(
+					Op("*").Qual("google.golang.org/protobuf/types/known/fieldmaskpb", "FieldMask"),
+				).Block(
+					List(Id("ss"), Id("ok")).Op(":=").Id("m").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberSS")),
+					If(Op("!").Id("ok")).Block(
+						Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal duration: no string set attribute provided"))),
+					),
+
+					Id("xt").Dot("Paths").Op("=").Id("ss").Dot("Value"),
 					Return(Nil()),
 				),
 

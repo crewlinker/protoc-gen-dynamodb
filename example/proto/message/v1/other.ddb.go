@@ -8,6 +8,7 @@ import (
 	proto "google.golang.org/protobuf/proto"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 )
@@ -42,6 +43,8 @@ func file_message_v1_other_proto_marshal_dynamo_item(x proto.Message) (a types.A
 			return nil, fmt.Errorf("failed to marshal Any's Value field: %w", err)
 		}
 		return mv, nil
+	case *fieldmaskpb.FieldMask:
+		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -78,6 +81,13 @@ func file_message_v1_other_proto_unmarshal_dynamo_item(m types.AttributeValue, x
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal Any's Value field: %w", err)
 		}
+		return nil
+	case *fieldmaskpb.FieldMask:
+		ss, ok := m.(*types.AttributeValueMemberSS)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
+		}
+		xt.Paths = ss.Value
 		return nil
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)

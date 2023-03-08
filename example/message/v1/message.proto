@@ -4,6 +4,7 @@ package message.v1;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/field_mask.proto";
 
 // DirtyNess describes how dirty a sink is
 enum Dirtyness {
@@ -84,10 +85,11 @@ message Kitchen {
     repeated Engine appliance_engines = 19;
     // repeated basic type
     repeated string other_brands = 20;
-
     // well-known Any field
     google.protobuf.Any some_any = 21;
-    
+    // well-known FieldMask field
+    google.protobuf.FieldMask some_mask = 22;
+
     // @TODO: Any?
 }
 

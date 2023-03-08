@@ -8,6 +8,7 @@ import (
 	proto "google.golang.org/protobuf/proto"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 )
@@ -42,6 +43,8 @@ func file_message_v1_message_proto_marshal_dynamo_item(x proto.Message) (a types
 			return nil, fmt.Errorf("failed to marshal Any's Value field: %w", err)
 		}
 		return mv, nil
+	case *fieldmaskpb.FieldMask:
+		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -78,6 +81,13 @@ func file_message_v1_message_proto_unmarshal_dynamo_item(m types.AttributeValue,
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal Any's Value field: %w", err)
 		}
+		return nil
+	case *fieldmaskpb.FieldMask:
+		ss, ok := m.(*types.AttributeValueMemberSS)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
+		}
+		xt.Paths = ss.Value
 		return nil
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
@@ -289,6 +299,13 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 		m["21"] = m21
 	}
+	if x.SomeMask != nil {
+		m22, err := file_message_v1_message_proto_marshal_dynamo_item(x.SomeMask)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'SomeMask': %w", err)
+		}
+		m["22"] = m22
+	}
 	return m, nil
 }
 
@@ -424,6 +441,13 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		err = file_message_v1_message_proto_unmarshal_dynamo_item(m["21"], x.SomeAny)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeAny': %w", err)
+		}
+	}
+	if m["22"] != nil {
+		x.SomeMask = new(fieldmaskpb.FieldMask)
+		err = file_message_v1_message_proto_unmarshal_dynamo_item(m["22"], x.SomeMask)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'SomeMask': %w", err)
 		}
 	}
 	return nil

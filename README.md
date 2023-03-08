@@ -15,6 +15,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Allow messages external to the package to be usable as field messages without problem
 - Support well-knowns, but are generated to maps with strings for their fields, instead of field numbers
   - Document "Any" format in particular: "Value" stored always stored as binary
+  - Document "FieldMask" format: "StringSet"
 
 ## Ideas
 
@@ -39,5 +40,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used in fields without problem
 - [ ] SHOULD turn panics into errors (or add catch mechanism)
 - [ ] SHOULD add support of StringSets, NumberSets, ByteSets etc
+- [ ] SHOULD allow customizing the dynamodb attribute name (from default "number")
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling
 - [x] SHOULD error when marshalling map of messages and the key is an empty string (not allowed)
+- [ ] COULD improve usability of FieldMask encoding, instead of slice of strings of the field names in proto definition, could/should be the dynamodb attribute names. But this probably means implement another version of the fieldmaskpb.New() function.
