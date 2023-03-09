@@ -1,4 +1,4 @@
-package messagev1
+package ddbv1
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ import (
 	"strconv"
 )
 
-// file_message_v1_other_proto_marshal_dynamo_item marshals into DynamoDB attribute value maps
-func file_message_v1_other_proto_marshal_dynamo_item(x proto.Message) (a types.AttributeValue, err error) {
+// file_ddb_v1_options_proto_marshal_dynamo_item marshals into DynamoDB attribute value maps
+func file_ddb_v1_options_proto_marshal_dynamo_item(x proto.Message) (a types.AttributeValue, err error) {
 	if mx, ok := x.(interface {
 		MarshalDynamoItem() (map[string]types.AttributeValue, error)
 	}); ok {
@@ -53,8 +53,8 @@ func file_message_v1_other_proto_marshal_dynamo_item(x proto.Message) (a types.A
 	}
 }
 
-// file_message_v1_other_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps
-func file_message_v1_other_proto_unmarshal_dynamo_item(m types.AttributeValue, x proto.Message) (err error) {
+// file_ddb_v1_options_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps
+func file_ddb_v1_options_proto_unmarshal_dynamo_item(m types.AttributeValue, x proto.Message) (err error) {
 	if mx, ok := x.(interface {
 		UnmarshalDynamoItem(map[string]types.AttributeValue) error
 	}); ok {
@@ -137,40 +137,22 @@ func file_message_v1_other_proto_unmarshal_dynamo_item(m types.AttributeValue, x
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
-func (x *OtherKitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+func (x *FieldOptions) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.AnotherKitchen != nil {
-		m16, err := file_message_v1_other_proto_marshal_dynamo_item(x.AnotherKitchen)
+	if x.Name != nil {
+		m["1"], err = attributevalue.Marshal(x.Name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal field 'AnotherKitchen': %w", err)
+			return nil, fmt.Errorf("failed to marshal field 'Name': %w", err)
 		}
-		m["16"] = m16
-	}
-	if x.OtherTimer != nil {
-		m17, err := file_message_v1_other_proto_marshal_dynamo_item(x.OtherTimer)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal field 'OtherTimer': %w", err)
-		}
-		m["17"] = m17
 	}
 	return m, nil
 }
 
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
-func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
-	if m["16"] != nil {
-		x.AnotherKitchen = new(Kitchen)
-		err = file_message_v1_other_proto_unmarshal_dynamo_item(m["16"], x.AnotherKitchen)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal field 'AnotherKitchen': %w", err)
-		}
-	}
-	if m["17"] != nil {
-		x.OtherTimer = new(durationpb.Duration)
-		err = file_message_v1_other_proto_unmarshal_dynamo_item(m["17"], x.OtherTimer)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal field 'OtherTimer': %w", err)
-		}
+func (x *FieldOptions) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	err = attributevalue.Unmarshal(m["1"], &x.Name)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Name': %w", err)
 	}
 	return nil
 }

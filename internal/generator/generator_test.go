@@ -2,18 +2,22 @@ package generator_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/example/proto/message/v1"
+	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
 	fuzz "github.com/google/gofuzz"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/format"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -30,10 +34,24 @@ func TestGenerator(t *testing.T) {
 
 var _ = BeforeSuite(func(ctx context.Context) {
 	// cmd := exec.CommandContext(ctx, "buf", "generate")
-	// cmd.Dir = filepath.Join("..", "..", "example")
+	// cmd.Dir = filepath.Join("..", "..")
 	// cmd.Stderr = GinkgoWriter
 	// Expect(cmd.Run()).To(Succeed())
 })
+
+// ExpectJSONFieldPresense will assert that all fields are present in 'item' that are also present
+// when encoding 'm' using canonical json.
+func ExpectJSONFieldPresence(m proto.Message, it map[string]types.AttributeValue) {
+	jm := map[string]any{}
+	jb, err := protojson.Marshal(m)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(json.Unmarshal(jb, &jm)).ToNot(HaveOccurred())
+
+	jkeys, dkeys := lo.Keys(jm), lo.Keys(it)
+	sort.Strings(jkeys)
+	sort.Strings(dkeys)
+	Expect(dkeys).To(Equal(jkeys))
+}
 
 // test with messages defined in the example directory
 var _ = Describe("example generation", func() {
@@ -55,6 +73,31 @@ var _ = Describe("example generation", func() {
 		Expect(proto.Equal(&k2, k1)).To(BeTrue())
 	})
 
+	// Assert that fields present in the resuling map are the same as present in canonical json encoding.
+	// This works if we have a message where dynamo attr names are explicitely set to match that of the
+	// the json encoding.
+	DescribeTable("field presence", func(m *messagev1.FieldPresence, e map[string]types.AttributeValue) {
+		it, err := m.MarshalDynamoItem()
+		Expect(err).ToNot(HaveOccurred())
+		ExpectJSONFieldPresence(m, it)
+	},
+		Entry("presence message zero",
+			&messagev1.FieldPresence{}, map[string]types.AttributeValue{}),
+		Entry("presence with field values at (non-nil) zero",
+			&messagev1.FieldPresence{
+				Str:     "",
+				OptStr:  proto.String(""),
+				Msg:     &messagev1.Engine{},
+				OptMsg:  &messagev1.Engine{},
+				StrList: []string{},
+				MsgList: []*messagev1.Engine{},
+				StrMap:  map[string]string{},
+				MsgMap:  map[string]*messagev1.Engine{},
+				Enum:    messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED,
+				OptEnum: messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED.Enum(),
+			}, map[string]types.AttributeValue{}),
+	)
+
 	// Assert encoding of various kitchen messages
 	DescribeTable("kitchen example", func(k *messagev1.Kitchen, exp map[string]types.AttributeValue, expErr string) {
 		m, err := k.MarshalDynamoItem()
@@ -64,35 +107,13 @@ var _ = Describe("example generation", func() {
 			Expect(err).To(MatchError(expErr))
 		}
 
+		// check message equality
 		format.MaxLength = 0
 		Expect(m).To(Equal(exp))
 	},
 		Entry("zero value",
 			&messagev1.Kitchen{},
-			map[string]types.AttributeValue{
-				"1": &types.AttributeValueMemberS{},
-				"2": &types.AttributeValueMemberBOOL{},
-				"3": &types.AttributeValueMemberNULL{Value: true},
-
-				"4": &types.AttributeValueMemberN{Value: "0"},
-				"5": &types.AttributeValueMemberN{Value: "0"},
-				"6": &types.AttributeValueMemberN{Value: "0"},
-
-				"7": &types.AttributeValueMemberN{Value: "0"},
-				"8": &types.AttributeValueMemberN{Value: "0"},
-				"9": &types.AttributeValueMemberN{Value: "0"},
-
-				"10": &types.AttributeValueMemberN{Value: "0"},
-				"11": &types.AttributeValueMemberN{Value: "0"},
-
-				"12": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED)},
-
-				"14": &types.AttributeValueMemberNULL{Value: true},
-
-				// @TODO why is "19" marsahlled as L(nil) and "20" as NULL(true)?
-				"19": &types.AttributeValueMemberL{Value: nil},
-				"20": &types.AttributeValueMemberNULL{Value: true},
-			}, nil),
+			map[string]types.AttributeValue{}, nil),
 		Entry("with values",
 			&messagev1.Kitchen{
 				Brand:             "Siemens",
@@ -164,11 +185,9 @@ var _ = Describe("example generation", func() {
 				"19": &types.AttributeValueMemberL{Value: []types.AttributeValue{
 					&types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
 						"1": &types.AttributeValueMemberS{Value: "Kooks"},
-						"2": &types.AttributeValueMemberN{Value: "0"},
 					}},
 					&types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
 						"1": &types.AttributeValueMemberS{Value: "Simens"},
-						"2": &types.AttributeValueMemberN{Value: "0"},
 					}},
 				}},
 				// basic slice
@@ -247,7 +266,7 @@ var _ = Describe("example generation", func() {
 		}
 	},
 		// Table entries allow seeds that detected a regression to be used as future test cases
-		// Entry("now()", time.Now().UnixNano()),
+		Entry("now()", time.Now().UnixNano()),
 		Entry("duration map", int64(1678219381135764000)),
 	)
 

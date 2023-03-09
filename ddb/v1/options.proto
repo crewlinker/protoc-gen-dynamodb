@@ -1,0 +1,14 @@
+syntax = "proto2";
+package ddb.v1;
+
+import "google/protobuf/descriptor.proto";
+
+// FieldOptions presents options to configure fields to interact with protobuf powered rpc
+message FieldOptions {
+    // specify the name of the DynamoDB attribute
+    optional string name = 1;
+}
+
+extend google.protobuf.FieldOptions {
+    optional FieldOptions field = 1098;
+}

@@ -1,11 +1,12 @@
 syntax = "proto3";
 
-package message.v1;
+package example.message.v1;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
+import "ddb/v1/options.proto";
 
 // DirtyNess describes how dirty a sink is
 enum Dirtyness {
@@ -144,4 +145,29 @@ message MapGalore {
 message ValueGalore {
     // struct value
     google.protobuf.Value some_value = 1;
+}
+
+// FieldPresence message is used to experiment and assert field presence in the generated 
+// attribute map
+message FieldPresence {
+    // string field
+    string str = 1 [(ddb.v1.field).name="str"];
+    // optional string field
+    optional string opt_str = 2 [(ddb.v1.field).name="optStr"];    
+    // msg field
+    Engine msg = 3 [(ddb.v1.field).name="msg"];
+    // optional message field
+    optional Engine opt_msg = 4 [(ddb.v1.field).name="optMsg"];
+    // list of strings
+    repeated string str_list = 5 [(ddb.v1.field).name="strList"];
+    // list of messages
+    repeated Engine msg_list = 6 [(ddb.v1.field).name="msgList"];
+    // map of strings
+    map<string,string> str_map = 7 [(ddb.v1.field).name="strMap"];
+    // map of messages
+    map<string,Engine> msg_map = 8 [(ddb.v1.field).name="msgMap"];
+    // enum field
+    Dirtyness enum = 9 [(ddb.v1.field).name="enum"];
+    // enum field
+    optional Dirtyness opt_enum = 10 [(ddb.v1.field).name="optEnum"];
 }

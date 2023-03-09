@@ -10,53 +10,6 @@ import (
 	. "github.com/dave/jennifer/jen"
 )
 
-// returns true as the identifier is part of the package we're generating for
-func (tg *Target) isSamePkgIdent(ident protogen.GoIdent) bool {
-	return ident.GoImportPath == tg.src.GoImportPath
-}
-
-// fieldGoType turns a field protoreflect kind into a go type
-func (tg *Target) fieldGoType(f *protogen.Field) *Statement {
-	if f.Message != nil {
-		// if the message is from the same package path as we're generating for, assume we refer
-		// to it without fullq qualifier
-		if tg.isSamePkgIdent(f.Message.GoIdent) {
-			return Id(f.Message.GoIdent.GoName)
-		}
-
-		// else refer to it with qualifier
-		return Qual(string(f.Message.GoIdent.GoImportPath), f.Message.GoIdent.GoName)
-	}
-
-	switch f.Desc.Kind() {
-	case protoreflect.StringKind, protoreflect.BoolKind,
-		protoreflect.Int64Kind, protoreflect.Uint64Kind:
-		return Id(f.Desc.Kind().String())
-	case protoreflect.BytesKind:
-		return Id("[]byte")
-	case protoreflect.Fixed64Kind:
-		return Id("uint64")
-	case protoreflect.Sint64Kind:
-		return Id("int64")
-	case protoreflect.Sfixed64Kind:
-		return Id("int64")
-	case protoreflect.Int32Kind, protoreflect.Uint32Kind:
-		return Id(f.Desc.Kind().String())
-	case protoreflect.Fixed32Kind:
-		return Id("uint32")
-	case protoreflect.Sint32Kind:
-		return Id("int32")
-	case protoreflect.Sfixed32Kind:
-		return Id("int32")
-	case protoreflect.DoubleKind:
-		return Id("float64")
-	case protoreflect.FloatKind:
-		return Id("float32")
-	default:
-		panic("unsupported field type: " + f.Desc.Kind().String())
-	}
-}
-
 // generate marshalling code for a map field.
 func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 	key := f.Message.Fields[0]
@@ -144,11 +97,11 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 	return []Code{
 
 		// only unmarshal map, if the attribute is not nil
-		If(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("!=").Nil()).Block(
+		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			Id("x").Dot(f.GoName).
 				Op("=").Make(Map(tg.fieldGoType(key)).Add(valtypid)),
 			List(Id(mid), Id("ok")).Op(":=").
-				Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")),
+				Id("m").Index(Lit(tg.attrName(f))).Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")),
 			If(Op("!").Id("ok")).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': no map attribute provided"))),
 			),
@@ -161,9 +114,9 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only unmarshal map, if the attribute is not nil
-		If(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("!=").Nil()).Block(
+		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Id(tg.idents.unmarshal).Call(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))), Id("x").Dot(f.GoName)),
+			Err().Op("=").Id(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -176,7 +129,7 @@ func (tg *Target) genBasicFieldUnmarshal(f *protogen.Field) []Code {
 	return []Code{
 		Err().Op("=").
 			Qual(attributevalues, "Unmarshal").Call(
-			Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))),
+			Id("m").Index(Lit(tg.attrName(f))),
 			Op("&").Id("x").Dot(f.GoName),
 		),
 		If(Err().Op("!=").Nil()).Block(
@@ -197,8 +150,8 @@ func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
 
 	// for messages we loop over each item and unmarshal them one by one
 	return []Code{
-		If(Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("!=").Nil()).Block(
-			List(Id(mid), Id("ok")).Op(":=").Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Assert(Op("*").Qual(dynamodbtypes, " AttributeValueMemberL")),
+		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
+			List(Id(mid), Id("ok")).Op(":=").Id("m").Index(Lit(tg.attrName(f))).Assert(Op("*").Qual(dynamodbtypes, " AttributeValueMemberL")),
 			If(Op("!").Id("ok")).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': no list attribute provided"))),
 			),

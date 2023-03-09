@@ -71,12 +71,12 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 
 	return []Code{
 		// only marshal the map at all if it's not nil at runtime
-		If(Id("x").Dot(f.GoName).Op("!=").Nil()).Block(
+		If(tg.marshalPresenceCond(f)...).Block(
 			Id(mid).Op(":=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberM").Values(
 				Dict{Id("Value"): Make(Map(String()).Qual(dynamodbtypes, "AttributeValue"))}),
 
 			For(List(Id("k"), Id("v")).Op(":=").Range().Id("x").Dot(f.GoName)).Block(loop...),
-			Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("=").Id(mid),
+			Id("m").Index(Lit(tg.attrName(f))).Op("=").Id(mid),
 		),
 	}
 }
@@ -86,25 +86,27 @@ func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only marshal message field if the value is not nil at runtime
 		If(Id("x").Dot(f.GoName).Op("!=").Nil()).Block(
-
 			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Id(tg.idents.marshal).Call(Id("x").Dot(f.GoName)),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
-			Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("=").Id(fmt.Sprintf("m%d", f.Desc.Number())),
+			Id("m").Index(Lit(tg.attrName(f))).Op("=").Id(fmt.Sprintf("m%d", f.Desc.Number())),
 		),
 	}
 }
 
 // basic field generates code for marshaling a regular field with basic types
 func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
-	return []Code{List(
-		Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))),
-		Id("err"),
-	).Op("=").
-		Qual(attributevalues, "Marshal").Call(Id("x").Dot(f.GoName)),
-		If(Err().Op("!=").Nil()).Block(
-			Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
+	return []Code{
+		If(tg.marshalPresenceCond(f)...).Block(
+			List(
+				Id("m").Index(Lit(tg.attrName(f))),
+				Id("err"),
+			).Op("=").
+				Qual(attributevalues, "Marshal").Call(Id("x").Dot(f.GoName)),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
+			),
 		),
 	}
 }
@@ -121,28 +123,31 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 
 	// for messages we loop over each item and marshal them one by one
 	return []Code{
-		Id(mid).Op(":=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberL").Values(),
-		For(List(Id("k"), Id("v")).Op(":=").Range().Id("x").Dot(f.GoName)).Block(
+		// only marshal if its not the zero  value
+		If(tg.marshalPresenceCond(f)...).Block(
+			Id(mid).Op(":=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberL").Values(),
+			For(List(Id("k"), Id("v")).Op(":=").Range().Id("x").Dot(f.GoName)).Block(
 
-			// the value can also be nil, append null attribute and continue
-			If(Id("v").Op("==").Nil()).Block(
+				// the value can also be nil, append null attribute and continue
+				If(Id("v").Op("==").Nil()).Block(
 
+					Id(mid).Dot("Value").Op("=").
+						Append(Id(mid).Dot("Value"), Op("&").Qual(dynamodbtypes, "AttributeValueMemberNULL").Values(
+							Dict{Id("Value"): Lit(true)})),
+
+					Continue(), // next map item
+				),
+
+				// else, marshal the item
+				List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
+				If(Err().Op("!=").Nil()).Block(
+					Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
+				),
 				Id(mid).Dot("Value").Op("=").
-					Append(Id(mid).Dot("Value"), Op("&").Qual(dynamodbtypes, "AttributeValueMemberNULL").Values(
-						Dict{Id("Value"): Lit(true)})),
-
-				Continue(), // next map item
+					Append(Id(mid).Dot("Value"), Id("mv")),
 			),
-
-			// else, marshal the item
-			List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
-			If(Err().Op("!=").Nil()).Block(
-				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
-			),
-			Id(mid).Dot("Value").Op("=").
-				Append(Id(mid).Dot("Value"), Id("mv")),
+			Id("m").Index(Lit(tg.attrName(f))).Op("=").Id(mid),
 		),
-		Id("m").Index(Lit(fmt.Sprintf("%d", f.Desc.Number()))).Op("=").Id(mid),
 	}
 }
 

@@ -2,7 +2,7 @@ version: v1
 managed:
   enabled: true
   go_package_prefix:
-    default: github.com/crewlinker/protoc-gen-dynamodb/example
+    default: github.com/crewlinker/protoc-gen-dynamodb/proto
 plugins:
   - name: go
     out: proto
@@ -11,4 +11,4 @@ plugins:
   - name: dynamodb
     out: proto
     opt: paths=source_relative
-    path: ["go", "run", ".."]
+    path: ["go", "run", "."]
