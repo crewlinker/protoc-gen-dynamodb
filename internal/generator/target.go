@@ -87,11 +87,9 @@ func (tg *Target) fieldGoType(f *protogen.Field) *Statement {
 // fieldZeroValue determines the literal that is asserted against to determine if
 // the field should be added to the result attribute map
 func (tg *Target) fieldZeroValue(f *protogen.Field) *Statement {
-	switch {
-	case
-		f.Desc.HasPresence(),
-		f.Desc.IsList(),
-		f.Message != nil:
+	if f.Message != nil ||
+		f.Desc.IsList() ||
+		f.Desc.HasPresence() {
 		return Nil()
 	}
 
@@ -125,6 +123,12 @@ func (tg *Target) fieldZeroValue(f *protogen.Field) *Statement {
 // should be included in the marshalled attribute map.
 func (tg *Target) marshalPresenceCond(f *protogen.Field) []Code {
 	switch {
+	case f.Oneof != nil && !f.Desc.HasOptionalKeyword():
+		return []Code{
+			List(Id("onev"), Id("ok")).Op(":=").Id("x").Dot(f.Oneof.GoName).Assert(Op("*").
+				Id(fmt.Sprintf("%s_%s", f.Parent.GoIdent.GoName, f.GoName))),
+			Id("ok").Op("&&").Id("onev").Op("!=").Add(tg.fieldZeroValue(f)),
+		}
 	case f.Desc.IsList(), f.Desc.IsMap():
 		return []Code{Len(Id("x").Dot(f.GoName)).Op("!=").Lit(0)}
 	default:

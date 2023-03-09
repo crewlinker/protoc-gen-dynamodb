@@ -93,6 +93,9 @@ message Kitchen {
     google.protobuf.FieldMask some_mask = 22;
     // struct value
     google.protobuf.Value some_value = 23;
+
+    // optional string
+    optional string opt_string = 24;
 }
 
 // Empty message
@@ -170,4 +173,11 @@ message FieldPresence {
     Dirtyness enum = 9 [(ddb.v1.field).name="enum"];
     // enum field
     optional Dirtyness opt_enum = 10 [(ddb.v1.field).name="optEnum"];
+    // one of field
+    oneof oo {
+        // string option
+        string oneof_str = 11 [(ddb.v1.field).name="oneofStr"];
+        // msg one option
+        Engine oneof_msg = 12 [(ddb.v1.field).name="oneofMsg"];
+    }
 }

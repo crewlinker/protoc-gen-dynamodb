@@ -177,6 +177,42 @@ func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
 	}
 }
 
+// genOneOfFieldUnmarshal generates unmarshal code for one-of fields
+func (tg *Target) genOneOfFieldUnmarshal(f *protogen.Field) []Code {
+	marshal := []Code{
+		Var().Id("mo").Id(fmt.Sprintf("%s_%s", f.Parent.GoIdent.GoName, f.GoName)),
+	}
+
+	switch {
+	case f.Message != nil:
+		// oneof field is a message
+		marshal = append(marshal,
+			Id("mo").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
+			Err().Op("=").Id(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
+		)
+	default:
+		// else, assume the oneof field is a basic type
+		marshal = append(marshal,
+			Err().Op("=").
+				Qual(attributevalues, "Unmarshal").Call(
+				Id("m").Index(Lit(tg.attrName(f))),
+				Op("&").Id("mo").Dot(f.GoName),
+			))
+	}
+
+	// handle error
+	marshal = append(marshal,
+		If(Err().Op("!=").Nil()).Block(
+			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
+		),
+		Id("x").Dot(f.Oneof.GoName).Op("=").Op("&").Id("mo"),
+	)
+
+	return []Code{
+		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(marshal...),
+	}
+}
+
 // genMessageUnmarshal generates the unmarshaling logic
 func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 	var body []Code
@@ -184,6 +220,9 @@ func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 	// generate unmarschalling code per field kind
 	for _, field := range m.Fields {
 		switch {
+		case field.Oneof != nil && !field.Desc.HasOptionalKeyword():
+			// special case are explicit oneOf fields (not optional fields)
+			body = append(body, tg.genOneOfFieldUnmarshal(field)...)
 		case field.Desc.IsList(): // repeated fields
 			body = append(body, tg.genListFieldUnmarshal(field)...)
 		case field.Desc.IsMap(): // map

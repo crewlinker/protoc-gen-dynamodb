@@ -85,8 +85,8 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only marshal message field if the value is not nil at runtime
-		If(Id("x").Dot(f.GoName).Op("!=").Nil()).Block(
-			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Id(tg.idents.marshal).Call(Id("x").Dot(f.GoName)),
+		If(tg.marshalPresenceCond(f)...).Block(
+			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Id(tg.idents.marshal).Call(Id("x").Dot("Get"+f.GoName).Call()),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -103,7 +103,7 @@ func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
 				Id("m").Index(Lit(tg.attrName(f))),
 				Id("err"),
 			).Op("=").
-				Qual(attributevalues, "Marshal").Call(Id("x").Dot(f.GoName)),
+				Qual(attributevalues, "Marshal").Call(Id("x").Dot("Get"+f.GoName).Call()),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -167,7 +167,7 @@ func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 			// field map is technically a message but we marshal it differently
 			body = append(body, tg.genMapFieldMarshal(field)...)
 		case field.Message != nil:
-			// nested message, generate recursing marshal call
+			// nested message, not part of a one-of
 			body = append(body, tg.genMessageFieldMarshal(field)...)
 		default:
 			// else, assume attributevalue package can handle it

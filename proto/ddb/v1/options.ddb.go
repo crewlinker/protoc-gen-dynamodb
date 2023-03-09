@@ -140,7 +140,7 @@ func file_ddb_v1_options_proto_unmarshal_dynamo_item(m types.AttributeValue, x p
 func (x *FieldOptions) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Name != nil {
-		m["1"], err = attributevalue.Marshal(x.Name)
+		m["1"], err = attributevalue.Marshal(x.GetName())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Name': %w", err)
 		}

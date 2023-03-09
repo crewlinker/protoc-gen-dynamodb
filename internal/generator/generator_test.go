@@ -1,7 +1,6 @@
 package generator_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -28,16 +27,10 @@ import (
 )
 
 func TestGenerator(t *testing.T) {
+	format.MaxLength = 0 // we produce long diff messages
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "internal/generator")
 }
-
-var _ = BeforeSuite(func(ctx context.Context) {
-	// cmd := exec.CommandContext(ctx, "buf", "generate")
-	// cmd.Dir = filepath.Join("..", "..")
-	// cmd.Stderr = GinkgoWriter
-	// Expect(cmd.Run()).To(Succeed())
-})
 
 // ExpectJSONFieldPresense will assert that all fields are present in 'item' that are also present
 // when encoding 'm' using canonical json.
@@ -80,6 +73,20 @@ var _ = Describe("example generation", func() {
 		it, err := m.MarshalDynamoItem()
 		Expect(err).ToNot(HaveOccurred())
 		ExpectJSONFieldPresence(m, it)
+
+		var m2 messagev1.FieldPresence
+		Expect(m2.UnmarshalDynamoItem(it)).To(Succeed())
+
+		intxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(m)
+		Expect(err).ToNot(HaveOccurred())
+		outtxt, err := (prototext.MarshalOptions{Multiline: true}).Marshal(&m2)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(string(outtxt)).To(Equal(string(intxt)))
+		Expect(proto.Equal(&m2, m)).To(BeTrue())
+
+		// check message equality
+		Expect(it).To(Equal(e))
 	},
 		Entry("presence message zero",
 			&messagev1.FieldPresence{}, map[string]types.AttributeValue{}),
@@ -95,7 +102,45 @@ var _ = Describe("example generation", func() {
 				MsgMap:  map[string]*messagev1.Engine{},
 				Enum:    messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED,
 				OptEnum: messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED.Enum(),
-			}, map[string]types.AttributeValue{}),
+				Oo:      &messagev1.FieldPresence_OneofStr{},
+			}, map[string]types.AttributeValue{
+				"optMsg":   &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)},
+				"optEnum":  &types.AttributeValueMemberN{Value: "0"},
+				"oneofStr": &types.AttributeValueMemberS{},
+				"optStr":   &types.AttributeValueMemberS{},
+				"msg":      &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{}},
+			}),
+		Entry("just oneof mesage",
+			&messagev1.FieldPresence{
+				Oo: &messagev1.FieldPresence_OneofMsg{OneofMsg: &messagev1.Engine{Brand: "foo"}},
+			}, map[string]types.AttributeValue{
+				"oneofMsg": &types.AttributeValueMemberM{
+					Value: map[string]types.AttributeValue{
+						"1": &types.AttributeValueMemberS{
+							Value: "foo",
+						},
+					},
+				},
+			}),
+		Entry("nil values for map entries and lists", &messagev1.FieldPresence{
+			MsgMap:  map[string]*messagev1.Engine{"foo": nil},
+			MsgList: []*messagev1.Engine{nil},
+		}, map[string]types.AttributeValue{
+			"msgList": &types.AttributeValueMemberL{
+				Value: []types.AttributeValue{
+					&types.AttributeValueMemberNULL{
+						Value: true,
+					},
+				},
+			},
+			"msgMap": &types.AttributeValueMemberM{
+				Value: map[string]types.AttributeValue{
+					"foo": &types.AttributeValueMemberNULL{
+						Value: true,
+					},
+				},
+			},
+		}),
 	)
 
 	// Assert encoding of various kitchen messages
@@ -108,7 +153,6 @@ var _ = Describe("example generation", func() {
 		}
 
 		// check message equality
-		format.MaxLength = 0
 		Expect(m).To(Equal(exp))
 	},
 		Entry("zero value",
@@ -145,10 +189,6 @@ var _ = Describe("example generation", func() {
 					v, _ := structpb.NewValue(map[string]any{"foo": "bar", "dar": 1})
 					return v
 				}(),
-
-				// @TODO test with nil values for embedded messages
-				// @TODO test with nil values for map entries
-				// @TODO add test with nil value for map value, should marshal to NullValue
 			},
 			map[string]types.AttributeValue{
 				// string/bool/bytes
