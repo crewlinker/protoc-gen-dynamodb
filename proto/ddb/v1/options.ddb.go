@@ -74,6 +74,46 @@ func file_ddb_v1_options_proto_marshal_dynamo_item(x proto.Message) (a types.Att
 	}
 }
 
+// file_ddb_v1_options_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps into structpb.Value
+func file_ddb_v1_options_proto_unmarshal_dynamo_structpb(m types.AttributeValue) (sv *structpb.Value, err error) {
+	var vv any
+	switch m.(type) {
+	case *types.AttributeValueMemberL:
+		vx := []any{}
+		err = attributevalue.Unmarshal(m, &vx)
+		vv = vx
+	case *types.AttributeValueMemberM:
+		vx := map[string]any{}
+		err = attributevalue.Unmarshal(m, &vx)
+		vv = vx
+	case *types.AttributeValueMemberS:
+		var vx string
+		err = attributevalue.Unmarshal(m, &vx)
+		vv = vx
+	case *types.AttributeValueMemberBOOL:
+		var vx bool
+		err = attributevalue.Unmarshal(m, &vx)
+		vv = vx
+	case *types.AttributeValueMemberN:
+		var vx float64
+		err = attributevalue.Unmarshal(m, &vx)
+		vv = vx
+	case *types.AttributeValueMemberNULL:
+		sv, _ = structpb.NewValue(nil)
+		return sv, nil
+	default:
+		return nil, fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+	}
+	sv, err = structpb.NewValue(vv)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init structpb value: %w", err)
+	}
+	return sv, nil
+}
+
 // file_ddb_v1_options_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps
 func file_ddb_v1_options_proto_unmarshal_dynamo_item(m types.AttributeValue, x proto.Message) (err error) {
 	if mx, ok := x.(interface {
@@ -112,45 +152,6 @@ func file_ddb_v1_options_proto_unmarshal_dynamo_item(m types.AttributeValue, x p
 			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
 		}
 		xt.Paths = ss.Value
-		return nil
-	case *structpb.Value:
-		var vv any
-		switch m.(type) {
-		case *types.AttributeValueMemberL:
-			vx := []any{}
-			err = attributevalue.Unmarshal(m, &vx)
-			vv = vx
-		case *types.AttributeValueMemberM:
-			vx := map[string]any{}
-			err = attributevalue.Unmarshal(m, &vx)
-			vv = vx
-		case *types.AttributeValueMemberS:
-			var vx string
-			err = attributevalue.Unmarshal(m, &vx)
-			vv = vx
-		case *types.AttributeValueMemberBOOL:
-			var vx bool
-			err = attributevalue.Unmarshal(m, &vx)
-			vv = vx
-		case *types.AttributeValueMemberN:
-			var vx float64
-			err = attributevalue.Unmarshal(m, &vx)
-			vv = vx
-		case *types.AttributeValueMemberNULL:
-			sv, _ := structpb.NewValue(nil)
-			*xt = *sv
-			return nil
-		default:
-			return fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
-		}
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-		}
-		sv, err := structpb.NewValue(vv)
-		if err != nil {
-			return fmt.Errorf("failed to init structpb value: %w", err)
-		}
-		*xt = *sv
 		return nil
 	case *wrapperspb.StringValue:
 		return attributevalue.Unmarshal(m, &xt.Value)

@@ -31,9 +31,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Allow nested messages to be stored as protojson/protobinary instead of nested maps
 - Similar to: https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema
 
-## Minimal Vialble Backlog
-
-- [ ] COULD fix staticcheck checks on generated code such as S1002
+## Minimal Viable Backlog
 
 ## Feature Backlog
 
@@ -48,6 +46,9 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## Hardening Backlog
 
+- [ ] SHOULD run test with parralel and -race enabled
+- [ ] COULD support encoding compex types (messages, maps, strucpb values as json AND/OR binary protobuf)
+- [ ] SHOULD fix go vet checks failure
 - [ ] SHOULD Add test that errors when unsupported map type is used
 - [ ] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
 - [ ] SHOULD Fuzz the "FieldPresence" message as well, but this might require revamping the fuzzing setup because
