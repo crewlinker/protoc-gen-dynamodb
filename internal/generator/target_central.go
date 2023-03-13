@@ -71,6 +71,26 @@ func (tg *Target) genCentralMarshal(f *File) error {
 					Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("AsInterface").Call())),
 				),
 
+				// WrappersPb values just marshal the wrapped value
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "StringValue")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "BoolValue")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "BytesValue")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "DoubleValue")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "FloatValue")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "Int32Value")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "Int64Value")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "UInt32Value")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "UInt64Value")).
+					Block(Return(Qual(attributevalues, "Marshal").Call(Id("xt").Dot("Value")))),
+
 				// or, any other type, return unsupported message
 				Default().Block(
 					Return(Nil(), Qual("fmt", "Errorf").Call(Lit("marshal of message type unsupported: %+T"), Id("xt"))),
@@ -84,6 +104,8 @@ func (tg *Target) genCentralMarshal(f *File) error {
 // asserts if the it implements the DynamoItemUnmarshaller interface. If not it also supports well-known types
 // that we allow to be unmarshalled.
 func (tg *Target) genCentralUnmarshal(f *File) error {
+
+	// generate the actual method
 	f.Commentf("%s unmarshals DynamoDB attribute value maps", tg.idents.marshal)
 	f.Func().Id(tg.idents.unmarshal).
 		Params(Id("m").Qual(dynamodbtypes, "AttributeValue"), Id("x").Qual("google.golang.org/protobuf/proto", "Message")).
@@ -103,6 +125,7 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 
 			// Else, take care of some special cases for well-known/common types
 			Switch(Id("xt").Op(":=").Id("x").Assert(Type())).Block(
+
 				// durationpb.Duration, timestamppb.Timestamp are unmarshalled using protojson
 				Case(
 					Op("*").Qual("google.golang.org/protobuf/types/known/durationpb", "Duration"),
@@ -156,7 +179,7 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 					Return(Nil()),
 				),
 
-				// structpb.Value types are not self describing. So we have to unmarshal based on they
+				// structpb.Value types are not self describing. So we have to unmarshal based on the
 				// dynamo representation.
 				Case(
 					Op("*").Qual("google.golang.org/protobuf/types/known/structpb", "Value"),
@@ -211,7 +234,27 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 					Return(Nil()),
 				),
 
-				// or, any other type, return unsupported message
+				// unmarshal all wrapper types by using the value member
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "StringValue")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "BoolValue")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "BytesValue")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "DoubleValue")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "FloatValue")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "Int32Value")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "Int64Value")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "UInt32Value")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+				Case(Op("*").Qual("google.golang.org/protobuf/types/known/wrapperspb", "UInt64Value")).
+					Block(Return(Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("xt").Dot("Value")))),
+
+				// explicitely don't support anything else
 				Default().Block(
 					Return(Qual("fmt", "Errorf").Call(Lit("unmarshal of message type unsupported: %+T"), Id("xt"))),
 				),

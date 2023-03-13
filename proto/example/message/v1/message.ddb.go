@@ -11,6 +11,7 @@ import (
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
 )
 
@@ -48,6 +49,24 @@ func file_example_message_v1_message_proto_marshal_dynamo_item(x proto.Message) 
 		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
 	case *structpb.Value:
 		return attributevalue.Marshal(xt.AsInterface())
+	case *wrapperspb.StringValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.BoolValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.BytesValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.DoubleValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.FloatValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.Int32Value:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.Int64Value:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.UInt32Value:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.UInt64Value:
+		return attributevalue.Marshal(xt.Value)
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -131,6 +150,24 @@ func file_example_message_v1_message_proto_unmarshal_dynamo_item(m types.Attribu
 		}
 		*xt = *sv
 		return nil
+	case *wrapperspb.StringValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.BoolValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.BytesValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.DoubleValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.FloatValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.Int32Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.Int64Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.UInt32Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.UInt64Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
 	}
@@ -399,6 +436,20 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 			return nil, fmt.Errorf("failed to marshal field 'OptString': %w", err)
 		}
 	}
+	if x.ValStr != nil {
+		m25, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetValStr())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'ValStr': %w", err)
+		}
+		m["25"] = m25
+	}
+	if x.ValBytes != nil {
+		m26, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetValBytes())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'ValBytes': %w", err)
+		}
+		m["26"] = m26
+	}
 	return m, nil
 }
 
@@ -553,6 +604,20 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	err = attributevalue.Unmarshal(m["24"], &x.OptString)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal field 'OptString': %w", err)
+	}
+	if m["25"] != nil {
+		x.ValStr = new(wrapperspb.StringValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["25"], x.ValStr)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'ValStr': %w", err)
+		}
+	}
+	if m["26"] != nil {
+		x.ValBytes = new(wrapperspb.BytesValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["26"], x.ValBytes)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'ValBytes': %w", err)
+		}
 	}
 	return nil
 }
@@ -932,6 +997,69 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 		}
 		m["oneofMsg"] = m12
 	}
+	if x.StrVal != nil {
+		m13, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetStrVal())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'StrVal': %w", err)
+		}
+		m["strVal"] = m13
+	}
+	if x.BoolVal != nil {
+		m14, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetBoolVal())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'BoolVal': %w", err)
+		}
+		m["boolVal"] = m14
+	}
+	if x.BytesVal != nil {
+		m15, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetBytesVal())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'BytesVal': %w", err)
+		}
+		m["bytesVal"] = m15
+	}
+	if x.DoubleVal != nil {
+		m16, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetDoubleVal())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'DoubleVal': %w", err)
+		}
+		m["doubleVal"] = m16
+	}
+	if x.FloatVal != nil {
+		m17, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetFloatVal())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'FloatVal': %w", err)
+		}
+		m["floatVal"] = m17
+	}
+	if x.Int32Val != nil {
+		m18, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetInt32Val())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Int32Val': %w", err)
+		}
+		m["int32Val"] = m18
+	}
+	if x.Int64Val != nil {
+		m19, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetInt64Val())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Int64Val': %w", err)
+		}
+		m["int64Val"] = m19
+	}
+	if x.Uint32Val != nil {
+		m20, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetUint32Val())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Uint32Val': %w", err)
+		}
+		m["uint32Val"] = m20
+	}
+	if x.Uint64Val != nil {
+		m21, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetUint64Val())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Uint64Val': %w", err)
+		}
+		m["uint64Val"] = m21
+	}
 	return m, nil
 }
 
@@ -1029,6 +1157,69 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 			return fmt.Errorf("failed to unmarshal field 'OneofMsg': %w", err)
 		}
 		x.Oo = &mo
+	}
+	if m["strVal"] != nil {
+		x.StrVal = new(wrapperspb.StringValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["strVal"], x.StrVal)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'StrVal': %w", err)
+		}
+	}
+	if m["boolVal"] != nil {
+		x.BoolVal = new(wrapperspb.BoolValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["boolVal"], x.BoolVal)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'BoolVal': %w", err)
+		}
+	}
+	if m["bytesVal"] != nil {
+		x.BytesVal = new(wrapperspb.BytesValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["bytesVal"], x.BytesVal)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'BytesVal': %w", err)
+		}
+	}
+	if m["doubleVal"] != nil {
+		x.DoubleVal = new(wrapperspb.DoubleValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["doubleVal"], x.DoubleVal)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'DoubleVal': %w", err)
+		}
+	}
+	if m["floatVal"] != nil {
+		x.FloatVal = new(wrapperspb.FloatValue)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["floatVal"], x.FloatVal)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'FloatVal': %w", err)
+		}
+	}
+	if m["int32Val"] != nil {
+		x.Int32Val = new(wrapperspb.Int32Value)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["int32Val"], x.Int32Val)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'Int32Val': %w", err)
+		}
+	}
+	if m["int64Val"] != nil {
+		x.Int64Val = new(wrapperspb.Int64Value)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["int64Val"], x.Int64Val)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'Int64Val': %w", err)
+		}
+	}
+	if m["uint32Val"] != nil {
+		x.Uint32Val = new(wrapperspb.UInt32Value)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["uint32Val"], x.Uint32Val)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'Uint32Val': %w", err)
+		}
+	}
+	if m["uint64Val"] != nil {
+		x.Uint64Val = new(wrapperspb.UInt64Value)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["uint64Val"], x.Uint64Val)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'Uint64Val': %w", err)
+		}
 	}
 	return nil
 }

@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
 import "ddb/v1/options.proto";
 
 // DirtyNess describes how dirty a sink is
@@ -96,6 +97,10 @@ message Kitchen {
 
     // optional string
     optional string opt_string = 24;
+    // string value (other kind of optional)
+    google.protobuf.StringValue val_str = 25;
+    // string value (other kind of optional)
+    google.protobuf.BytesValue val_bytes = 26;
 }
 
 // Empty message
@@ -180,4 +185,23 @@ message FieldPresence {
         // msg one option
         Engine oneof_msg = 12 [(ddb.v1.field).name="oneofMsg"];
     }
+
+    // string wrapper
+    google.protobuf.StringValue str_val = 13 [(ddb.v1.field).name="strVal"];
+    // bool wrapper
+    google.protobuf.BoolValue bool_val = 14 [(ddb.v1.field).name="boolVal"];
+    // bytes wrapper
+    google.protobuf.BytesValue bytes_val = 15 [(ddb.v1.field).name="bytesVal"];
+    // double wrapper
+    google.protobuf.DoubleValue double_val = 16 [(ddb.v1.field).name="doubleVal"];
+    // float wrapper
+    google.protobuf.FloatValue float_val = 17 [(ddb.v1.field).name="floatVal"];
+    // // in32 wrapper
+    google.protobuf.Int32Value int32_val = 18 [(ddb.v1.field).name="int32Val"];
+    // // int64 wrapper
+    google.protobuf.Int64Value int64_val = 19 [(ddb.v1.field).name="int64Val"];
+    // // uint32 wrapper
+    google.protobuf.UInt32Value uint32_val = 20 [(ddb.v1.field).name="uint32Val"];
+    // // uint64 wrapper
+    google.protobuf.UInt64Value uint64_val = 21 [(ddb.v1.field).name="uint64Val"];
 }

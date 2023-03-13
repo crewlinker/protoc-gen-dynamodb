@@ -11,6 +11,7 @@ import (
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
 )
 
@@ -48,6 +49,24 @@ func file_example_message_v1_other_proto_marshal_dynamo_item(x proto.Message) (a
 		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
 	case *structpb.Value:
 		return attributevalue.Marshal(xt.AsInterface())
+	case *wrapperspb.StringValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.BoolValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.BytesValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.DoubleValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.FloatValue:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.Int32Value:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.Int64Value:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.UInt32Value:
+		return attributevalue.Marshal(xt.Value)
+	case *wrapperspb.UInt64Value:
+		return attributevalue.Marshal(xt.Value)
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -131,6 +150,24 @@ func file_example_message_v1_other_proto_unmarshal_dynamo_item(m types.Attribute
 		}
 		*xt = *sv
 		return nil
+	case *wrapperspb.StringValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.BoolValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.BytesValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.DoubleValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.FloatValue:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.Int32Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.Int64Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.UInt32Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
+	case *wrapperspb.UInt64Value:
+		return attributevalue.Unmarshal(m, &xt.Value)
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
 	}

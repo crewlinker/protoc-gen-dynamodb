@@ -33,14 +33,12 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## Minimal Vialble Backlog
 
-- [ ] SHOULD test support of wrapper types (what about optional field with wrapper types?)
 - [ ] MUST add file header that states that the file is generated
 - [ ] COULD fix staticcheck checks on generated code such as S1002
-- [ ] SHOULD add a test that passes in empty (or half empty) attribute maps into unmarshal and unmarshalled struct
-      to match what would be marshalled from from json.
 
 ## Feature Backlog
 
+- [ ] COULD add option to "skip unsupported" instead of error (but why not just "ignore" the field?)
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
 - [ ] SHOULD allow customizing the encoder/decoder options
 - [ ] SHOULD add support of StringSets, NumberSets, ByteSets etc
@@ -53,7 +51,8 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 - [ ] SHOULD Add test that errors when unsupported map type is used
 - [ ] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
-- [ ] SHOULD Fuzz the "Presence" message as well, but this might require revamping the fuzzing setup
+- [ ] SHOULD Fuzz the "FieldPresence" message as well, but this might require revamping the fuzzing setup because
+      of interface types in the generated types
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used
       in fields without problem
 - [ ] SHOULD turn panics into errors (or add catch mechanism)
@@ -61,6 +60,9 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## Done Backlog
 
+- [x] SHOULD test support of wrapper types (what about optional field with wrapper types?)
+- [x] SHOULD add a test that passes in empty (or half empty) attribute maps into unmarshal and unmarshalled struct
+      to match what would be marshalled from from json.
 - [x] SHOULD match output field presence to that of json encoding
 - [x] SHOULD test with OneOf field
 - [x] SHOULD Make sure generated error handling prints the field name and a more descriptive error
