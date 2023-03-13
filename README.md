@@ -33,7 +33,6 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## Minimal Vialble Backlog
 
-- [ ] MUST add file header that states that the file is generated
 - [ ] COULD fix staticcheck checks on generated code such as S1002
 
 ## Feature Backlog
@@ -60,6 +59,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## Done Backlog
 
+- [x] MUST add file header that states that the file is generated
 - [x] SHOULD test support of wrapper types (what about optional field with wrapper types?)
 - [x] SHOULD add a test that passes in empty (or half empty) attribute maps into unmarshal and unmarshalled struct
       to match what would be marshalled from from json.
