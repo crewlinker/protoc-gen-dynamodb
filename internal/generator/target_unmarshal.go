@@ -112,34 +112,14 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 
 // generate nested message marshalling
 func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
-
-	// by default, defer to central unmarshalling code
-	marshalling := []Code{
-		Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-		Err().Op("=").Id(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
-	}
-
-	// we need to make a special exception for structpb value message because memory that needs to be
-	// accessed for unmarshalling cannot be access from outside the structpb package so passing it
-	// to the central unmarshal as proto.message doens't allow unmarshal code to work. Instead the
-	// x.<FIELD> needs to be set to a new struct.Value instance.
-	if f.Message.GoIdent.GoImportPath == "google.golang.org/protobuf/types/known/structpb" &&
-		f.Message.GoIdent.GoName == "Value" {
-		marshalling = []Code{
-			List(Id("x").Dot(f.GoName), Err()).Op("=").Id(tg.idents.structunmarshal).Call(Id("m").Index(Lit(tg.attrName(f)))),
-		}
-	}
-
-	// error handling
-	marshalling = append(marshalling,
-		If(Err().Op("!=").Nil()).Block(
-			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
-		))
-
 	return []Code{
 		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
-			marshalling...,
+			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
+			Err().Op("=").Id(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
+			),
 		),
 	}
 }

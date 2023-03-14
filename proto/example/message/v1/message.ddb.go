@@ -74,46 +74,6 @@ func file_example_message_v1_message_proto_marshal_dynamo_item(x proto.Message) 
 	}
 }
 
-// file_example_message_v1_message_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps into structpb.Value
-func file_example_message_v1_message_proto_unmarshal_dynamo_structpb(m types.AttributeValue) (sv *structpb.Value, err error) {
-	var vv any
-	switch m.(type) {
-	case *types.AttributeValueMemberL:
-		vx := []any{}
-		err = attributevalue.Unmarshal(m, &vx)
-		vv = vx
-	case *types.AttributeValueMemberM:
-		vx := map[string]any{}
-		err = attributevalue.Unmarshal(m, &vx)
-		vv = vx
-	case *types.AttributeValueMemberS:
-		var vx string
-		err = attributevalue.Unmarshal(m, &vx)
-		vv = vx
-	case *types.AttributeValueMemberBOOL:
-		var vx bool
-		err = attributevalue.Unmarshal(m, &vx)
-		vv = vx
-	case *types.AttributeValueMemberN:
-		var vx float64
-		err = attributevalue.Unmarshal(m, &vx)
-		vv = vx
-	case *types.AttributeValueMemberNULL:
-		sv, _ = structpb.NewValue(nil)
-		return sv, nil
-	default:
-		return nil, fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-	}
-	sv, err = structpb.NewValue(vv)
-	if err != nil {
-		return nil, fmt.Errorf("failed to init structpb value: %w", err)
-	}
-	return sv, nil
-}
-
 // file_example_message_v1_message_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps
 func file_example_message_v1_message_proto_unmarshal_dynamo_item(m types.AttributeValue, x proto.Message) (err error) {
 	if mx, ok := x.(interface {
@@ -153,6 +113,62 @@ func file_example_message_v1_message_proto_unmarshal_dynamo_item(m types.Attribu
 		}
 		xt.Paths = ss.Value
 		return nil
+	case *structpb.Value:
+		switch m.(type) {
+		case *types.AttributeValueMemberL:
+			vx := []any{}
+			err = attributevalue.Unmarshal(m, &vx)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+			}
+			lv, err := structpb.NewList(vx)
+			if err != nil {
+				return fmt.Errorf("failed to init structpb.Value: %w", err)
+			}
+			xt.Kind = &structpb.Value_ListValue{ListValue: lv}
+			return nil
+		case *types.AttributeValueMemberM:
+			vx := map[string]any{}
+			err = attributevalue.Unmarshal(m, &vx)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+			}
+			lv, err := structpb.NewStruct(vx)
+			if err != nil {
+				return fmt.Errorf("failed to init structpb.Value: %w", err)
+			}
+			xt.Kind = &structpb.Value_StructValue{StructValue: lv}
+			return nil
+		case *types.AttributeValueMemberS:
+			var vx string
+			err = attributevalue.Unmarshal(m, &vx)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+			}
+			xt.Kind = &structpb.Value_StringValue{StringValue: vx}
+			return nil
+		case *types.AttributeValueMemberBOOL:
+			var vx bool
+			err = attributevalue.Unmarshal(m, &vx)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+			}
+			xt.Kind = &structpb.Value_BoolValue{BoolValue: vx}
+			return nil
+		case *types.AttributeValueMemberN:
+			var vx float64
+			err = attributevalue.Unmarshal(m, &vx)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
+			}
+			xt.Kind = &structpb.Value_NumberValue{NumberValue: vx}
+			return nil
+		case *types.AttributeValueMemberNULL:
+			xt.Kind = &structpb.Value_NullValue{NullValue: structpb.NullValue_NULL_VALUE}
+			return nil
+		default:
+			return fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
+		}
 	case *wrapperspb.StringValue:
 		return attributevalue.Unmarshal(m, &xt.Value)
 	case *wrapperspb.BoolValue:
@@ -598,7 +614,8 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		}
 	}
 	if m["23"] != nil {
-		x.SomeValue, err = file_example_message_v1_message_proto_unmarshal_dynamo_structpb(m["23"])
+		x.SomeValue = new(structpb.Value)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["23"], x.SomeValue)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeValue': %w", err)
 		}
@@ -890,7 +907,8 @@ func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, er
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	if m["1"] != nil {
-		x.SomeValue, err = file_example_message_v1_message_proto_unmarshal_dynamo_structpb(m["1"])
+		x.SomeValue = new(structpb.Value)
+		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["1"], x.SomeValue)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeValue': %w", err)
 		}

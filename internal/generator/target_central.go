@@ -104,71 +104,6 @@ func (tg *Target) genCentralMarshal(f *File) error {
 // asserts if the it implements the DynamoItemUnmarshaller interface. If not it also supports well-known types
 // that we allow to be unmarshalled.
 func (tg *Target) genCentralUnmarshal(f *File) error {
-
-	// generate the structpb.Value unmarshal method. It needs to be separate because it returns the
-	// initalized structpb.Value itself
-	f.Commentf("%s unmarshals DynamoDB attribute value maps into structpb.Value", tg.idents.marshal)
-	f.Func().Id(tg.idents.structunmarshal).
-		Params(
-			Id("m").Qual(dynamodbtypes, "AttributeValue"),
-		).
-		Params(
-			Id("sv").Op("*").Qual("google.golang.org/protobuf/types/known/structpb", "Value"),
-			Id("err").Error(),
-		).
-		Block(
-
-			// structpb.Value types are not self describing. So we have to unmarshal based on the
-			// dynamo representation.
-
-			Var().Id("vv").Any(),
-			Switch(Id("m").Assert(Type())).Block(
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberL")).Block(
-					Id("vx").Op(":=").Index().Any().Values(),
-					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
-					Id("vv").Op("=").Id("vx"),
-				),
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")).Block(
-					Id("vx").Op(":=").Map(String()).Any().Values(),
-					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
-					Id("vv").Op("=").Id("vx"),
-				),
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberS")).Block(
-					Var().Id("vx").String(),
-					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
-					Id("vv").Op("=").Id("vx"),
-				),
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberBOOL")).Block(
-					Var().Id("vx").Bool(),
-					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
-					Id("vv").Op("=").Id("vx"),
-				),
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberN")).Block(
-					Var().Id("vx").Float64(),
-					Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
-					Id("vv").Op("=").Id("vx"),
-				),
-				// in case of a nill value, we don't have to unmarshal and just assign it
-				Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")).Block(
-					List(Id("sv"), Id("_")).Op("=").Qual("google.golang.org/protobuf/types/known/structpb", "NewValue").Call(Nil()),
-					Return(Id("sv"), Nil()),
-				),
-				Default().Block(
-					Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to unmarshal struct value: unsupported attribute value"))),
-				),
-			),
-			If(Err().Op("!=").Nil()).Block(
-				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to unmarshal structpb Value field: %w"), Err())),
-			),
-
-			List(Id("sv"), Err()).Op("=").Qual("google.golang.org/protobuf/types/known/structpb", "NewValue").Call(Id("vv")),
-			If(Err().Op("!=").Nil()).Block(
-				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to init structpb value: %w"), Err())),
-			),
-			Return(Id("sv"), Nil()),
-		)
-
-	// generate the non-struct central unmarshal method
 	f.Commentf("%s unmarshals DynamoDB attribute value maps", tg.idents.marshal)
 	f.Func().Id(tg.idents.unmarshal).
 		Params(Id("m").Qual(dynamodbtypes, "AttributeValue"), Id("x").Qual("google.golang.org/protobuf/proto", "Message")).
@@ -240,6 +175,89 @@ func (tg *Target) genCentralUnmarshal(f *File) error {
 
 					Id("xt").Dot("Paths").Op("=").Id("ss").Dot("Value"),
 					Return(Nil()),
+				),
+
+				// structpb.Value types are not self describing. So we have to unmarshal based on the
+				// dynamo representation. This is a bit painfull and luckily dynamo types map nicely on
+				// json-oriented nature of structpb.Value
+				Case(
+					Op("*").Qual("google.golang.org/protobuf/types/known/structpb", "Value"),
+				).Block(
+					Switch(Id("m").Assert(Type())).Block(
+						Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberL")).Block(
+							Id("vx").Op(":=").Index().Any().Values(),
+							Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal structpb Value field: %w"), Err())),
+							),
+							List(Id("lv"), Err()).Op(":=").Qual("google.golang.org/protobuf/types/known/structpb", "NewList").Call(Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to init structpb.Value: %w"), Err())),
+							),
+							Id("xt").Dot("Kind").Op("=").Op("&").
+								Qual("google.golang.org/protobuf/types/known/structpb", "Value_ListValue").
+								Values(Dict{Id("ListValue"): Id("lv")}),
+							Return(Nil()),
+						),
+						Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")).Block(
+							Id("vx").Op(":=").Map(String()).Any().Values(),
+							Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal structpb Value field: %w"), Err())),
+							),
+							List(Id("lv"), Err()).Op(":=").Qual("google.golang.org/protobuf/types/known/structpb", "NewStruct").Call(Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to init structpb.Value: %w"), Err())),
+							),
+							Id("xt").Dot("Kind").Op("=").Op("&").
+								Qual("google.golang.org/protobuf/types/known/structpb", "Value_StructValue").
+								Values(Dict{Id("StructValue"): Id("lv")}),
+							Return(Nil()),
+						),
+						Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberS")).Block(
+							Var().Id("vx").String(),
+							Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal structpb Value field: %w"), Err())),
+							),
+							Id("xt").Dot("Kind").Op("=").Op("&").
+								Qual("google.golang.org/protobuf/types/known/structpb", "Value_StringValue").
+								Values(Dict{Id("StringValue"): Id("vx")}),
+							Return(Nil()),
+						),
+						Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberBOOL")).Block(
+							Var().Id("vx").Bool(),
+							Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal structpb Value field: %w"), Err())),
+							),
+							Id("xt").Dot("Kind").Op("=").Op("&").
+								Qual("google.golang.org/protobuf/types/known/structpb", "Value_BoolValue").
+								Values(Dict{Id("BoolValue"): Id("vx")}),
+							Return(Nil()),
+						),
+						Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberN")).Block(
+							Var().Id("vx").Float64(),
+							Err().Op("=").Qual(attributevalues, "Unmarshal").Call(Id("m"), Op("&").Id("vx")),
+							If(Err().Op("!=").Nil()).Block(
+								Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal structpb Value field: %w"), Err())),
+							),
+							Id("xt").Dot("Kind").Op("=").Op("&").
+								Qual("google.golang.org/protobuf/types/known/structpb", "Value_NumberValue").
+								Values(Dict{Id("NumberValue"): Id("vx")}),
+							Return(Nil()),
+						),
+						// in case of a nill value, we don't have to unmarshal and just assign it
+						Case(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")).Block(
+							Id("xt").Dot("Kind").Op("=").Op("&").
+								Qual("google.golang.org/protobuf/types/known/structpb", "Value_NullValue").
+								Values(Dict{Id("NullValue"): Qual("google.golang.org/protobuf/types/known/structpb", "NullValue_NULL_VALUE")}),
+							Return(Nil()),
+						),
+						Default().Block(
+							Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal struct value: unsupported attribute value"))),
+						),
+					),
 				),
 
 				// unmarshal all wrapper types by using the value member
