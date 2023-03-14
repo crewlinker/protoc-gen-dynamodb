@@ -16,6 +16,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
   - Including maps with all basic types, including bool as keys
 - No external dependencies of the generated code except the aws SDK
 - Allow messages external to the package to be usable as field messages without problem
+- Uses field position numbers by default instead of names (since they are supposed to be stable)
 - Support well-knowns, but are generated to maps with strings for their fields, instead of field numbers
   - Document "Any" format in particular: "Value" stored always stored as binary
   - Document "FieldMask" format: "StringSet"
@@ -24,33 +25,31 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 ## Ideas
 
 - Define the sk/pk on the message, and set the pk/sk member of the resulting item, error when sk/pk is not set?
-- Consider using the field position numbers instead of names (since they are supposed to be stable)
 - Generate table definitions for use in AWS Cloudformation/CDK
 - E2E testing with LocalDynamodb docker container
 - Fuzz testing with complicated protobuf message
 - Generate methods for just generating "Key" attribute maps
 - Generate methods for creating put/get items for transactions
 - Generate methods for handling dynamodb stream Lambda events, use: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#FromDynamoDBStreamsMap
-- Allow nested messages to be stored as protojson/protobinary instead of nested maps
+- Allow nested messages (oneof) to be stored as protojson/protobinary instead of nested maps
 - Similar to: https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema
 
 ## Minimal Viable Backlog
 
 ## Feature Backlog
 
+- [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
+- [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
+- [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
 - [ ] COULD add option to "skip unsupported" instead of error (but why not just "ignore" the field?)
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
-- [ ] SHOULD allow customizing the encoder/decoder options
-- [ ] SHOULD add support of StringSets, NumberSets, ByteSets etc
-- [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling.
+- [ ] COULD allow customizing the encoder/decoder options
   - make sure that logic applies to both marshalling, and unmarshalling (new test case)
 - [ ] COULD improve usability of FieldMask encoding, instead of slice of strings of the field names in
       proto definition, could/should be the dynamodb attribute names. But this probably means implement another version of the fieldmaskpb.New() function. But https://pkg.go.dev/google.golang.org/protobuf/types/known/fieldmaskpb#Intersect states that "field.number" paths are also valid
 
 ## Hardening Backlog
 
-- [ ] SHOULD run test with parralel and -race enabled
-- [ ] COULD support encoding compex types (messages, maps, strucpb values as json AND/OR binary protobuf)
 - [ ] SHOULD fix go vet checks failure
 - [ ] SHOULD Add test that errors when unsupported map type is used
 - [ ] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
@@ -63,6 +62,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## Done Backlog
 
+- [x] SHOULD run test with parralel and -race enabled
 - [x] MUST add file header that states that the file is generated
 - [x] SHOULD test support of wrapper types (what about optional field with wrapper types?)
 - [x] SHOULD add a test that passes in empty (or half empty) attribute maps into unmarshal and unmarshalled struct
