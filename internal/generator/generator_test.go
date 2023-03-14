@@ -1,6 +1,7 @@
 package generator_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -411,26 +412,38 @@ func PbTimestampFuzz(s *timestamppb.Timestamp, c fuzz.Continue) {
 // PbValueFuzz fuzzes code for structpb value. It doesn't recurse because go fuzz can't handle
 // maps or lists with interface values.
 func PbValueFuzz(s *structpb.Value, c fuzz.Continue) {
-	var sf *structpb.Value
 	switch c.Rand.Int63n(8) {
 	case 0:
-		sf = structpb.NewBoolValue(c.RandBool())
+		s.Kind = &structpb.Value_BoolValue{BoolValue: c.RandBool()}
+		return
 	case 1:
-		sf = structpb.NewStringValue(c.RandString())
+		s.Kind = &structpb.Value_StringValue{StringValue: c.RandString()}
+		return
 	case 2:
-		sf = structpb.NewNullValue()
+		s.Kind = &structpb.Value_NullValue{NullValue: structpb.NullValue_NULL_VALUE}
+		return
 	case 3:
-		sf = structpb.NewNumberValue(c.ExpFloat64())
+		s.Kind = &structpb.Value_NumberValue{NumberValue: c.ExpFloat64()}
+		return
 	case 4:
-		sf, _ = structpb.NewValue([]any{c.RandString()})
+		lv := &structpb.Value_ListValue{}
+		lv.ListValue, _ = structpb.NewList([]any{c.RandString()})
+		s.Kind = lv
+		return
 	case 5:
-		sf, _ = structpb.NewValue(map[string]any{c.RandString(): c.RandString()})
+		lv := &structpb.Value_StructValue{}
+		lv.StructValue, _ = structpb.NewStruct(map[string]any{c.RandString(): c.RandString()})
+		s.Kind = lv
+		return
 	case 6:
-		sf, _ = structpb.NewValue(c.RandUint64())
+		s.Kind = &structpb.Value_NumberValue{NumberValue: float64(c.RandUint64())}
+		return
 	case 7:
 		p := make([]byte, 10)
 		c.Read(p)
-		sf, _ = structpb.NewValue(p)
+		s.Kind = &structpb.Value_StringValue{StringValue: base64.StdEncoding.EncodeToString(p)}
+		return
+	default:
+		panic("unsupported")
 	}
-	*s = *sf
 }
