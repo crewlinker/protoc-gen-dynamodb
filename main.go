@@ -36,7 +36,7 @@ func main() {
 				continue // without services there is nothing to build a graphql schema for
 			}
 
-			logs.Info("found file with services", zap.Int("num_services", len(pf.Services)))
+			logs.Info("found file with messages", zap.Int("num_messages", len(pf.Messages)))
 			ddbf := gp.NewGeneratedFile(fmt.Sprintf("%s.ddb.go", pf.GeneratedFilenamePrefix), pf.GoImportPath)
 
 			if err := gen.CreateTarget(pf).Generate(ddbf); err != nil {
