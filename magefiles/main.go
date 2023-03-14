@@ -36,7 +36,9 @@ func Checks() error {
 
 // Test test the code base
 func Test() error {
-	return sh.Run("go", "test", "-v", "-failfast", "-count=1", "./...")
+	return sh.Run("go", "run", "-mod=readonly", "github.com/onsi/ginkgo/v2/ginkgo",
+		"-p", "-randomize-all", "--fail-on-pending", "--race", "--trace",
+		"--junit-report=test-report.xml", "./...")
 }
 
 // init performs some sanity checks before running anything

@@ -1,5 +1,8 @@
 # protoc-gen-dynamodb
 
+[![Checks](https://github.com/crewlinker/protoc-gen-dynamodb/actions/workflows/checks.yaml/badge.svg)](https://github.com/crewlinker/protoc-gen-dynamodb/actions/workflows/checks.yaml)
+[![Test](https://github.com/crewlinker/protoc-gen-dynamodb/actions/workflows/test.yaml/badge.svg)](https://github.com/crewlinker/protoc-gen-dynamodb/actions/workflows/test.yaml)
+
 Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 ## features
