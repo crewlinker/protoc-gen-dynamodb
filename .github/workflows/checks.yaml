@@ -14,11 +14,19 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ">=1.20.0"
+      - name: Set up Buf
+        uses: bufbuild/buf-setup-action@v1
       - name: Check out code
         uses: actions/checkout@v3
       - name: Install tooling
         run: |
           go install -mod=readonly github.com/magefile/mage
+      - name: Lint Protobufs
+        uses: bufbuild/buf-lint-action@v1
+      - name: Check Protobufs breaking changes
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          against: "https://github.com/${GITHUB_REPOSITORY}.git#branch=main"
       - name: Run all checks
         run: |
           mage -v checks
