@@ -2,7 +2,7 @@ syntax = "proto2";
 package ddb.v1;
 
 import "google/protobuf/descriptor.proto";
-option go_package = "github.com/crewlinker/protoc-gen-dynamodb/ddb/v1";
+option go_package = "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1;ddbv1";
 
 // FieldOptions presents options to configure fields to interact with protobuf powered rpc
 message FieldOptions {
