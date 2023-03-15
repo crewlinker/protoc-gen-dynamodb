@@ -25,7 +25,8 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 ## Ideas
 
 - Define the sk/pk on the message, and set the pk/sk member of the resulting item, error when sk/pk is not set?
-- Generate table definitions for use in AWS Cloudformation/CDK
+- Define indexes (and maybe streams) so they can be used by aws CDK, indexes may generate extra methods
+- Generate table definitions for use in AWS Cloudformation/CDK, and or generate/support create table for initializing tables on LocalDynamo
 - E2E testing with LocalDynamodb docker container
 - Fuzz testing with complicated protobuf message
 - Generate methods for just generating "Key" attribute maps
@@ -33,8 +34,11 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Generate methods for handling dynamodb stream Lambda events, use: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#FromDynamoDBStreamsMap
 - Allow nested messages (oneof) to be stored as protojson/protobinary instead of nested maps
 - Similar to: https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema
+- Don't generate central unmarshal/marshal method more than once per package. Simply check file existence?
 
 ## Minimal Viable Backlog
+
+- [ ] MUST deploy a buf module so users can easily include options
 
 ## Feature Backlog
 

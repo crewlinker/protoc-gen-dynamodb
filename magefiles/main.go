@@ -56,6 +56,10 @@ func Release(version string) error {
 		return fmt.Errorf("failed to push version tag: %w", err)
 	}
 
+	if err := sh.Run("buf", "push", "-t", version); err != nil {
+		return fmt.Errorf("failed to push to buf registry: %w", err)
+	}
+
 	return nil
 }
 
