@@ -1,3 +1,4 @@
+// Package generator implements the code generator
 package generator
 
 import (

@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	//lint:ignore ST1001 we want expressive meta code
 	. "github.com/dave/jennifer/jen"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/compiler/protogen"

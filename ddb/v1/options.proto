@@ -8,6 +8,10 @@ option go_package = "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1;ddbv
 message FieldOptions {
     // specify the name of the DynamoDB attribute
     optional string name = 1;
+    // indicate that the field represents the item's partition key
+    optional bool pk = 2;
+    // indicate that the field represents the item's sort key
+    optional bool sk = 3;
 }
 
 extend google.protobuf.FieldOptions {

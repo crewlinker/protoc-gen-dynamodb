@@ -3,11 +3,9 @@ package generator
 import (
 	"fmt"
 
+	. "github.com/dave/jennifer/jen"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	//lint:ignore ST1001 we want expressive meta code
-	. "github.com/dave/jennifer/jen"
 )
 
 // generate marshalling code for a map field.
