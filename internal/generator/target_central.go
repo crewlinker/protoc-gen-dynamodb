@@ -1,7 +1,6 @@
 package generator
 
 import (
-	//lint:ignore ST1001 we want expressive meta code
 	. "github.com/dave/jennifer/jen"
 )
 

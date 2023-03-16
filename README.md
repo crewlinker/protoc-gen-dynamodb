@@ -21,6 +21,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
   - Document "Any" format in particular: "Value" stored always stored as binary
   - Document "FieldMask" format: "StringSet"
   - Structpb.Value is formatted in dynamodb
+- Does no logic to support formatting pk/sk, instead supports the use code to do this
 
 ## Ideas
 
@@ -36,8 +37,31 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Similar to: https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema
 - Don't generate central unmarshal/marshal method more than once per package. Simply check file existence?
 
+## Key generation and utility
+
+We would like to generate some way to generate Dynamo key helper methods. Carefull key construction in DynamoDB
+is important because it directly determines how data can be queried effiently. It is unlikely that
+we can capture this logic in Protobuf. Some ideas
+
+- Allow certain fields to be involved in the key generation, then generate a method/function that takes
+  a lambda and should output the key(s)
+  - It will also error if the fields are not set before this is called
+- PK/SK are often values stringed together for example with "#"
+- Parts of the PK/SK can be constants, maybe allow enums to be used?
+- Parts of the PK/SK can be constant given the message type
+- Would be nice if these pk/sk constructions are flagged when changed in a backwards incompatible way
+- Could generate functions that create key attribute maps
+
+What should the helping do for the various methods
+
+- GetItem, UpdateItem, DeleteItem: turn basic Go type (string, int), passed in a request parameters into a
+  attribute map with just the key values
+- PutItem: should produce a full item, including keys into a dynamodb attribute map
+- QueryItem: should produce a exact partition key, and variety of expressions on the sort key
+
 ## Minimal Viable Backlog
 
+- [ ] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
 - [ ] MUST deploy a buf module so users can easily include options
 
 ## Feature Backlog
@@ -45,6 +69,11 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
+- [ ] COULD generate var/consts that return the attribute name for a member, so it can be used in DynamoExpressions
+      , so instead of `attribute_not_exists(pk)` it can be `attribute_not_exists("+modelv1.ProfileSortKey+")` - Should generates methods that returns the SortKey() and PartitionKey() so interfaces can be defined
+      for helper methods
+- [ ] COULD (if we have annotations on what are the keys), to implement a GetItem implementation that fetches
+      the rest of the item from the database.
 - [ ] COULD add option to "skip unsupported" instead of error (but why not just "ignore" the field?)
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
 - [ ] COULD allow customizing the encoder/decoder options
