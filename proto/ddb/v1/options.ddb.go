@@ -201,6 +201,18 @@ func (x *FieldOptions) MarshalDynamoItem() (m map[string]types.AttributeValue, e
 			return nil, fmt.Errorf("failed to marshal field 'Name': %w", err)
 		}
 	}
+	if x.Pk != nil {
+		m["2"], err = attributevalue.Marshal(x.GetPk())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Pk': %w", err)
+		}
+	}
+	if x.Sk != nil {
+		m["3"], err = attributevalue.Marshal(x.GetSk())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Sk': %w", err)
+		}
+	}
 	return m, nil
 }
 
@@ -209,6 +221,14 @@ func (x *FieldOptions) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 	err = attributevalue.Unmarshal(m["1"], &x.Name)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal field 'Name': %w", err)
+	}
+	err = attributevalue.Unmarshal(m["2"], &x.Pk)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Pk': %w", err)
+	}
+	err = attributevalue.Unmarshal(m["3"], &x.Sk)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Sk': %w", err)
 	}
 	return nil
 }

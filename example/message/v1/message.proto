@@ -42,11 +42,11 @@ message Appliance{
 // Kitchen holds all possible Protobuf field types
 message Kitchen {
     // brand of kitchen
-    string brand = 1;
+    string brand = 1 [(ddb.v1.field).pk=true];
     // is the kitchen renovated
     bool is_renovated = 2;
     // some data
-    bytes qr_code = 3;
+    bytes qr_code = 3 [(ddb.v1.field).sk=true];;
 
     // small knife count
     int32 num_small_knifes = 4;

@@ -3,7 +3,6 @@ package generator
 import (
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	. "github.com/dave/jennifer/jen"
@@ -25,15 +24,6 @@ type Target struct {
 		marshal   string
 		unmarshal string
 	}
-}
-
-// determine the dyanmodb attribute name given the field definition
-func (tg *Target) attrName(f *protogen.Field) string {
-	if fopts := FieldOptions(f); fopts != nil && fopts.Name != nil {
-		return *fopts.Name // explicit name option
-	}
-
-	return strconv.FormatInt(int64(f.Desc.Number()), 10)
 }
 
 // returns true as the identifier is part of the package we're generating for
@@ -158,9 +148,18 @@ func (tg *Target) Generate(w io.Writer) error {
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {
+
+		// generate pk/sk methods
+		if err := tg.genMessageKeying(f, m); err != nil {
+			return fmt.Errorf("failed to generate keying: %w", err)
+		}
+
+		// generate the marshal method
 		if err := tg.genMessageMarshal(f, m); err != nil {
 			return fmt.Errorf("failed to generate marshal: %w", err)
 		}
+
+		// generate the unmarshal method
 		if err := tg.genMessageUnmarshal(f, m); err != nil {
 			return fmt.Errorf("failed to generate unmarshal: %w", err)
 		}

@@ -1,6 +1,8 @@
 package generator
 
 import (
+	"strconv"
+
 	ddbv1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -22,4 +24,22 @@ func FieldOptions(f *protogen.Field) *ddbv1.FieldOptions {
 		return nil
 	}
 	return ext
+}
+
+// determine the dyanmodb attribute name given the field definition
+func (tg *Target) attrName(f *protogen.Field) string {
+	if fopts := FieldOptions(f); fopts != nil && fopts.Name != nil {
+		return *fopts.Name // explicit name option
+	}
+
+	return strconv.FormatInt(int64(f.Desc.Number()), 10)
+}
+
+// determine if the field is marked as the partition/sk key
+func (tg *Target) isKey(f *protogen.Field) (isPk bool, isSk bool) {
+	if fopts := FieldOptions(f); fopts != nil {
+		return (fopts.Pk != nil && *fopts.Pk), (fopts.Sk != nil && *fopts.Sk)
+	}
+
+	return false, false
 }

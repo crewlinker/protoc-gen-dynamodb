@@ -10,7 +10,10 @@ import (
 
 // Generate generates Go code from definition fiels
 func Generate() error {
-	return sh.Run("buf", "generate")
+	return sh.Run("buf", "generate",
+		"--path", "example/message",
+		"--path", "ddb",
+	)
 }
 
 // Checks runs various pre-merge checks
@@ -37,10 +40,28 @@ func Checks() error {
 
 // Test test the code base
 func Test() error {
-	return sh.Run("go", "run",
+	coverdir := "covdatafiles"
+	os.RemoveAll(coverdir)
+	os.MkdirAll(coverdir, 0777)
+	os.Setenv("GOCOVERDIR", coverdir) // allow code generator to write coverage files
+	defer os.Unsetenv("GOCOVERDIR")
+
+	if err := Generate(); err != nil {
+		return fmt.Errorf("failed to re-generate protobuf code: %w", err)
+	}
+
+	if err := sh.Run("go", "run",
 		"-mod=readonly", "github.com/onsi/ginkgo/v2/ginkgo",
-		"-p", "-randomize-all", "--fail-on-pending", "--race", "--trace",
-		"--junit-report=test-report.xml", "./...")
+		"-p", "-randomize-all", "--fail-on-pending",
+		"--junit-report=test-report.xml", "./..."); err != nil {
+		return fmt.Errorf("failed to run tests: %w", err)
+	}
+
+	if err := sh.Run("go", "tool", "covdata", "textfmt", "-i="+coverdir, "-o="+coverdir+"/out.cover"); err != nil {
+		return fmt.Errorf("failed to text format cover data: %w", err)
+	}
+
+	return nil
 }
 
 // Release tags a new version and pushes it

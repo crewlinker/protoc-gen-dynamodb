@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package example.wrong.v1;
+import "ddb/v1/options.proto";
+
+// WrongSortKeyOnly is invalid because it only has a sort key
+message WrongSortKeyOnly{
+    // sk field
+    string sk = 1 [(ddb.v1.field).sk=true];
+}

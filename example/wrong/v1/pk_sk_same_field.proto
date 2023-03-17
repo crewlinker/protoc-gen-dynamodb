@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package example.wrong.v1;
+import "ddb/v1/options.proto";
+
+// PkSkSameField is invalid because pk and sk can't mark the same field
+message PkSkSameField{
+    // skpk field
+    string skpk = 1 [(ddb.v1.field).sk=true,(ddb.v1.field).pk=true];
+}
