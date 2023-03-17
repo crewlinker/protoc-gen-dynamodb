@@ -223,6 +223,16 @@ func (x *Engine) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err err
 	return nil
 }
 
+// PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
+func (x *Car) PartitionKey() (name string, value int64) {
+	return "ws", x.NrOfWheels
+}
+
+// Sortkey returns the name of the Dynamo attribute that holds the sort key and the current value of that key in the struct
+func (x *Car) SortKey() (name string, value string) {
+	return "2", x.Name
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Car) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -232,6 +242,12 @@ func (x *Car) MarshalDynamoItem() (m map[string]types.AttributeValue, err error)
 			return nil, fmt.Errorf("failed to marshal field 'Engine': %w", err)
 		}
 		m["1"] = m1
+	}
+	if x.NrOfWheels != 0 {
+		m["ws"], err = attributevalue.Marshal(x.GetNrOfWheels())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'NrOfWheels': %w", err)
+		}
 	}
 	if x.Name != "" {
 		m["2"], err = attributevalue.Marshal(x.GetName())
@@ -250,6 +266,10 @@ func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Engine': %w", err)
 		}
+	}
+	err = attributevalue.Unmarshal(m["ws"], &x.NrOfWheels)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'NrOfWheels': %w", err)
 	}
 	err = attributevalue.Unmarshal(m["2"], &x.Name)
 	if err != nil {
