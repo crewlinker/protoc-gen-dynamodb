@@ -64,8 +64,14 @@ What should the helping do for the various methods
 - [ ] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
 - [ ] MUST deploy a buf module so users can easily include options
 
+## Documentation backlog
+
+- [ ] Write the rules for what kind of fields can be set as a PK, or SK
+- [ ] Write what well-known types encode to what
+
 ## Feature Backlog
 
+- [ ] SHOULD add method that marshals just the keys (if any keys are configured)
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
@@ -76,6 +82,7 @@ What should the helping do for the various methods
       the rest of the item from the database.
 - [ ] COULD add option to "skip unsupported" instead of error (but why not just "ignore" the field?)
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
+- [ ] COULD support pk/sk options for fields that are message types, as long as the message has textencoding interface of some sort
 - [ ] COULD allow customizing the encoder/decoder options
   - make sure that logic applies to both marshalling, and unmarshalling (new test case)
 - [ ] COULD improve usability of FieldMask encoding, instead of slice of strings of the field names in
@@ -83,6 +90,7 @@ What should the helping do for the various methods
 
 ## Hardening Backlog
 
+- [ ] SHOULD test boolean key maps
 - [ ] SHOULD fix go vet checks failure
 - [ ] SHOULD Add test that errors when unsupported map type is used
 - [ ] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
@@ -95,6 +103,7 @@ What should the helping do for the various methods
 
 ## Done Backlog
 
+- [x] SHOULD add code generation that adds methods to return the PartitionKey and SortKey from a message
 - [x] SHOULD run test with parralel and -race enabled
 - [x] MUST add file header that states that the file is generated
 - [x] SHOULD test support of wrapper types (what about optional field with wrapper types?)

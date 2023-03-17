@@ -11,4 +11,4 @@ plugins:
   - name: dynamodb
     out: proto
     opt: paths=source_relative
-    path: ["go", "run", "."]
+    path: ["go", "run", "-cover", "."]

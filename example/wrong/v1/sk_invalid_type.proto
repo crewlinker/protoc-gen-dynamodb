@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package example.wrong.v1;
+import "ddb/v1/options.proto";
+
+
+// Sk message
+message Sk { }
+
+// InvalidSkType is invalid because the message type is not supported as a Sk
+message InvalidSkType{
+    // pk field invalid type
+    Sk sk = 1 [(ddb.v1.field).sk=true];
+    // pk field invalid type
+    string pk = 2 [(ddb.v1.field).pk=true];
+}

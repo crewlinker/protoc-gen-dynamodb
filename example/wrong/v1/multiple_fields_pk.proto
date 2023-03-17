@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package example.wrong.v1;
+import "ddb/v1/options.proto";
+
+// MultipleFieldsPk is invalid because multiple fields have been marked as a primary key
+message MultipleFieldsPk{
+    // one field
+    string one = 1 [(ddb.v1.field).pk=true];
+    // two field
+    string two = 2 [(ddb.v1.field).pk=true];
+}

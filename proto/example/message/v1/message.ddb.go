@@ -279,6 +279,16 @@ func (x *Appliance) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 	return nil
 }
 
+// PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
+func (x *Kitchen) PartitionKey() (name string, value string) {
+	return "1", x.Brand
+}
+
+// Sortkey returns the name of the Dynamo attribute that holds the sort key and the current value of that key in the struct
+func (x *Kitchen) SortKey() (name string, value []byte) {
+	return "3", x.QrCode
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)

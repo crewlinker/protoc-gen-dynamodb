@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package example.wrong.v1;
+import "ddb/v1/options.proto";
+
+// MultipleFieldsSk is invalid because multiple fields have been marked as a sort key
+message MultipleFieldsSk{
+    // one field
+    string one = 1 [(ddb.v1.field).sk=true];
+    // two field
+    string two = 2 [(ddb.v1.field).sk=true];
+    // pk field
+    string pk = 3 [(ddb.v1.field).pk=true];
+}

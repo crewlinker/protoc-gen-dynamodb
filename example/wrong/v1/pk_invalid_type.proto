@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package example.wrong.v1;
+import "ddb/v1/options.proto";
+
+// InvalidPkType is invalid because the bool type is not supported as a pk
+message InvalidPkType{
+    // pk field invalid type
+    bool pk = 1 [(ddb.v1.field).pk=true];
+}
