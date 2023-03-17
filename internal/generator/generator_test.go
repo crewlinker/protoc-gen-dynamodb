@@ -54,6 +54,17 @@ var _ = Describe("handling example messages", func() {
 		Expect(c2.UnmarshalDynamoItem(m1)).To(Succeed())
 		ExpectProtoEqual(&c2, c1)
 	})
+
+	It("should have generated pk/sk methods", func() {
+		c1 := &messagev1.Car{Name: "foo", NrOfWheels: 4}
+		pk, pkv := c1.PartitionKey()
+		Expect(pk).To(Equal("ws"))
+		Expect(pkv).To(Equal(int64(4)))
+
+		sk, skv := c1.SortKey()
+		Expect(sk).To(Equal("2"))
+		Expect(skv).To(Equal("foo"))
+	})
 })
 
 // assert unmarshalling of various attribute maps

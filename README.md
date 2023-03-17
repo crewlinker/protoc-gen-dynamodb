@@ -71,7 +71,7 @@ What should the helping do for the various methods
 
 ## Feature Backlog
 
-- [ ] SHOULD add method that marshals just the keys (if any keys are configured)
+- [ ] SHOULD add method that marshals just the keys (if any keys are configured), fail if more keys, fail if no data in keys
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
