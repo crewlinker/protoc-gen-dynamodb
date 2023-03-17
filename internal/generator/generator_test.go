@@ -65,6 +65,24 @@ var _ = Describe("handling example messages", func() {
 		Expect(sk).To(Equal("2"))
 		Expect(skv).To(Equal("foo"))
 	})
+
+	It("marshal key should work as expected", func() {
+		c1 := &messagev1.Car{Name: "foo", NrOfWheels: 4}
+		k1, err := c1.MarshalDynamoKey()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(k1).To(Equal(map[string]types.AttributeValue{
+			"ws": &types.AttributeValueMemberN{Value: "4"},
+			"2":  &types.AttributeValueMemberS{Value: "foo"},
+		}))
+
+		c2 := &messagev1.Car{}
+		k2, err := c2.MarshalDynamoKey()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(k2).To(Equal(map[string]types.AttributeValue{
+			"ws": &types.AttributeValueMemberN{Value: "0"},
+			"2":  &types.AttributeValueMemberS{Value: ""},
+		}))
+	})
 })
 
 // assert unmarshalling of various attribute maps
