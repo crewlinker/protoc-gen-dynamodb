@@ -71,10 +71,11 @@ What should the helping do for the various methods
 
 ## Feature Backlog
 
-- [ ] SHOULD add method that marshals just the keys (if any keys are configured), fail if more keys, fail if no data in keys
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
+- [ ] COULD generate query building structure for FilterExpressions/KeyConditionExpressions etc
+- [ ] COULD add errors to the "MarshalDynamoKey" method if range/sort key is empty string, or empty bytes (0 number is fine?)
 - [ ] COULD generate var/consts that return the attribute name for a member, so it can be used in DynamoExpressions
       , so instead of `attribute_not_exists(pk)` it can be `attribute_not_exists("+modelv1.ProfileSortKey+")` - Should generates methods that returns the SortKey() and PartitionKey() so interfaces can be defined
       for helper methods
@@ -103,6 +104,7 @@ What should the helping do for the various methods
 
 ## Done Backlog
 
+- [x] SHOULD add method that marshals just the keys (if any keys are configured), fail if more keys, fail if no data in keys
 - [x] SHOULD add code generation that adds methods to return the PartitionKey and SortKey from a message
 - [x] SHOULD run test with parralel and -race enabled
 - [x] MUST add file header that states that the file is generated
