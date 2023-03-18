@@ -6,10 +6,11 @@ import (
 	"fmt"
 	attributevalue "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 )
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
-func (x *FieldOptions) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+func (x *FieldOptions) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Name != nil {
 		m["1"], err = attributevalue.Marshal(x.GetName())
@@ -33,7 +34,7 @@ func (x *FieldOptions) MarshalDynamoItem() (m map[string]types.AttributeValue, e
 }
 
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
-func (x *FieldOptions) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+func (x *FieldOptions) UnmarshalDynamoItem(m map[string]types.AttributeValue, o ...ddb.DecodingOption) (err error) {
 	err = attributevalue.Unmarshal(m["1"], &x.Name)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal field 'Name': %w", err)

@@ -76,7 +76,7 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 
 		// else, we unmarshal into a not-nil message
 		Var().Id("mv").Add(tg.fieldGoType(val)),
-		Err().Op("=").Add(tg.idents.unmarshal).Call(Id("v"), Op("&").Id("mv")),
+		Err().Op("=").Add(tg.idents.unmarshal).Call(Id("v"), Op("&").Id("mv"), Id("o").Op("...")),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map value for field '"+f.GoName+"': %w"), Err())),
 		),
@@ -114,7 +114,7 @@ func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
 		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Add(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
+			Err().Op("=").Add(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName), Id("o").Op("...")),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -165,6 +165,7 @@ func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
 				Err().Op("=").Add(tg.idents.unmarshal).Call(
 					Id("v"),
 					Op("&").Id("mv"),
+					Id("o").Op("..."),
 				),
 				If(Err().Op("!=").Nil()).Block(
 					Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
@@ -186,7 +187,7 @@ func (tg *Target) genOneOfFieldUnmarshal(f *protogen.Field) []Code {
 		// oneof field is a message
 		marshal = append(marshal,
 			Id("mo").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Add(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
+			Err().Op("=").Add(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName), Id("o").Op("...")),
 		)
 	default:
 		// else, assume the oneof field is a basic type
@@ -237,7 +238,7 @@ func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 	f.Comment(`UnmarshalDynamoItem unmarshals data from a dynamodb attribute map`)
 	f.Func().
 		Params(Id("x").Op("*").Id(m.GoIdent.GoName)).Id("UnmarshalDynamoItem").
-		Params(Id("m").Map(String()).Qual(dynamodbtypes, "AttributeValue")).
+		Params(Id("m").Map(String()).Qual(dynamodbtypes, "AttributeValue"), Id("o").Op("...").Add(tg.idents.decopt)).
 		Params(Id("err").Id("error")).Block(body...)
 
 	return nil

@@ -24,6 +24,8 @@ type Target struct {
 	idents struct {
 		marshal   Code
 		unmarshal Code
+		encopt    Code
+		decopt    Code
 	}
 }
 
@@ -136,9 +138,12 @@ func (tg *Target) Generate(w io.Writer) error {
 		return fmt.Errorf("failed to read build info: binary not build with modules support")
 	}
 
-	tg.idents.marshal, tg.idents.unmarshal =
+	// setup qualifiers to the shared package
+	tg.idents.marshal, tg.idents.unmarshal, tg.idents.encopt, tg.idents.decopt =
 		Qual(path.Join(bi.Path, "ddb"), "MarshalDynamoMessage"),
-		Qual(path.Join(bi.Path, "ddb"), "UnmarshalDynamoMessage")
+		Qual(path.Join(bi.Path, "ddb"), "UnmarshalDynamoMessage"),
+		Qual(path.Join(bi.Path, "ddb"), "EncodingOption"),
+		Qual(path.Join(bi.Path, "ddb"), "DecodingOption")
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {

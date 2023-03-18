@@ -20,11 +20,11 @@ import (
 // MarshalDynamoMessage will marshal a protobuf message 'm' into an attribute value. It supports several
 // well-known Protobuf types and if 'x' implements its own MarshalDynamoItem method it will be called to
 // delegate the marshalling.
-func MarshalDynamoMessage(x proto.Message) (a types.AttributeValue, err error) {
+func MarshalDynamoMessage(x proto.Message, opts ...EncodingOption) (a types.AttributeValue, err error) {
 	if mx, ok := x.(interface {
-		MarshalDynamoItem() (map[string]types.AttributeValue, error)
+		MarshalDynamoItem(...EncodingOption) (map[string]types.AttributeValue, error)
 	}); ok {
-		mm, err := mx.MarshalDynamoItem()
+		mm, err := mx.MarshalDynamoItem(opts...)
 		return &types.AttributeValueMemberM{Value: mm}, err
 	}
 	switch xt := x.(type) {
@@ -79,15 +79,15 @@ func MarshalDynamoMessage(x proto.Message) (a types.AttributeValue, err error) {
 // UnmarshalDynamoMessage will attempt to unmarshal 'm' into a protobuf message 'x'. It provides special
 // support for several well-known protobuf message types. If 'x' implements the MarshalDynamoItem method
 // it will be called to delegate the unmarshalling.
-func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message) (err error) {
+func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...DecodingOption) (err error) {
 	if mx, ok := x.(interface {
-		UnmarshalDynamoItem(map[string]types.AttributeValue) error
+		UnmarshalDynamoItem(map[string]types.AttributeValue, ...DecodingOption) error
 	}); ok {
 		mm, ok := m.(*types.AttributeValueMemberM)
 		if !ok {
 			return fmt.Errorf("failed to unmarshal: no map attribute provided")
 		}
-		return mx.UnmarshalDynamoItem(mm.Value)
+		return mx.UnmarshalDynamoItem(mm.Value, opts...)
 	}
 	switch xt := x.(type) {
 	case *durationpb.Duration, *timestamppb.Timestamp:
