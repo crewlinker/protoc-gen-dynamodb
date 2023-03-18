@@ -6,8 +6,7 @@ import (
 	"fmt"
 	attributevalue "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	protojson "google.golang.org/protobuf/encoding/protojson"
-	proto "google.golang.org/protobuf/proto"
+	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -16,181 +15,6 @@ import (
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
 )
-
-// file_example_message_v1_message_proto_marshal_dynamo_item marshals into DynamoDB attribute value maps
-func file_example_message_v1_message_proto_marshal_dynamo_item(x proto.Message) (a types.AttributeValue, err error) {
-	if mx, ok := x.(interface {
-		MarshalDynamoItem() (map[string]types.AttributeValue, error)
-	}); ok {
-		mm, err := mx.MarshalDynamoItem()
-		return &types.AttributeValueMemberM{Value: mm}, err
-	}
-	switch xt := x.(type) {
-	case *durationpb.Duration, *timestamppb.Timestamp:
-		xjson, err := protojson.Marshal(xt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal duration: %w", err)
-		}
-		xjsons, err := strconv.Unquote(string(xjson))
-		if err != nil {
-			return nil, fmt.Errorf("failed to unquote value: %w", err)
-		}
-		return &types.AttributeValueMemberS{Value: xjsons}, nil
-	case *anypb.Any:
-		mv := &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{}}
-		mv.Value["1"], err = attributevalue.Marshal(xt.TypeUrl)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal Any's TypeURL field: %w", err)
-		}
-		mv.Value["2"], err = attributevalue.Marshal(xt.Value)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal Any's Value field: %w", err)
-		}
-		return mv, nil
-	case *fieldmaskpb.FieldMask:
-		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
-	case *structpb.Value:
-		return attributevalue.Marshal(xt.AsInterface())
-	case *wrapperspb.StringValue:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.BoolValue:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.BytesValue:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.DoubleValue:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.FloatValue:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.Int32Value:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.Int64Value:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.UInt32Value:
-		return attributevalue.Marshal(xt.Value)
-	case *wrapperspb.UInt64Value:
-		return attributevalue.Marshal(xt.Value)
-	default:
-		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
-	}
-}
-
-// file_example_message_v1_message_proto_marshal_dynamo_item unmarshals DynamoDB attribute value maps
-func file_example_message_v1_message_proto_unmarshal_dynamo_item(m types.AttributeValue, x proto.Message) (err error) {
-	if mx, ok := x.(interface {
-		UnmarshalDynamoItem(map[string]types.AttributeValue) error
-	}); ok {
-		mm, ok := m.(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal: no map attribute provided")
-		}
-		return mx.UnmarshalDynamoItem(mm.Value)
-	}
-	switch xt := x.(type) {
-	case *durationpb.Duration, *timestamppb.Timestamp:
-		ms, ok := m.(*types.AttributeValueMemberS)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal duration: no string attribute provided")
-		}
-		return protojson.Unmarshal([]byte(strconv.Quote(ms.Value)), x)
-	case *anypb.Any:
-		mm, ok := m.(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal duration: no map attribute provided")
-		}
-		err = attributevalue.Unmarshal(mm.Value["1"], &xt.TypeUrl)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal Any's TypeURL field: %w", err)
-		}
-		err = attributevalue.Unmarshal(mm.Value["2"], &xt.Value)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal Any's Value field: %w", err)
-		}
-		return nil
-	case *fieldmaskpb.FieldMask:
-		ss, ok := m.(*types.AttributeValueMemberSS)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
-		}
-		xt.Paths = ss.Value
-		return nil
-	case *structpb.Value:
-		switch m.(type) {
-		case *types.AttributeValueMemberL:
-			vx := []any{}
-			err = attributevalue.Unmarshal(m, &vx)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-			}
-			lv, err := structpb.NewList(vx)
-			if err != nil {
-				return fmt.Errorf("failed to init structpb.Value: %w", err)
-			}
-			xt.Kind = &structpb.Value_ListValue{ListValue: lv}
-			return nil
-		case *types.AttributeValueMemberM:
-			vx := map[string]any{}
-			err = attributevalue.Unmarshal(m, &vx)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-			}
-			lv, err := structpb.NewStruct(vx)
-			if err != nil {
-				return fmt.Errorf("failed to init structpb.Value: %w", err)
-			}
-			xt.Kind = &structpb.Value_StructValue{StructValue: lv}
-			return nil
-		case *types.AttributeValueMemberS:
-			var vx string
-			err = attributevalue.Unmarshal(m, &vx)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-			}
-			xt.Kind = &structpb.Value_StringValue{StringValue: vx}
-			return nil
-		case *types.AttributeValueMemberBOOL:
-			var vx bool
-			err = attributevalue.Unmarshal(m, &vx)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-			}
-			xt.Kind = &structpb.Value_BoolValue{BoolValue: vx}
-			return nil
-		case *types.AttributeValueMemberN:
-			var vx float64
-			err = attributevalue.Unmarshal(m, &vx)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
-			}
-			xt.Kind = &structpb.Value_NumberValue{NumberValue: vx}
-			return nil
-		case *types.AttributeValueMemberNULL:
-			xt.Kind = &structpb.Value_NullValue{NullValue: structpb.NullValue_NULL_VALUE}
-			return nil
-		default:
-			return fmt.Errorf("failed to unmarshal struct value: unsupported attribute value")
-		}
-	case *wrapperspb.StringValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.BoolValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.BytesValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.DoubleValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.FloatValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.Int32Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.Int64Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.UInt32Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	case *wrapperspb.UInt64Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
-	default:
-		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
-	}
-}
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Engine) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
@@ -253,7 +77,7 @@ func (x *Car) MarshalDynamoKey() (m map[string]types.AttributeValue, err error) 
 func (x *Car) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Engine != nil {
-		m1, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetEngine())
+		m1, err := ddb.MarshalDynamoMessage(x.GetEngine())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Engine': %w", err)
 		}
@@ -278,7 +102,7 @@ func (x *Car) MarshalDynamoItem() (m map[string]types.AttributeValue, err error)
 func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	if m["1"] != nil {
 		x.Engine = new(Engine)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["1"], x.Engine)
+		err = ddb.UnmarshalDynamoMessage(m["1"], x.Engine)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Engine': %w", err)
 		}
@@ -427,7 +251,7 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 				m13.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := file_example_message_v1_message_proto_marshal_dynamo_item(v)
+			mv, err := ddb.MarshalDynamoMessage(v)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'Furniture': %w", err)
 			}
@@ -442,28 +266,28 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 	}
 	if x.WasherEngine != nil {
-		m15, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetWasherEngine())
+		m15, err := ddb.MarshalDynamoMessage(x.GetWasherEngine())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'WasherEngine': %w", err)
 		}
 		m["15"] = m15
 	}
 	if x.ExtraKitchen != nil {
-		m16, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetExtraKitchen())
+		m16, err := ddb.MarshalDynamoMessage(x.GetExtraKitchen())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'ExtraKitchen': %w", err)
 		}
 		m["16"] = m16
 	}
 	if x.Timer != nil {
-		m17, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetTimer())
+		m17, err := ddb.MarshalDynamoMessage(x.GetTimer())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Timer': %w", err)
 		}
 		m["17"] = m17
 	}
 	if x.WallTime != nil {
-		m18, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetWallTime())
+		m18, err := ddb.MarshalDynamoMessage(x.GetWallTime())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'WallTime': %w", err)
 		}
@@ -476,7 +300,7 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 				m19.Value = append(m19.Value, &types.AttributeValueMemberNULL{Value: true})
 				continue
 			}
-			mv, err := file_example_message_v1_message_proto_marshal_dynamo_item(v)
+			mv, err := ddb.MarshalDynamoMessage(v)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal item '%d' of field 'ApplianceEngines': %w", k, err)
 			}
@@ -491,21 +315,21 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 	}
 	if x.SomeAny != nil {
-		m21, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetSomeAny())
+		m21, err := ddb.MarshalDynamoMessage(x.GetSomeAny())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeAny': %w", err)
 		}
 		m["21"] = m21
 	}
 	if x.SomeMask != nil {
-		m22, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetSomeMask())
+		m22, err := ddb.MarshalDynamoMessage(x.GetSomeMask())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeMask': %w", err)
 		}
 		m["22"] = m22
 	}
 	if x.SomeValue != nil {
-		m23, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetSomeValue())
+		m23, err := ddb.MarshalDynamoMessage(x.GetSomeValue())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeValue': %w", err)
 		}
@@ -518,14 +342,14 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 	}
 	if x.ValStr != nil {
-		m25, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetValStr())
+		m25, err := ddb.MarshalDynamoMessage(x.GetValStr())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'ValStr': %w", err)
 		}
 		m["25"] = m25
 	}
 	if x.ValBytes != nil {
-		m26, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetValBytes())
+		m26, err := ddb.MarshalDynamoMessage(x.GetValBytes())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'ValBytes': %w", err)
 		}
@@ -600,7 +424,7 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 				continue
 			}
 			var mv Appliance
-			err = file_example_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'Furniture': %w", err)
 			}
@@ -613,28 +437,28 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	}
 	if m["15"] != nil {
 		x.WasherEngine = new(Engine)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["15"], x.WasherEngine)
+		err = ddb.UnmarshalDynamoMessage(m["15"], x.WasherEngine)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'WasherEngine': %w", err)
 		}
 	}
 	if m["16"] != nil {
 		x.ExtraKitchen = new(Kitchen)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["16"], x.ExtraKitchen)
+		err = ddb.UnmarshalDynamoMessage(m["16"], x.ExtraKitchen)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'ExtraKitchen': %w", err)
 		}
 	}
 	if m["17"] != nil {
 		x.Timer = new(durationpb.Duration)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["17"], x.Timer)
+		err = ddb.UnmarshalDynamoMessage(m["17"], x.Timer)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Timer': %w", err)
 		}
 	}
 	if m["18"] != nil {
 		x.WallTime = new(timestamppb.Timestamp)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["18"], x.WallTime)
+		err = ddb.UnmarshalDynamoMessage(m["18"], x.WallTime)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'WallTime': %w", err)
 		}
@@ -650,7 +474,7 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 				continue
 			}
 			var mv Engine
-			err = file_example_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal item '%d' of field 'ApplianceEngines': %w", k, err)
 			}
@@ -663,21 +487,21 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	}
 	if m["21"] != nil {
 		x.SomeAny = new(anypb.Any)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["21"], x.SomeAny)
+		err = ddb.UnmarshalDynamoMessage(m["21"], x.SomeAny)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeAny': %w", err)
 		}
 	}
 	if m["22"] != nil {
 		x.SomeMask = new(fieldmaskpb.FieldMask)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["22"], x.SomeMask)
+		err = ddb.UnmarshalDynamoMessage(m["22"], x.SomeMask)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeMask': %w", err)
 		}
 	}
 	if m["23"] != nil {
 		x.SomeValue = new(structpb.Value)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["23"], x.SomeValue)
+		err = ddb.UnmarshalDynamoMessage(m["23"], x.SomeValue)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeValue': %w", err)
 		}
@@ -688,14 +512,14 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	}
 	if m["25"] != nil {
 		x.ValStr = new(wrapperspb.StringValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["25"], x.ValStr)
+		err = ddb.UnmarshalDynamoMessage(m["25"], x.ValStr)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'ValStr': %w", err)
 		}
 	}
 	if m["26"] != nil {
 		x.ValBytes = new(wrapperspb.BytesValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["26"], x.ValBytes)
+		err = ddb.UnmarshalDynamoMessage(m["26"], x.ValBytes)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'ValBytes': %w", err)
 		}
@@ -818,7 +642,7 @@ func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err 
 				m16.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := file_example_message_v1_message_proto_marshal_dynamo_item(v)
+			mv, err := ddb.MarshalDynamoMessage(v)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'Stringduration': %w", err)
 			}
@@ -837,7 +661,7 @@ func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err 
 				m17.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := file_example_message_v1_message_proto_marshal_dynamo_item(v)
+			mv, err := ddb.MarshalDynamoMessage(v)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'Stringtimestamp': %w", err)
 			}
@@ -923,7 +747,7 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 				continue
 			}
 			var mv durationpb.Duration
-			err = file_example_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'Stringduration': %w", err)
 			}
@@ -943,7 +767,7 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 				continue
 			}
 			var mv timestamppb.Timestamp
-			err = file_example_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'Stringtimestamp': %w", err)
 			}
@@ -957,7 +781,7 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.SomeValue != nil {
-		m1, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetSomeValue())
+		m1, err := ddb.MarshalDynamoMessage(x.GetSomeValue())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeValue': %w", err)
 		}
@@ -970,7 +794,7 @@ func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, er
 func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	if m["1"] != nil {
 		x.SomeValue = new(structpb.Value)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["1"], x.SomeValue)
+		err = ddb.UnmarshalDynamoMessage(m["1"], x.SomeValue)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'SomeValue': %w", err)
 		}
@@ -994,14 +818,14 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 		}
 	}
 	if x.Msg != nil {
-		m3, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetMsg())
+		m3, err := ddb.MarshalDynamoMessage(x.GetMsg())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Msg': %w", err)
 		}
 		m["msg"] = m3
 	}
 	if x.OptMsg != nil {
-		m4, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetOptMsg())
+		m4, err := ddb.MarshalDynamoMessage(x.GetOptMsg())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OptMsg': %w", err)
 		}
@@ -1020,7 +844,7 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 				m6.Value = append(m6.Value, &types.AttributeValueMemberNULL{Value: true})
 				continue
 			}
-			mv, err := file_example_message_v1_message_proto_marshal_dynamo_item(v)
+			mv, err := ddb.MarshalDynamoMessage(v)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal item '%d' of field 'MsgList': %w", k, err)
 			}
@@ -1045,7 +869,7 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 				m8.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := file_example_message_v1_message_proto_marshal_dynamo_item(v)
+			mv, err := ddb.MarshalDynamoMessage(v)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'MsgMap': %w", err)
 			}
@@ -1072,70 +896,70 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 		}
 	}
 	if onev, ok := x.Oo.(*FieldPresence_OneofMsg); ok && onev != nil {
-		m12, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetOneofMsg())
+		m12, err := ddb.MarshalDynamoMessage(x.GetOneofMsg())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OneofMsg': %w", err)
 		}
 		m["oneofMsg"] = m12
 	}
 	if x.StrVal != nil {
-		m13, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetStrVal())
+		m13, err := ddb.MarshalDynamoMessage(x.GetStrVal())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'StrVal': %w", err)
 		}
 		m["strVal"] = m13
 	}
 	if x.BoolVal != nil {
-		m14, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetBoolVal())
+		m14, err := ddb.MarshalDynamoMessage(x.GetBoolVal())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'BoolVal': %w", err)
 		}
 		m["boolVal"] = m14
 	}
 	if x.BytesVal != nil {
-		m15, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetBytesVal())
+		m15, err := ddb.MarshalDynamoMessage(x.GetBytesVal())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'BytesVal': %w", err)
 		}
 		m["bytesVal"] = m15
 	}
 	if x.DoubleVal != nil {
-		m16, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetDoubleVal())
+		m16, err := ddb.MarshalDynamoMessage(x.GetDoubleVal())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'DoubleVal': %w", err)
 		}
 		m["doubleVal"] = m16
 	}
 	if x.FloatVal != nil {
-		m17, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetFloatVal())
+		m17, err := ddb.MarshalDynamoMessage(x.GetFloatVal())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'FloatVal': %w", err)
 		}
 		m["floatVal"] = m17
 	}
 	if x.Int32Val != nil {
-		m18, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetInt32Val())
+		m18, err := ddb.MarshalDynamoMessage(x.GetInt32Val())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Int32Val': %w", err)
 		}
 		m["int32Val"] = m18
 	}
 	if x.Int64Val != nil {
-		m19, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetInt64Val())
+		m19, err := ddb.MarshalDynamoMessage(x.GetInt64Val())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Int64Val': %w", err)
 		}
 		m["int64Val"] = m19
 	}
 	if x.Uint32Val != nil {
-		m20, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetUint32Val())
+		m20, err := ddb.MarshalDynamoMessage(x.GetUint32Val())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Uint32Val': %w", err)
 		}
 		m["uint32Val"] = m20
 	}
 	if x.Uint64Val != nil {
-		m21, err := file_example_message_v1_message_proto_marshal_dynamo_item(x.GetUint64Val())
+		m21, err := ddb.MarshalDynamoMessage(x.GetUint64Val())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Uint64Val': %w", err)
 		}
@@ -1156,14 +980,14 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	}
 	if m["msg"] != nil {
 		x.Msg = new(Engine)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["msg"], x.Msg)
+		err = ddb.UnmarshalDynamoMessage(m["msg"], x.Msg)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Msg': %w", err)
 		}
 	}
 	if m["optMsg"] != nil {
 		x.OptMsg = new(Engine)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["optMsg"], x.OptMsg)
+		err = ddb.UnmarshalDynamoMessage(m["optMsg"], x.OptMsg)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'OptMsg': %w", err)
 		}
@@ -1183,7 +1007,7 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 				continue
 			}
 			var mv Engine
-			err = file_example_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal item '%d' of field 'MsgList': %w", k, err)
 			}
@@ -1207,7 +1031,7 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 				continue
 			}
 			var mv Engine
-			err = file_example_message_v1_message_proto_unmarshal_dynamo_item(v, &mv)
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal map value for field 'MsgMap': %w", err)
 			}
@@ -1233,7 +1057,7 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	if m["oneofMsg"] != nil {
 		var mo FieldPresence_OneofMsg
 		mo.OneofMsg = new(Engine)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["oneofMsg"], mo.OneofMsg)
+		err = ddb.UnmarshalDynamoMessage(m["oneofMsg"], mo.OneofMsg)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'OneofMsg': %w", err)
 		}
@@ -1241,63 +1065,63 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	}
 	if m["strVal"] != nil {
 		x.StrVal = new(wrapperspb.StringValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["strVal"], x.StrVal)
+		err = ddb.UnmarshalDynamoMessage(m["strVal"], x.StrVal)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'StrVal': %w", err)
 		}
 	}
 	if m["boolVal"] != nil {
 		x.BoolVal = new(wrapperspb.BoolValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["boolVal"], x.BoolVal)
+		err = ddb.UnmarshalDynamoMessage(m["boolVal"], x.BoolVal)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'BoolVal': %w", err)
 		}
 	}
 	if m["bytesVal"] != nil {
 		x.BytesVal = new(wrapperspb.BytesValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["bytesVal"], x.BytesVal)
+		err = ddb.UnmarshalDynamoMessage(m["bytesVal"], x.BytesVal)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'BytesVal': %w", err)
 		}
 	}
 	if m["doubleVal"] != nil {
 		x.DoubleVal = new(wrapperspb.DoubleValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["doubleVal"], x.DoubleVal)
+		err = ddb.UnmarshalDynamoMessage(m["doubleVal"], x.DoubleVal)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'DoubleVal': %w", err)
 		}
 	}
 	if m["floatVal"] != nil {
 		x.FloatVal = new(wrapperspb.FloatValue)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["floatVal"], x.FloatVal)
+		err = ddb.UnmarshalDynamoMessage(m["floatVal"], x.FloatVal)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'FloatVal': %w", err)
 		}
 	}
 	if m["int32Val"] != nil {
 		x.Int32Val = new(wrapperspb.Int32Value)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["int32Val"], x.Int32Val)
+		err = ddb.UnmarshalDynamoMessage(m["int32Val"], x.Int32Val)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Int32Val': %w", err)
 		}
 	}
 	if m["int64Val"] != nil {
 		x.Int64Val = new(wrapperspb.Int64Value)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["int64Val"], x.Int64Val)
+		err = ddb.UnmarshalDynamoMessage(m["int64Val"], x.Int64Val)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Int64Val': %w", err)
 		}
 	}
 	if m["uint32Val"] != nil {
 		x.Uint32Val = new(wrapperspb.UInt32Value)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["uint32Val"], x.Uint32Val)
+		err = ddb.UnmarshalDynamoMessage(m["uint32Val"], x.Uint32Val)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Uint32Val': %w", err)
 		}
 	}
 	if m["uint64Val"] != nil {
 		x.Uint64Val = new(wrapperspb.UInt64Value)
-		err = file_example_message_v1_message_proto_unmarshal_dynamo_item(m["uint64Val"], x.Uint64Val)
+		err = ddb.UnmarshalDynamoMessage(m["uint64Val"], x.Uint64Val)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'Uint64Val': %w", err)
 		}

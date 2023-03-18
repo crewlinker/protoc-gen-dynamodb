@@ -60,7 +60,7 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 		),
 
 		// marshal non-nil map value by calling the centrally generated function
-		List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
+		List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v")),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map value of field '"+f.GoName+"': %w"), Err())),
 		),
@@ -84,7 +84,7 @@ func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only marshal message field if the value is not nil at runtime
 		If(tg.marshalPresenceCond(f)...).Block(
-			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Id(tg.idents.marshal).Call(Id("x").Dot("Get"+f.GoName).Call()),
+			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Add(tg.idents.marshal).Call(Id("x").Dot("Get"+f.GoName).Call()),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -137,7 +137,7 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 				),
 
 				// else, marshal the item
-				List(Id("mv"), Err()).Op(":=").Id(tg.idents.marshal).Call(Id("v")),
+				List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v")),
 				If(Err().Op("!=").Nil()).Block(
 					Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
 				),
