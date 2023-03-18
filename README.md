@@ -14,7 +14,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - use official 'attributevalue' with ability to customize its behaviour
 - Wide(r) range of types support: everything in the canonical json table
   - Including maps with all basic types, including bool as keys
-- No external dependencies of the generated code except the aws SDK
+- ~~No external dependencies of the generated code except the aws SDK~~
 - Allow messages external to the package to be usable as field messages without problem
 - Uses field position numbers by default instead of names (since they are supposed to be stable)
 - Support well-knowns, but are generated to maps with strings for their fields, instead of field numbers
@@ -36,6 +36,20 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 - Allow nested messages (oneof) to be stored as protojson/protobinary instead of nested maps
 - Similar to: https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema
 - Don't generate central unmarshal/marshal method more than once per package. Simply check file existence?
+
+## Expression generation utility
+
+Provide functionality similar to a query builder to support building the differente
+
+- ConditionExpression: PutItem,DeleteItem,UpdateItem (TransactWriteItem)
+- UpdateExpression: UpdateItem
+- ProjectionExpression: GetItem, BatchGetItem (TransactGetItems), Query
+- FilterExpression: Query
+- KeyConditionExpression: Query
+
+Integrate with: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression
+
+- Idea: Generate methods to return "NameBuilder" instances, include method method that returns "NameBuilder" for partition/sort key. So can return PartitionKeyName().AttributeExists()
 
 ## Key generation and utility
 
@@ -91,6 +105,7 @@ What should the helping do for the various methods
 
 ## Hardening Backlog
 
+- [ ] SHOULD unit test the "ddb" shared package
 - [ ] SHOULD test boolean key maps
 - [ ] SHOULD fix go vet checks failure
 - [ ] SHOULD Add test that errors when unsupported map type is used
