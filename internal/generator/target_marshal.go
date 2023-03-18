@@ -8,6 +8,30 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// marshalPresenceCond generates code for the if statements condition that checks if the field
+// should be included in the marshalled attribute map. This centralizes the generated logic for
+// asserting zero values and masking checks.
+func (tg *Target) marshalPresenceCond(f *protogen.Field) []Code {
+	switch {
+	case f.Oneof != nil && !f.Desc.HasOptionalKeyword():
+		return []Code{
+			List(Id("onev"), Id("ok")).Op(":=").Id("x").Dot(f.Oneof.GoName).Assert(Op("*").
+				Id(fmt.Sprintf("%s_%s", f.Parent.GoIdent.GoName, f.GoName))),
+			Id("ok").
+				Op("&&").Id("onev").Op("!=").Add(tg.fieldZeroValue(f)).      // check if not zero value
+				Op("&&").Id("eo").Dot("IsMasked").Call(Lit(tg.attrName(f))), // check if not masked
+		}
+	case f.Desc.IsList(), f.Desc.IsMap():
+		return []Code{Len(Id("x").Dot(f.GoName)).Op("!=").Lit(0).
+			Op("&&").Id("eo").Dot("IsMasked").Call(Lit(tg.attrName(f)))} // check if masked
+	default:
+		return []Code{
+			Id("x").Dot(f.GoName).Op("!=").Add(tg.fieldZeroValue(f)).
+				Op("&&").Id("eo").Dot("IsMasked").Call(Lit(tg.attrName(f))), // check if masked
+		}
+	}
+}
+
 // generate marshalling code for a map field
 func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 	key := f.Message.Fields[0]
@@ -60,7 +84,8 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 		),
 
 		// marshal non-nil map value by calling the centrally generated function
-		List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v"), Id("o").Op("...")),
+		List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v"),
+			Id("ddb").Dot("WithEncodingOptions").Call(Id("eo").Dot("SubMask").Call(Lit(tg.attrName(f))))),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map value of field '"+f.GoName+"': %w"), Err())),
 		),
@@ -85,7 +110,7 @@ func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 		// only marshal message field if the value is not nil at runtime
 		If(tg.marshalPresenceCond(f)...).Block(
 			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Add(tg.idents.marshal).Call(
-				Id("x").Dot("Get"+f.GoName).Call(), Id("o").Op("...")),
+				Id("x").Dot("Get"+f.GoName).Call(), Id("ddb").Dot("WithEncodingOptions").Call(Id("eo").Dot("SubMask").Call(Lit(tg.attrName(f))))),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -138,7 +163,8 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 				),
 
 				// else, marshal the item
-				List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v"), Id("o").Op("...")),
+				List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v"),
+					Id("ddb").Dot("WithEncodingOptions").Call(Id("eo").Dot("SubMask").Call(Lit(tg.attrName(f))))),
 				If(Err().Op("!=").Nil()).Block(
 					Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
 				),
@@ -154,7 +180,14 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 
 	// render method body
-	body := []Code{Id("m").Op("=").Make(Map(String()).Qual(dynamodbtypes, "AttributeValue"))}
+	body := []Code{
+		Id("m").Op("=").Make(Map(String()).Qual(dynamodbtypes, "AttributeValue")),
+	}
+
+	// if we have some fields we need to apply option arguments
+	if len(m.Fields) > 0 {
+		body = append(body, Id("eo").Op(":=").Qual(tg.idents.ddb, "ApplyEncodingOptions").Call(Id("o").Op("...")))
+	}
 
 	// generate field marshalling code
 	for _, field := range m.Fields {

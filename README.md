@@ -85,9 +85,12 @@ What should the helping do for the various methods
 
 ## Feature Backlog
 
+- [ ] SHOULD error if a mask value is wrong, add a (generated) mask validation method, or just do it when marshalling with a mask
+- [ ] COULD support indexing into lists, if that makes sense given dynamodb operations
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
+- [ ] COULD also allow customizing protojson encoding (in case it's used)
 - [ ] COULD generate query building structure for FilterExpressions/KeyConditionExpressions etc
 - [ ] COULD add errors to the "MarshalDynamoKey" method if range/sort key is empty string, or empty bytes (0 number is fine?)
 - [ ] COULD generate var/consts that return the attribute name for a member, so it can be used in DynamoExpressions
@@ -105,6 +108,7 @@ What should the helping do for the various methods
 
 ## Hardening Backlog
 
+- [ ] SHOULD do fuzzing of field masking
 - [ ] SHOULD unit test the "ddb" shared package
 - [ ] SHOULD test boolean key maps
 - [ ] SHOULD fix go vet checks failure

@@ -27,6 +27,7 @@ func MarshalDynamoMessage(x proto.Message, opts ...EncodingOption) (a types.Attr
 		mm, err := mx.MarshalDynamoItem(opts...)
 		return &types.AttributeValueMemberM{Value: mm}, err
 	}
+
 	switch xt := x.(type) {
 	case *durationpb.Duration, *timestamppb.Timestamp:
 		xjson, err := protojson.Marshal(xt)
@@ -40,11 +41,11 @@ func MarshalDynamoMessage(x proto.Message, opts ...EncodingOption) (a types.Attr
 		return &types.AttributeValueMemberS{Value: xjsons}, nil
 	case *anypb.Any:
 		mv := &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{}}
-		mv.Value["1"], err = attributevalue.Marshal(xt.TypeUrl)
+		mv.Value["1"], err = attributevalue.MarshalWithOptions(xt.TypeUrl)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal Any's TypeURL field: %w", err)
 		}
-		mv.Value["2"], err = attributevalue.Marshal(xt.Value)
+		mv.Value["2"], err = attributevalue.MarshalWithOptions(xt.Value)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal Any's Value field: %w", err)
 		}
@@ -52,25 +53,25 @@ func MarshalDynamoMessage(x proto.Message, opts ...EncodingOption) (a types.Attr
 	case *fieldmaskpb.FieldMask:
 		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
 	case *structpb.Value:
-		return attributevalue.Marshal(xt.AsInterface())
+		return attributevalue.MarshalWithOptions(xt.AsInterface())
 	case *wrapperspb.StringValue:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.BoolValue:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.BytesValue:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.DoubleValue:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.FloatValue:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.Int32Value:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.Int64Value:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.UInt32Value:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	case *wrapperspb.UInt64Value:
-		return attributevalue.Marshal(xt.Value)
+		return attributevalue.MarshalWithOptions(xt.Value)
 	default:
 		return nil, fmt.Errorf("marshal of message type unsupported: %+T", xt)
 	}
@@ -89,6 +90,7 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 		}
 		return mx.UnmarshalDynamoItem(mm.Value, opts...)
 	}
+
 	switch xt := x.(type) {
 	case *durationpb.Duration, *timestamppb.Timestamp:
 		ms, ok := m.(*types.AttributeValueMemberS)
@@ -101,11 +103,11 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 		if !ok {
 			return fmt.Errorf("failed to unmarshal duration: no map attribute provided")
 		}
-		err = attributevalue.Unmarshal(mm.Value["1"], &xt.TypeUrl)
+		err = attributevalue.UnmarshalWithOptions(mm.Value["1"], &xt.TypeUrl)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal Any's TypeURL field: %w", err)
 		}
-		err = attributevalue.Unmarshal(mm.Value["2"], &xt.Value)
+		err = attributevalue.UnmarshalWithOptions(mm.Value["2"], &xt.Value)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal Any's Value field: %w", err)
 		}
@@ -121,7 +123,7 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 		switch m.(type) {
 		case *types.AttributeValueMemberL:
 			vx := []any{}
-			err = attributevalue.Unmarshal(m, &vx)
+			err = attributevalue.UnmarshalWithOptions(m, &vx)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
 			}
@@ -133,7 +135,7 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 			return nil
 		case *types.AttributeValueMemberM:
 			vx := map[string]any{}
-			err = attributevalue.Unmarshal(m, &vx)
+			err = attributevalue.UnmarshalWithOptions(m, &vx)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
 			}
@@ -145,7 +147,7 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 			return nil
 		case *types.AttributeValueMemberS:
 			var vx string
-			err = attributevalue.Unmarshal(m, &vx)
+			err = attributevalue.UnmarshalWithOptions(m, &vx)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
 			}
@@ -153,7 +155,7 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 			return nil
 		case *types.AttributeValueMemberBOOL:
 			var vx bool
-			err = attributevalue.Unmarshal(m, &vx)
+			err = attributevalue.UnmarshalWithOptions(m, &vx)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
 			}
@@ -161,7 +163,7 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 			return nil
 		case *types.AttributeValueMemberN:
 			var vx float64
-			err = attributevalue.Unmarshal(m, &vx)
+			err = attributevalue.UnmarshalWithOptions(m, &vx)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal structpb Value field: %w", err)
 			}
@@ -175,23 +177,23 @@ func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message, opts ...Dec
 		}
 	// wrapper types can just call the sdk unmarshal on the wrapped value
 	case *wrapperspb.StringValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.BoolValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.BytesValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.DoubleValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.FloatValue:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.Int32Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.Int64Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.UInt32Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	case *wrapperspb.UInt64Value:
-		return attributevalue.Unmarshal(m, &xt.Value)
+		return attributevalue.UnmarshalWithOptions(m, &xt.Value)
 	default:
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
 	}

@@ -12,15 +12,16 @@ import (
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *OtherKitchen) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.AnotherKitchen != nil {
-		m16, err := ddb.MarshalDynamoMessage(x.GetAnotherKitchen(), o...)
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.AnotherKitchen != nil && eo.IsMasked("16") {
+		m16, err := ddb.MarshalDynamoMessage(x.GetAnotherKitchen(), ddb.WithEncodingOptions(eo.SubMask("16")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'AnotherKitchen': %w", err)
 		}
 		m["16"] = m16
 	}
-	if x.OtherTimer != nil {
-		m17, err := ddb.MarshalDynamoMessage(x.GetOtherTimer(), o...)
+	if x.OtherTimer != nil && eo.IsMasked("17") {
+		m17, err := ddb.MarshalDynamoMessage(x.GetOtherTimer(), ddb.WithEncodingOptions(eo.SubMask("17")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OtherTimer': %w", err)
 		}

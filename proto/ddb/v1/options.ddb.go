@@ -12,19 +12,20 @@ import (
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *FieldOptions) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Name != nil {
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.Name != nil && eo.IsMasked("1") {
 		m["1"], err = attributevalue.Marshal(x.GetName())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Name': %w", err)
 		}
 	}
-	if x.Pk != nil {
+	if x.Pk != nil && eo.IsMasked("2") {
 		m["2"], err = attributevalue.Marshal(x.GetPk())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Pk': %w", err)
 		}
 	}
-	if x.Sk != nil {
+	if x.Sk != nil && eo.IsMasked("3") {
 		m["3"], err = attributevalue.Marshal(x.GetSk())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Sk': %w", err)

@@ -19,13 +19,14 @@ import (
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Engine) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Brand != "" {
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.Brand != "" && eo.IsMasked("1") {
 		m["1"], err = attributevalue.Marshal(x.GetBrand())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Brand': %w", err)
 		}
 	}
-	if x.Dirtyness != 0 {
+	if x.Dirtyness != 0 && eo.IsMasked("2") {
 		m["2"], err = attributevalue.Marshal(x.GetDirtyness())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Dirtyness': %w", err)
@@ -76,20 +77,21 @@ func (x *Car) MarshalDynamoKey() (m map[string]types.AttributeValue, err error) 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Car) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Engine != nil {
-		m1, err := ddb.MarshalDynamoMessage(x.GetEngine(), o...)
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.Engine != nil && eo.IsMasked("1") {
+		m1, err := ddb.MarshalDynamoMessage(x.GetEngine(), ddb.WithEncodingOptions(eo.SubMask("1")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Engine': %w", err)
 		}
 		m["1"] = m1
 	}
-	if x.NrOfWheels != 0 {
+	if x.NrOfWheels != 0 && eo.IsMasked("ws") {
 		m["ws"], err = attributevalue.Marshal(x.GetNrOfWheels())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NrOfWheels': %w", err)
 		}
 	}
-	if x.Name != "" {
+	if x.Name != "" && eo.IsMasked("2") {
 		m["2"], err = attributevalue.Marshal(x.GetName())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Name': %w", err)
@@ -121,7 +123,8 @@ func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue, o ...ddb.De
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Appliance) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Brand != "" {
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.Brand != "" && eo.IsMasked("1") {
 		m["1"], err = attributevalue.Marshal(x.GetBrand())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Brand': %w", err)
@@ -168,79 +171,80 @@ func (x *Kitchen) MarshalDynamoKey() (m map[string]types.AttributeValue, err err
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Kitchen) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Brand != "" {
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.Brand != "" && eo.IsMasked("1") {
 		m["1"], err = attributevalue.Marshal(x.GetBrand())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Brand': %w", err)
 		}
 	}
-	if x.IsRenovated != false {
+	if x.IsRenovated != false && eo.IsMasked("2") {
 		m["2"], err = attributevalue.Marshal(x.GetIsRenovated())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'IsRenovated': %w", err)
 		}
 	}
-	if x.QrCode != nil {
+	if x.QrCode != nil && eo.IsMasked("3") {
 		m["3"], err = attributevalue.Marshal(x.GetQrCode())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'QrCode': %w", err)
 		}
 	}
-	if x.NumSmallKnifes != 0 {
+	if x.NumSmallKnifes != 0 && eo.IsMasked("4") {
 		m["4"], err = attributevalue.Marshal(x.GetNumSmallKnifes())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NumSmallKnifes': %w", err)
 		}
 	}
-	if x.NumSharpKnifes != 0 {
+	if x.NumSharpKnifes != 0 && eo.IsMasked("5") {
 		m["5"], err = attributevalue.Marshal(x.GetNumSharpKnifes())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NumSharpKnifes': %w", err)
 		}
 	}
-	if x.NumBluntKnifes != 0 {
+	if x.NumBluntKnifes != 0 && eo.IsMasked("6") {
 		m["6"], err = attributevalue.Marshal(x.GetNumBluntKnifes())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NumBluntKnifes': %w", err)
 		}
 	}
-	if x.NumSmallForks != 0 {
+	if x.NumSmallForks != 0 && eo.IsMasked("7") {
 		m["7"], err = attributevalue.Marshal(x.GetNumSmallForks())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NumSmallForks': %w", err)
 		}
 	}
-	if x.NumMediumForks != 0 {
+	if x.NumMediumForks != 0 && eo.IsMasked("8") {
 		m["8"], err = attributevalue.Marshal(x.GetNumMediumForks())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NumMediumForks': %w", err)
 		}
 	}
-	if x.NumLargeForks != 0 {
+	if x.NumLargeForks != 0 && eo.IsMasked("9") {
 		m["9"], err = attributevalue.Marshal(x.GetNumLargeForks())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'NumLargeForks': %w", err)
 		}
 	}
-	if x.PercentBlackTiles != 0 {
+	if x.PercentBlackTiles != 0 && eo.IsMasked("10") {
 		m["10"], err = attributevalue.Marshal(x.GetPercentBlackTiles())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'PercentBlackTiles': %w", err)
 		}
 	}
-	if x.PercentWhiteTiles != 0 {
+	if x.PercentWhiteTiles != 0 && eo.IsMasked("11") {
 		m["11"], err = attributevalue.Marshal(x.GetPercentWhiteTiles())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'PercentWhiteTiles': %w", err)
 		}
 	}
-	if x.Dirtyness != 0 {
+	if x.Dirtyness != 0 && eo.IsMasked("12") {
 		m["12"], err = attributevalue.Marshal(x.GetDirtyness())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Dirtyness': %w", err)
 		}
 	}
-	if len(x.Furniture) != 0 {
+	if len(x.Furniture) != 0 && eo.IsMasked("13") {
 		m13 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.Furniture {
 			mk := fmt.Sprintf("%d", k)
@@ -251,7 +255,7 @@ func (x *Kitchen) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types
 				m13.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := ddb.MarshalDynamoMessage(v, o...)
+			mv, err := ddb.MarshalDynamoMessage(v, ddb.WithEncodingOptions(eo.SubMask("13")))
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'Furniture': %w", err)
 			}
@@ -259,48 +263,48 @@ func (x *Kitchen) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types
 		}
 		m["13"] = m13
 	}
-	if len(x.Calendar) != 0 {
+	if len(x.Calendar) != 0 && eo.IsMasked("14") {
 		m["14"], err = attributevalue.Marshal(x.GetCalendar())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Calendar': %w", err)
 		}
 	}
-	if x.WasherEngine != nil {
-		m15, err := ddb.MarshalDynamoMessage(x.GetWasherEngine(), o...)
+	if x.WasherEngine != nil && eo.IsMasked("15") {
+		m15, err := ddb.MarshalDynamoMessage(x.GetWasherEngine(), ddb.WithEncodingOptions(eo.SubMask("15")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'WasherEngine': %w", err)
 		}
 		m["15"] = m15
 	}
-	if x.ExtraKitchen != nil {
-		m16, err := ddb.MarshalDynamoMessage(x.GetExtraKitchen(), o...)
+	if x.ExtraKitchen != nil && eo.IsMasked("16") {
+		m16, err := ddb.MarshalDynamoMessage(x.GetExtraKitchen(), ddb.WithEncodingOptions(eo.SubMask("16")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'ExtraKitchen': %w", err)
 		}
 		m["16"] = m16
 	}
-	if x.Timer != nil {
-		m17, err := ddb.MarshalDynamoMessage(x.GetTimer(), o...)
+	if x.Timer != nil && eo.IsMasked("17") {
+		m17, err := ddb.MarshalDynamoMessage(x.GetTimer(), ddb.WithEncodingOptions(eo.SubMask("17")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Timer': %w", err)
 		}
 		m["17"] = m17
 	}
-	if x.WallTime != nil {
-		m18, err := ddb.MarshalDynamoMessage(x.GetWallTime(), o...)
+	if x.WallTime != nil && eo.IsMasked("18") {
+		m18, err := ddb.MarshalDynamoMessage(x.GetWallTime(), ddb.WithEncodingOptions(eo.SubMask("18")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'WallTime': %w", err)
 		}
 		m["18"] = m18
 	}
-	if len(x.ApplianceEngines) != 0 {
+	if len(x.ApplianceEngines) != 0 && eo.IsMasked("19") {
 		m19 := &types.AttributeValueMemberL{}
 		for k, v := range x.ApplianceEngines {
 			if v == nil {
 				m19.Value = append(m19.Value, &types.AttributeValueMemberNULL{Value: true})
 				continue
 			}
-			mv, err := ddb.MarshalDynamoMessage(v, o...)
+			mv, err := ddb.MarshalDynamoMessage(v, ddb.WithEncodingOptions(eo.SubMask("19")))
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal item '%d' of field 'ApplianceEngines': %w", k, err)
 			}
@@ -308,48 +312,48 @@ func (x *Kitchen) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types
 		}
 		m["19"] = m19
 	}
-	if len(x.OtherBrands) != 0 {
+	if len(x.OtherBrands) != 0 && eo.IsMasked("20") {
 		m["20"], err = attributevalue.Marshal(x.GetOtherBrands())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OtherBrands': %w", err)
 		}
 	}
-	if x.SomeAny != nil {
-		m21, err := ddb.MarshalDynamoMessage(x.GetSomeAny(), o...)
+	if x.SomeAny != nil && eo.IsMasked("21") {
+		m21, err := ddb.MarshalDynamoMessage(x.GetSomeAny(), ddb.WithEncodingOptions(eo.SubMask("21")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeAny': %w", err)
 		}
 		m["21"] = m21
 	}
-	if x.SomeMask != nil {
-		m22, err := ddb.MarshalDynamoMessage(x.GetSomeMask(), o...)
+	if x.SomeMask != nil && eo.IsMasked("22") {
+		m22, err := ddb.MarshalDynamoMessage(x.GetSomeMask(), ddb.WithEncodingOptions(eo.SubMask("22")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeMask': %w", err)
 		}
 		m["22"] = m22
 	}
-	if x.SomeValue != nil {
-		m23, err := ddb.MarshalDynamoMessage(x.GetSomeValue(), o...)
+	if x.SomeValue != nil && eo.IsMasked("23") {
+		m23, err := ddb.MarshalDynamoMessage(x.GetSomeValue(), ddb.WithEncodingOptions(eo.SubMask("23")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeValue': %w", err)
 		}
 		m["23"] = m23
 	}
-	if x.OptString != nil {
+	if x.OptString != nil && eo.IsMasked("24") {
 		m["24"], err = attributevalue.Marshal(x.GetOptString())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OptString': %w", err)
 		}
 	}
-	if x.ValStr != nil {
-		m25, err := ddb.MarshalDynamoMessage(x.GetValStr(), o...)
+	if x.ValStr != nil && eo.IsMasked("25") {
+		m25, err := ddb.MarshalDynamoMessage(x.GetValStr(), ddb.WithEncodingOptions(eo.SubMask("25")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'ValStr': %w", err)
 		}
 		m["25"] = m25
 	}
-	if x.ValBytes != nil {
-		m26, err := ddb.MarshalDynamoMessage(x.GetValBytes(), o...)
+	if x.ValBytes != nil && eo.IsMasked("26") {
+		m26, err := ddb.MarshalDynamoMessage(x.GetValBytes(), ddb.WithEncodingOptions(eo.SubMask("26")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'ValBytes': %w", err)
 		}
@@ -541,97 +545,98 @@ func (x *Empty) UnmarshalDynamoItem(m map[string]types.AttributeValue, o ...ddb.
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *MapGalore) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if len(x.Int64Int64) != 0 {
+	eo := ddb.ApplyEncodingOptions(o...)
+	if len(x.Int64Int64) != 0 && eo.IsMasked("1") {
 		m["1"], err = attributevalue.Marshal(x.GetInt64Int64())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Int64Int64': %w", err)
 		}
 	}
-	if len(x.Uint64Uint64) != 0 {
+	if len(x.Uint64Uint64) != 0 && eo.IsMasked("2") {
 		m["2"], err = attributevalue.Marshal(x.GetUint64Uint64())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Uint64Uint64': %w", err)
 		}
 	}
-	if len(x.Fixed64Fixed64) != 0 {
+	if len(x.Fixed64Fixed64) != 0 && eo.IsMasked("3") {
 		m["3"], err = attributevalue.Marshal(x.GetFixed64Fixed64())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Fixed64Fixed64': %w", err)
 		}
 	}
-	if len(x.Sint64Sint64) != 0 {
+	if len(x.Sint64Sint64) != 0 && eo.IsMasked("4") {
 		m["4"], err = attributevalue.Marshal(x.GetSint64Sint64())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Sint64Sint64': %w", err)
 		}
 	}
-	if len(x.Sfixed64Sfixed64) != 0 {
+	if len(x.Sfixed64Sfixed64) != 0 && eo.IsMasked("5") {
 		m["5"], err = attributevalue.Marshal(x.GetSfixed64Sfixed64())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Sfixed64Sfixed64': %w", err)
 		}
 	}
-	if len(x.Int32Int32) != 0 {
+	if len(x.Int32Int32) != 0 && eo.IsMasked("6") {
 		m["6"], err = attributevalue.Marshal(x.GetInt32Int32())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Int32Int32': %w", err)
 		}
 	}
-	if len(x.Uint32Uint32) != 0 {
+	if len(x.Uint32Uint32) != 0 && eo.IsMasked("7") {
 		m["7"], err = attributevalue.Marshal(x.GetUint32Uint32())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Uint32Uint32': %w", err)
 		}
 	}
-	if len(x.Fixed32Fixed32) != 0 {
+	if len(x.Fixed32Fixed32) != 0 && eo.IsMasked("8") {
 		m["8"], err = attributevalue.Marshal(x.GetFixed32Fixed32())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Fixed32Fixed32': %w", err)
 		}
 	}
-	if len(x.Sint32Sint32) != 0 {
+	if len(x.Sint32Sint32) != 0 && eo.IsMasked("9") {
 		m["9"], err = attributevalue.Marshal(x.GetSint32Sint32())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Sint32Sint32': %w", err)
 		}
 	}
-	if len(x.Sfixed32Sfixed32) != 0 {
+	if len(x.Sfixed32Sfixed32) != 0 && eo.IsMasked("10") {
 		m["10"], err = attributevalue.Marshal(x.GetSfixed32Sfixed32())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Sfixed32Sfixed32': %w", err)
 		}
 	}
-	if len(x.Stringstring) != 0 {
+	if len(x.Stringstring) != 0 && eo.IsMasked("11") {
 		m["11"], err = attributevalue.Marshal(x.GetStringstring())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Stringstring': %w", err)
 		}
 	}
-	if len(x.Boolbool) != 0 {
+	if len(x.Boolbool) != 0 && eo.IsMasked("12") {
 		m["12"], err = attributevalue.Marshal(x.GetBoolbool())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Boolbool': %w", err)
 		}
 	}
-	if len(x.Stringbytes) != 0 {
+	if len(x.Stringbytes) != 0 && eo.IsMasked("13") {
 		m["13"], err = attributevalue.Marshal(x.GetStringbytes())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Stringbytes': %w", err)
 		}
 	}
-	if len(x.Stringdouble) != 0 {
+	if len(x.Stringdouble) != 0 && eo.IsMasked("14") {
 		m["14"], err = attributevalue.Marshal(x.GetStringdouble())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Stringdouble': %w", err)
 		}
 	}
-	if len(x.Stringfloat) != 0 {
+	if len(x.Stringfloat) != 0 && eo.IsMasked("15") {
 		m["15"], err = attributevalue.Marshal(x.GetStringfloat())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Stringfloat': %w", err)
 		}
 	}
-	if len(x.Stringduration) != 0 {
+	if len(x.Stringduration) != 0 && eo.IsMasked("16") {
 		m16 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.Stringduration {
 			mk := k
@@ -642,7 +647,7 @@ func (x *MapGalore) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]typ
 				m16.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := ddb.MarshalDynamoMessage(v, o...)
+			mv, err := ddb.MarshalDynamoMessage(v, ddb.WithEncodingOptions(eo.SubMask("16")))
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'Stringduration': %w", err)
 			}
@@ -650,7 +655,7 @@ func (x *MapGalore) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]typ
 		}
 		m["16"] = m16
 	}
-	if len(x.Stringtimestamp) != 0 {
+	if len(x.Stringtimestamp) != 0 && eo.IsMasked("17") {
 		m17 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.Stringtimestamp {
 			mk := k
@@ -661,7 +666,7 @@ func (x *MapGalore) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]typ
 				m17.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := ddb.MarshalDynamoMessage(v, o...)
+			mv, err := ddb.MarshalDynamoMessage(v, ddb.WithEncodingOptions(eo.SubMask("17")))
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'Stringtimestamp': %w", err)
 			}
@@ -780,8 +785,9 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue, o ...
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *ValueGalore) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.SomeValue != nil {
-		m1, err := ddb.MarshalDynamoMessage(x.GetSomeValue(), o...)
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.SomeValue != nil && eo.IsMasked("1") {
+		m1, err := ddb.MarshalDynamoMessage(x.GetSomeValue(), ddb.WithEncodingOptions(eo.SubMask("1")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'SomeValue': %w", err)
 		}
@@ -805,46 +811,47 @@ func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue, o .
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *FieldPresence) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
-	if x.Str != "" {
+	eo := ddb.ApplyEncodingOptions(o...)
+	if x.Str != "" && eo.IsMasked("str") {
 		m["str"], err = attributevalue.Marshal(x.GetStr())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Str': %w", err)
 		}
 	}
-	if x.OptStr != nil {
+	if x.OptStr != nil && eo.IsMasked("optStr") {
 		m["optStr"], err = attributevalue.Marshal(x.GetOptStr())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OptStr': %w", err)
 		}
 	}
-	if x.Msg != nil {
-		m3, err := ddb.MarshalDynamoMessage(x.GetMsg(), o...)
+	if x.Msg != nil && eo.IsMasked("msg") {
+		m3, err := ddb.MarshalDynamoMessage(x.GetMsg(), ddb.WithEncodingOptions(eo.SubMask("msg")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Msg': %w", err)
 		}
 		m["msg"] = m3
 	}
-	if x.OptMsg != nil {
-		m4, err := ddb.MarshalDynamoMessage(x.GetOptMsg(), o...)
+	if x.OptMsg != nil && eo.IsMasked("optMsg") {
+		m4, err := ddb.MarshalDynamoMessage(x.GetOptMsg(), ddb.WithEncodingOptions(eo.SubMask("optMsg")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OptMsg': %w", err)
 		}
 		m["optMsg"] = m4
 	}
-	if len(x.StrList) != 0 {
+	if len(x.StrList) != 0 && eo.IsMasked("strList") {
 		m["strList"], err = attributevalue.Marshal(x.GetStrList())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'StrList': %w", err)
 		}
 	}
-	if len(x.MsgList) != 0 {
+	if len(x.MsgList) != 0 && eo.IsMasked("msgList") {
 		m6 := &types.AttributeValueMemberL{}
 		for k, v := range x.MsgList {
 			if v == nil {
 				m6.Value = append(m6.Value, &types.AttributeValueMemberNULL{Value: true})
 				continue
 			}
-			mv, err := ddb.MarshalDynamoMessage(v, o...)
+			mv, err := ddb.MarshalDynamoMessage(v, ddb.WithEncodingOptions(eo.SubMask("msgList")))
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal item '%d' of field 'MsgList': %w", k, err)
 			}
@@ -852,13 +859,13 @@ func (x *FieldPresence) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string
 		}
 		m["msgList"] = m6
 	}
-	if len(x.StrMap) != 0 {
+	if len(x.StrMap) != 0 && eo.IsMasked("strMap") {
 		m["strMap"], err = attributevalue.Marshal(x.GetStrMap())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'StrMap': %w", err)
 		}
 	}
-	if len(x.MsgMap) != 0 {
+	if len(x.MsgMap) != 0 && eo.IsMasked("msgMap") {
 		m8 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 		for k, v := range x.MsgMap {
 			mk := k
@@ -869,7 +876,7 @@ func (x *FieldPresence) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string
 				m8.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
 				continue
 			}
-			mv, err := ddb.MarshalDynamoMessage(v, o...)
+			mv, err := ddb.MarshalDynamoMessage(v, ddb.WithEncodingOptions(eo.SubMask("msgMap")))
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal map value of field 'MsgMap': %w", err)
 			}
@@ -877,89 +884,89 @@ func (x *FieldPresence) MarshalDynamoItem(o ...ddb.EncodingOption) (m map[string
 		}
 		m["msgMap"] = m8
 	}
-	if x.Enum != 0 {
+	if x.Enum != 0 && eo.IsMasked("enum") {
 		m["enum"], err = attributevalue.Marshal(x.GetEnum())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Enum': %w", err)
 		}
 	}
-	if x.OptEnum != nil {
+	if x.OptEnum != nil && eo.IsMasked("optEnum") {
 		m["optEnum"], err = attributevalue.Marshal(x.GetOptEnum())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OptEnum': %w", err)
 		}
 	}
-	if onev, ok := x.Oo.(*FieldPresence_OneofStr); ok && onev != nil {
+	if onev, ok := x.Oo.(*FieldPresence_OneofStr); ok && onev != nil && eo.IsMasked("oneofStr") {
 		m["oneofStr"], err = attributevalue.Marshal(x.GetOneofStr())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OneofStr': %w", err)
 		}
 	}
-	if onev, ok := x.Oo.(*FieldPresence_OneofMsg); ok && onev != nil {
-		m12, err := ddb.MarshalDynamoMessage(x.GetOneofMsg(), o...)
+	if onev, ok := x.Oo.(*FieldPresence_OneofMsg); ok && onev != nil && eo.IsMasked("oneofMsg") {
+		m12, err := ddb.MarshalDynamoMessage(x.GetOneofMsg(), ddb.WithEncodingOptions(eo.SubMask("oneofMsg")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OneofMsg': %w", err)
 		}
 		m["oneofMsg"] = m12
 	}
-	if x.StrVal != nil {
-		m13, err := ddb.MarshalDynamoMessage(x.GetStrVal(), o...)
+	if x.StrVal != nil && eo.IsMasked("strVal") {
+		m13, err := ddb.MarshalDynamoMessage(x.GetStrVal(), ddb.WithEncodingOptions(eo.SubMask("strVal")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'StrVal': %w", err)
 		}
 		m["strVal"] = m13
 	}
-	if x.BoolVal != nil {
-		m14, err := ddb.MarshalDynamoMessage(x.GetBoolVal(), o...)
+	if x.BoolVal != nil && eo.IsMasked("boolVal") {
+		m14, err := ddb.MarshalDynamoMessage(x.GetBoolVal(), ddb.WithEncodingOptions(eo.SubMask("boolVal")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'BoolVal': %w", err)
 		}
 		m["boolVal"] = m14
 	}
-	if x.BytesVal != nil {
-		m15, err := ddb.MarshalDynamoMessage(x.GetBytesVal(), o...)
+	if x.BytesVal != nil && eo.IsMasked("bytesVal") {
+		m15, err := ddb.MarshalDynamoMessage(x.GetBytesVal(), ddb.WithEncodingOptions(eo.SubMask("bytesVal")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'BytesVal': %w", err)
 		}
 		m["bytesVal"] = m15
 	}
-	if x.DoubleVal != nil {
-		m16, err := ddb.MarshalDynamoMessage(x.GetDoubleVal(), o...)
+	if x.DoubleVal != nil && eo.IsMasked("doubleVal") {
+		m16, err := ddb.MarshalDynamoMessage(x.GetDoubleVal(), ddb.WithEncodingOptions(eo.SubMask("doubleVal")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'DoubleVal': %w", err)
 		}
 		m["doubleVal"] = m16
 	}
-	if x.FloatVal != nil {
-		m17, err := ddb.MarshalDynamoMessage(x.GetFloatVal(), o...)
+	if x.FloatVal != nil && eo.IsMasked("floatVal") {
+		m17, err := ddb.MarshalDynamoMessage(x.GetFloatVal(), ddb.WithEncodingOptions(eo.SubMask("floatVal")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'FloatVal': %w", err)
 		}
 		m["floatVal"] = m17
 	}
-	if x.Int32Val != nil {
-		m18, err := ddb.MarshalDynamoMessage(x.GetInt32Val(), o...)
+	if x.Int32Val != nil && eo.IsMasked("int32Val") {
+		m18, err := ddb.MarshalDynamoMessage(x.GetInt32Val(), ddb.WithEncodingOptions(eo.SubMask("int32Val")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Int32Val': %w", err)
 		}
 		m["int32Val"] = m18
 	}
-	if x.Int64Val != nil {
-		m19, err := ddb.MarshalDynamoMessage(x.GetInt64Val(), o...)
+	if x.Int64Val != nil && eo.IsMasked("int64Val") {
+		m19, err := ddb.MarshalDynamoMessage(x.GetInt64Val(), ddb.WithEncodingOptions(eo.SubMask("int64Val")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Int64Val': %w", err)
 		}
 		m["int64Val"] = m19
 	}
-	if x.Uint32Val != nil {
-		m20, err := ddb.MarshalDynamoMessage(x.GetUint32Val(), o...)
+	if x.Uint32Val != nil && eo.IsMasked("uint32Val") {
+		m20, err := ddb.MarshalDynamoMessage(x.GetUint32Val(), ddb.WithEncodingOptions(eo.SubMask("uint32Val")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Uint32Val': %w", err)
 		}
 		m["uint32Val"] = m20
 	}
-	if x.Uint64Val != nil {
-		m21, err := ddb.MarshalDynamoMessage(x.GetUint64Val(), o...)
+	if x.Uint64Val != nil && eo.IsMasked("uint64Val") {
+		m21, err := ddb.MarshalDynamoMessage(x.GetUint64Val(), ddb.WithEncodingOptions(eo.SubMask("uint64Val")))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'Uint64Val': %w", err)
 		}

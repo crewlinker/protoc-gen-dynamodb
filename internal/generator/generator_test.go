@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega/format"
@@ -239,6 +240,42 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 			}},
 		}, nil),
 )
+
+var _ = Describe("masked marshalling", func() {
+
+	It("should marshal only the fields that are selected", func() {
+		k1 := &messagev1.Kitchen{Brand: "Siemens", IsRenovated: true}
+		item, err := k1.MarshalDynamoItem(ddb.WithMask("1"))
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(item).To(Equal(map[string]types.AttributeValue{
+			"1": &types.AttributeValueMemberS{Value: "Siemens"},
+		}))
+	})
+
+	It("should marshal only nested message that are selected", func() {
+		k1 := &messagev1.Kitchen{
+			Brand:       "Siemens",
+			IsRenovated: true,
+			ExtraKitchen: &messagev1.Kitchen{
+				Brand:          "Bosch",
+				NumSmallKnifes: 64,
+			},
+		}
+		item, err := k1.MarshalDynamoItem(ddb.WithMask("2", "16.4"))
+		Expect(err).ToNot(HaveOccurred())
+		Expect(item).To(Equal(map[string]types.AttributeValue{
+			"2": &types.AttributeValueMemberBOOL{Value: true},
+			"16": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+				"4": &types.AttributeValueMemberN{Value: "64"},
+			}},
+		}))
+	})
+
+	// @TODO test that it only marshals the map fields (even without recursing)
+	// @TODO test masking a list of messages using numeric index (and error on non-numeric index)
+
+})
 
 // We fuzz our implementation by filling the kitchen message with random data, then marshal and unmarshal
 // to check if it results in the output being equal to the input.

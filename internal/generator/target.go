@@ -22,6 +22,7 @@ type Target struct {
 	src    *protogen.File
 	logs   *zap.Logger
 	idents struct {
+		ddb       string
 		marshal   Code
 		unmarshal Code
 		encopt    Code
@@ -111,23 +112,6 @@ func (tg *Target) fieldZeroValue(f *protogen.Field) *Statement {
 	}
 }
 
-// marshalPresenceCond generates code for the if statements condition that checks if the field
-// should be included in the marshalled attribute map.
-func (tg *Target) marshalPresenceCond(f *protogen.Field) []Code {
-	switch {
-	case f.Oneof != nil && !f.Desc.HasOptionalKeyword():
-		return []Code{
-			List(Id("onev"), Id("ok")).Op(":=").Id("x").Dot(f.Oneof.GoName).Assert(Op("*").
-				Id(fmt.Sprintf("%s_%s", f.Parent.GoIdent.GoName, f.GoName))),
-			Id("ok").Op("&&").Id("onev").Op("!=").Add(tg.fieldZeroValue(f)),
-		}
-	case f.Desc.IsList(), f.Desc.IsMap():
-		return []Code{Len(Id("x").Dot(f.GoName)).Op("!=").Lit(0)}
-	default:
-		return []Code{Id("x").Dot(f.GoName).Op("!=").Add(tg.fieldZeroValue(f))}
-	}
-}
-
 // Generate peforms the actual code generation
 func (tg *Target) Generate(w io.Writer) error {
 	f := NewFile(string(tg.src.GoPackageName))
@@ -139,11 +123,12 @@ func (tg *Target) Generate(w io.Writer) error {
 	}
 
 	// setup qualifiers to the shared package
+	tg.idents.ddb = path.Join(bi.Path, "ddb")
 	tg.idents.marshal, tg.idents.unmarshal, tg.idents.encopt, tg.idents.decopt =
-		Qual(path.Join(bi.Path, "ddb"), "MarshalDynamoMessage"),
-		Qual(path.Join(bi.Path, "ddb"), "UnmarshalDynamoMessage"),
-		Qual(path.Join(bi.Path, "ddb"), "EncodingOption"),
-		Qual(path.Join(bi.Path, "ddb"), "DecodingOption")
+		Qual(tg.idents.ddb, "MarshalDynamoMessage"),
+		Qual(tg.idents.ddb, "UnmarshalDynamoMessage"),
+		Qual(tg.idents.ddb, "EncodingOption"),
+		Qual(tg.idents.ddb, "DecodingOption")
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {
