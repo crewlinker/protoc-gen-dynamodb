@@ -99,7 +99,12 @@ var _ = Describe("path building", func() {
 		Expect(k1.DynamoPath().ApplianceEngines().Index(1).Brand().String()).To(Equal(".19[1].1"))
 	})
 
-	// @TODO implement and test list of basic types
+	It("should allow building paths into basisc lists", func() {
+		k1 := messagev1.Kitchen{OtherBrands: []string{}}
+		Expect(k1.DynamoPath().OtherBrands().Index(100).String()).To(Equal(".20[100]"))
+	})
+
+	// @TODO test list of basic types
 	// @TODO test maps path building
 
 })
