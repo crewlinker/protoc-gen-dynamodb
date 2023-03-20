@@ -22,6 +22,7 @@ type Target struct {
 	src    *protogen.File
 	logs   *zap.Logger
 	idents struct {
+		ddb       string
 		marshal   Code
 		unmarshal Code
 	}
@@ -33,16 +34,21 @@ func (tg *Target) isSamePkgIdent(ident protogen.GoIdent) bool {
 }
 
 // fieldGoType turns a field protoreflect kind into a go type
-func (tg *Target) fieldGoType(f *protogen.Field) *Statement {
+func (tg *Target) fieldGoType(f *protogen.Field, msgSuffix ...string) *Statement {
 	if f.Message != nil {
+		identName := f.Message.GoIdent.GoName
+		if len(msgSuffix) > 0 {
+			identName = identName + msgSuffix[0]
+		}
+
 		// if the message is from the same package path as we're generating for, assume we refer
 		// to it without fullq qualifier
 		if tg.isSamePkgIdent(f.Message.GoIdent) {
-			return Id(f.Message.GoIdent.GoName)
+			return Id(identName)
 		}
 
 		// else refer to it with qualifier
-		return Qual(string(f.Message.GoIdent.GoImportPath), f.Message.GoIdent.GoName)
+		return Qual(string(f.Message.GoIdent.GoImportPath), identName)
 	}
 
 	switch f.Desc.Kind() {
@@ -136,9 +142,10 @@ func (tg *Target) Generate(w io.Writer) error {
 		return fmt.Errorf("failed to read build info: binary not build with modules support")
 	}
 
+	tg.idents.ddb = path.Join(bi.Path, "ddb")
 	tg.idents.marshal, tg.idents.unmarshal =
-		Qual(path.Join(bi.Path, "ddb"), "MarshalDynamoMessage"),
-		Qual(path.Join(bi.Path, "ddb"), "UnmarshalDynamoMessage")
+		Qual(tg.idents.ddb, "MarshalDynamoMessage"),
+		Qual(tg.idents.ddb, "UnmarshalDynamoMessage")
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {
@@ -156,6 +163,11 @@ func (tg *Target) Generate(w io.Writer) error {
 		// generate the unmarshal method
 		if err := tg.genMessageUnmarshal(f, m); err != nil {
 			return fmt.Errorf("failed to generate unmarshal: %w", err)
+		}
+
+		// generate the message paths
+		if err := tg.genMessagePaths(f, m); err != nil {
+			return fmt.Errorf("failed to generate message path: %w", err)
 		}
 	}
 

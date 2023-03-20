@@ -47,6 +47,21 @@ func (x *Engine) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err err
 	return nil
 }
 
+// EnginePath allows for constructing type-safe expression names
+type EnginePath struct {
+	ddb.Path
+}
+
+func (x *Engine) DynamoPath() EnginePath {
+	return EnginePath{ddb.Path{}}
+}
+func (p EnginePath) Brand() ddb.Path {
+	return p.Append("1")
+}
+func (p EnginePath) Dirtyness() ddb.Path {
+	return p.Append("2")
+}
+
 // PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
 func (x *Car) PartitionKey() (name string, value int64) {
 	return "ws", x.NrOfWheels
@@ -118,6 +133,24 @@ func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error)
 	return nil
 }
 
+// CarPath allows for constructing type-safe expression names
+type CarPath struct {
+	ddb.Path
+}
+
+func (x *Car) DynamoPath() CarPath {
+	return CarPath{ddb.Path{}}
+}
+func (p CarPath) Engine() EnginePath {
+	return EnginePath{p.Append("1")}
+}
+func (p CarPath) NrOfWheels() ddb.Path {
+	return p.Append("3")
+}
+func (p CarPath) Name() ddb.Path {
+	return p.Append("2")
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Appliance) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -137,6 +170,18 @@ func (x *Appliance) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 		return fmt.Errorf("failed to unmarshal field 'Brand': %w", err)
 	}
 	return nil
+}
+
+// AppliancePath allows for constructing type-safe expression names
+type AppliancePath struct {
+	ddb.Path
+}
+
+func (x *Appliance) DynamoPath() AppliancePath {
+	return AppliancePath{ddb.Path{}}
+}
+func (p AppliancePath) Brand() ddb.Path {
+	return p.Append("1")
 }
 
 // PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
@@ -527,6 +572,63 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	return nil
 }
 
+// KitchenPath allows for constructing type-safe expression names
+type KitchenPath struct {
+	ddb.Path
+}
+
+func (x *Kitchen) DynamoPath() KitchenPath {
+	return KitchenPath{ddb.Path{}}
+}
+func (p KitchenPath) Brand() ddb.Path {
+	return p.Append("1")
+}
+func (p KitchenPath) IsRenovated() ddb.Path {
+	return p.Append("2")
+}
+func (p KitchenPath) QrCode() ddb.Path {
+	return p.Append("3")
+}
+func (p KitchenPath) NumSmallKnifes() ddb.Path {
+	return p.Append("4")
+}
+func (p KitchenPath) NumSharpKnifes() ddb.Path {
+	return p.Append("5")
+}
+func (p KitchenPath) NumBluntKnifes() ddb.Path {
+	return p.Append("6")
+}
+func (p KitchenPath) NumSmallForks() ddb.Path {
+	return p.Append("7")
+}
+func (p KitchenPath) NumMediumForks() ddb.Path {
+	return p.Append("8")
+}
+func (p KitchenPath) NumLargeForks() ddb.Path {
+	return p.Append("9")
+}
+func (p KitchenPath) PercentBlackTiles() ddb.Path {
+	return p.Append("10")
+}
+func (p KitchenPath) PercentWhiteTiles() ddb.Path {
+	return p.Append("11")
+}
+func (p KitchenPath) Dirtyness() ddb.Path {
+	return p.Append("12")
+}
+func (p KitchenPath) WasherEngine() EnginePath {
+	return EnginePath{p.Append("15")}
+}
+func (p KitchenPath) ExtraKitchen() KitchenPath {
+	return KitchenPath{p.Append("16")}
+}
+func (p KitchenPath) ApplianceEngines() ddb.ListPath[EnginePath, *EnginePath] {
+	return ddb.ListPath[EnginePath, *EnginePath]{Path: p.Append("19")}
+}
+func (p KitchenPath) OptString() ddb.Path {
+	return p.Append("24")
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *Empty) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -536,6 +638,15 @@ func (x *Empty) MarshalDynamoItem() (m map[string]types.AttributeValue, err erro
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *Empty) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	return nil
+}
+
+// EmptyPath allows for constructing type-safe expression names
+type EmptyPath struct {
+	ddb.Path
+}
+
+func (x *Empty) DynamoPath() EmptyPath {
+	return EmptyPath{ddb.Path{}}
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -777,6 +888,15 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 	return nil
 }
 
+// MapGalorePath allows for constructing type-safe expression names
+type MapGalorePath struct {
+	ddb.Path
+}
+
+func (x *MapGalore) DynamoPath() MapGalorePath {
+	return MapGalorePath{ddb.Path{}}
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -800,6 +920,15 @@ func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (er
 		}
 	}
 	return nil
+}
+
+// ValueGalorePath allows for constructing type-safe expression names
+type ValueGalorePath struct {
+	ddb.Path
+}
+
+func (x *ValueGalore) DynamoPath() ValueGalorePath {
+	return ValueGalorePath{ddb.Path{}}
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -1127,4 +1256,40 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 		}
 	}
 	return nil
+}
+
+// FieldPresencePath allows for constructing type-safe expression names
+type FieldPresencePath struct {
+	ddb.Path
+}
+
+func (x *FieldPresence) DynamoPath() FieldPresencePath {
+	return FieldPresencePath{ddb.Path{}}
+}
+func (p FieldPresencePath) Str() ddb.Path {
+	return p.Append("1")
+}
+func (p FieldPresencePath) OptStr() ddb.Path {
+	return p.Append("2")
+}
+func (p FieldPresencePath) Msg() EnginePath {
+	return EnginePath{p.Append("3")}
+}
+func (p FieldPresencePath) OptMsg() EnginePath {
+	return EnginePath{p.Append("4")}
+}
+func (p FieldPresencePath) MsgList() ddb.ListPath[EnginePath, *EnginePath] {
+	return ddb.ListPath[EnginePath, *EnginePath]{Path: p.Append("6")}
+}
+func (p FieldPresencePath) Enum() ddb.Path {
+	return p.Append("9")
+}
+func (p FieldPresencePath) OptEnum() ddb.Path {
+	return p.Append("10")
+}
+func (p FieldPresencePath) OneofStr() ddb.Path {
+	return p.Append("11")
+}
+func (p FieldPresencePath) OneofMsg() EnginePath {
+	return EnginePath{p.Append("12")}
 }

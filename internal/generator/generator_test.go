@@ -83,6 +83,25 @@ var _ = Describe("handling example messages", func() {
 			"2":  &types.AttributeValueMemberS{Value: ""},
 		}))
 	})
+
+})
+
+// test the building of paths
+var _ = Describe("path building", func() {
+	It("should recursing type-safe paths", func() {
+		k1 := messagev1.Kitchen{ExtraKitchen: &messagev1.Kitchen{ExtraKitchen: &messagev1.Kitchen{Brand: "foo"}}}
+		p1 := k1.DynamoPath().ExtraKitchen().ExtraKitchen().Brand()
+		Expect(p1.String()).To(Equal(".16.16.1"))
+	})
+
+	It("should allow building paths into messages lists", func() {
+		k1 := messagev1.Kitchen{ApplianceEngines: []*messagev1.Engine{{Brand: "engine1"}}}
+		Expect(k1.DynamoPath().ApplianceEngines().Index(1).Brand().String()).To(Equal(".19[1].1"))
+	})
+
+	// @TODO implement and test list of basic types
+	// @TODO test maps path building
+
 })
 
 // assert unmarshalling of various attribute maps

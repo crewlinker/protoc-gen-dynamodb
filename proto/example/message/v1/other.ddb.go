@@ -47,3 +47,15 @@ func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 	}
 	return nil
 }
+
+// OtherKitchenPath allows for constructing type-safe expression names
+type OtherKitchenPath struct {
+	ddb.Path
+}
+
+func (x *OtherKitchen) DynamoPath() OtherKitchenPath {
+	return OtherKitchenPath{ddb.Path{}}
+}
+func (p OtherKitchenPath) AnotherKitchen() KitchenPath {
+	return KitchenPath{p.Append("16")}
+}
