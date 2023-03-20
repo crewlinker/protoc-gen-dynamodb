@@ -51,11 +51,13 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 
 // genListFieldPath implements the generation of method for building baths for message type fields
 func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
+	got := tg.fieldGoType(field, "Path")
 	if field.Message == nil {
-		return nil // @TODO skip generating lists of basic messages, does't work with generic ddb type
+		got = Qual(tg.idents.ddb, "Path")
 	}
 
-	got := tg.fieldGoType(field, "Path")
+	// @TODO but how about a list of well-known types?
+
 	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "Path")).Id(field.GoName).
 		Params().
 		Params(

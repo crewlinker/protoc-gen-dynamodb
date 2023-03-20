@@ -625,6 +625,9 @@ func (p KitchenPath) ExtraKitchen() KitchenPath {
 func (p KitchenPath) ApplianceEngines() ddb.ListPath[EnginePath, *EnginePath] {
 	return ddb.ListPath[EnginePath, *EnginePath]{Path: p.Append("19")}
 }
+func (p KitchenPath) OtherBrands() ddb.ListPath[ddb.Path, *ddb.Path] {
+	return ddb.ListPath[ddb.Path, *ddb.Path]{Path: p.Append("20")}
+}
 func (p KitchenPath) OptString() ddb.Path {
 	return p.Append("24")
 }
@@ -1277,6 +1280,9 @@ func (p FieldPresencePath) Msg() EnginePath {
 }
 func (p FieldPresencePath) OptMsg() EnginePath {
 	return EnginePath{p.Append("4")}
+}
+func (p FieldPresencePath) StrList() ddb.ListPath[ddb.Path, *ddb.Path] {
+	return ddb.ListPath[ddb.Path, *ddb.Path]{Path: p.Append("5")}
 }
 func (p FieldPresencePath) MsgList() ddb.ListPath[EnginePath, *EnginePath] {
 	return ddb.ListPath[EnginePath, *EnginePath]{Path: p.Append("6")}
