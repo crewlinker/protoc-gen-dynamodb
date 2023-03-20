@@ -6,6 +6,7 @@ import (
 	"fmt"
 	attributevalue "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 )
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -47,4 +48,22 @@ func (x *FieldOptions) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 		return fmt.Errorf("failed to unmarshal field 'Sk': %w", err)
 	}
 	return nil
+}
+
+// FieldOptionsPath allows for constructing type-safe expression names
+type FieldOptionsPath struct {
+	ddb.Path
+}
+
+func (x *FieldOptions) DynamoPath() FieldOptionsPath {
+	return FieldOptionsPath{ddb.Path{}}
+}
+func (p FieldOptionsPath) Name() ddb.Path {
+	return p.Append("1")
+}
+func (p FieldOptionsPath) Pk() ddb.Path {
+	return p.Append("2")
+}
+func (p FieldOptionsPath) Sk() ddb.Path {
+	return p.Append("3")
 }

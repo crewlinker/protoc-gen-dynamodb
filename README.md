@@ -9,6 +9,7 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
 
 - Uses sdk v2
 - Unit and e2e testing
+- Type-safe expression path building
 - Generate table definitions
 - Use protobuf field numbers
 - use official 'attributevalue' with ability to customize its behaviour
@@ -50,6 +51,19 @@ Provide functionality similar to a query builder to support building the differe
 Integrate with: https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression
 
 - Idea: Generate methods to return "NameBuilder" instances, include method method that returns "NameBuilder" for partition/sort key. So can return PartitionKeyName().AttributeExists()
+- Idea:
+  - Generate validate method for a new "Mask" type
+  - provide a method/function on the mask type that can "Mask" the output of the marshalDynamoItem, and returns another dynamo item (map).
+  - provide method/functions to turn maps into expression.ValueBuilder(s), expression.NameBuilder(s), or expression.KeyBuilders
+  - BUT, sometimes it requires string instead of ValueBuilder, eg: with key.BeginsWith($string), or namebuilder.Contains($string)
+
+There are basically parts to thi:
+
+- Providing a way to generate string paths from Go protobuf messages: when the fields names change a any logic
+  dependant on those names should no longer compile.
+- A way to turn a slice of such "compile-validated" paths into expression.Names (for projections),
+- and turn them into expression.Values when provided with the result from marshalling the (partial) item
+- A way to validate full-path strings from the client and turn them into name-value builders for update expressions
 
 ## Key generation and utility
 
@@ -82,6 +96,7 @@ What should the helping do for the various methods
 
 - [ ] Write the rules for what kind of fields can be set as a PK, or SK
 - [ ] Write what well-known types encode to what
+- [ ] Type-safe expression path building
 
 ## Feature Backlog
 
@@ -105,7 +120,8 @@ What should the helping do for the various methods
 
 ## Hardening Backlog
 
-- [ ] SHOULD unit test the "ddb" shared package
+- [ ] SHOULD fuzz the bath building
+- [ ] SHOULD unit test the "ddb" shared package to 100%
 - [ ] SHOULD test boolean key maps
 - [ ] SHOULD fix go vet checks failure
 - [ ] SHOULD Add test that errors when unsupported map type is used
