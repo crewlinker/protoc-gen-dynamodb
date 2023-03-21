@@ -53,6 +53,7 @@ message Ignored {
     string visible = 4;
 }
 
+
 // Kitchen holds all possible Protobuf field types
 message Kitchen {
     // brand of kitchen
@@ -60,7 +61,7 @@ message Kitchen {
     // is the kitchen renovated
     bool is_renovated = 2;
     // some data
-    bytes qr_code = 3 [(ddb.v1.field).sk=true];;
+    bytes qr_code = 3 [(ddb.v1.field).sk=true];
 
     // small knife count
     int32 num_small_knifes = 4;
@@ -118,6 +119,13 @@ message Kitchen {
 
     // list of timestamps
     repeated google.protobuf.Timestamp list_of_ts = 27;
+
+    // set of strings
+    repeated string string_set = 28 [(ddb.v1.field).set=true];
+    // set of numbers
+    repeated int64 number_set = 29 [(ddb.v1.field).set=true];
+    // set of bytes
+    repeated bytes bytes_set = 30 [(ddb.v1.field).set=true];
 }
 
 // Empty message

@@ -119,7 +119,6 @@ var _ = Describe("handling example messages", func() {
 			"4": &types.AttributeValueMemberS{Value: "visible"},
 		})).To(Succeed())
 		Expect(m2).To(Equal(&messagev1.Ignored{Visible: "visible"}))
-
 	})
 })
 
@@ -248,6 +247,10 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 				v, _ := structpb.NewValue(map[string]any{"foo": "bar", "dar": 1})
 				return v
 			}(),
+
+			StringSet: []string{"a", "b", "c"},
+			NumberSet: []int64{1, 100, 2000},
+			BytesSet:  [][]byte{{0x01}, {0x02}, {0x03}},
 		},
 		map[string]types.AttributeValue{
 			// string/bool/bytes
@@ -306,6 +309,15 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 				"dar": &types.AttributeValueMemberN{Value: "1"},
 				"foo": &types.AttributeValueMemberS{Value: "bar"},
 			}},
+			"28": &types.AttributeValueMemberSS{
+				Value: []string{"a", "b", "c"},
+			},
+			"29": &types.AttributeValueMemberNS{
+				Value: []string{"1", "100", "2000"},
+			},
+			"30": &types.AttributeValueMemberBS{
+				Value: [][]byte{{0x01}, {0x02}, {0x03}},
+			},
 		}, nil),
 )
 

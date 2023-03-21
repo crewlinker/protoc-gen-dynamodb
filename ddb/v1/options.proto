@@ -14,6 +14,8 @@ message FieldOptions {
     optional bool sk = 3;
     // indicate that the field should be ignored by Dynamo code generation
     optional bool omit = 4;
+    // indicate that the field should be marshalled and unmarshalled from dynamo as a set
+    optional bool set = 5;
 }
 
 extend google.protobuf.FieldOptions {

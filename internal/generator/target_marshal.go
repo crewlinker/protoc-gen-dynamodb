@@ -109,13 +109,71 @@ func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
 	}
 }
 
+// genSetFieldMarshal generates code to marshal a field into a StringSet, NumberSet or BinarySet
+func (tg *Target) genSetFieldMarshal(f *protogen.Field) []Code {
+	mid := fmt.Sprintf("m%d", f.Desc.Number())
+	var attrValMemberType string
+	var loop []Code
+	switch f.Desc.Kind() {
+	case protoreflect.BytesKind:
+		attrValMemberType = "AttributeValueMemberBS"
+		loop = append(loop,
+			Id(mid).Dot("Value").Op("=").Append(Id(mid).Dot("Value"), Id("v")))
+
+	case protoreflect.StringKind:
+		attrValMemberType = "AttributeValueMemberSS"
+		loop = append(loop,
+			Id(mid).Dot("Value").Op("=").Append(Id(mid).Dot("Value"), Id("v")))
+	case protoreflect.Int64Kind,
+		protoreflect.Uint64Kind,
+		protoreflect.Fixed64Kind,
+		protoreflect.Sint64Kind,
+		protoreflect.Sfixed64Kind,
+		protoreflect.Int32Kind,
+		protoreflect.Uint32Kind,
+		protoreflect.Fixed32Kind,
+		protoreflect.Sint32Kind,
+		protoreflect.Sfixed32Kind,
+		protoreflect.DoubleKind,
+		protoreflect.FloatKind:
+		attrValMemberType = "AttributeValueMemberNS"
+
+		// the looping logic is more difficult for number sets because we wanna use
+		// the official library to encode numbers. Which may error, and need to be type asserted.
+		loop = append(loop,
+			List(Id("av"), Err()).Op(":=").Qual(attributevalues, "Marshal").Call(Id("v")),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal set item of field '"+f.GoName+"': %w"), Err())),
+			),
+			List(Id("avn"), Id("ok")).Op(":=").Id("av").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberN")),
+			If(Op("!").Id("ok")).Block(
+				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("set item of field '"+f.GoName+"' dit not marshal to a N value"))),
+			),
+			Id(mid).Dot("Value").Op("=").Append(Id(mid).Dot("Value"), Id("avn").Dot("Value")),
+		)
+
+	default:
+		panic("unsupported set field: " + f.Desc.Kind().String())
+	}
+
+	return []Code{
+		If(tg.marshalPresenceCond(f)...).Block(
+			Id(mid).Op(":=").Op("&").Qual(dynamodbtypes, attrValMemberType).Values(),
+			For(List(Id("_"), Id("v")).Op(":=").Range().Id("x").Dot(f.GoName)).Block(loop...),
+			Id("m").Index(Lit(tg.attrName(f))).Op("=").Id(mid),
+		),
+	}
+}
+
 // genListFieldMarshal generates marshal code for a repeated field
 func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 	mid := fmt.Sprintf("m%d", f.Desc.Number())
 
-	// if its not a list of messages, they are basic types and we can just
-	// marshal it as normal
-	if f.Message == nil {
+	// if its not a list of messages, it could be marked as as a set
+	if f.Message == nil && tg.isSet(f) {
+		return tg.genSetFieldMarshal(f)
+	} else if f.Message == nil {
+		// else, it must be a repeated field of basic type, we can just marshal as usual
 		return tg.genBasicFieldMarshal(f)
 	}
 

@@ -52,3 +52,12 @@ func (tg *Target) isOmitted(f *protogen.Field) bool {
 
 	return false
 }
+
+// determine if the field is marked as the a set of strings,numbers or bytes
+func (tg *Target) isSet(f *protogen.Field) bool {
+	if fopts := FieldOptions(f); fopts != nil && fopts.Set != nil {
+		return *fopts.Set
+	}
+
+	return false
+}

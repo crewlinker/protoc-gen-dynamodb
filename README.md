@@ -89,36 +89,26 @@ What should the helping do for the various methods
 
 ## Minimal Viable Backlog
 
-- [ ] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
-- [ ] MUST deploy a buf module so users can easily include options
-- [ ] MUST clean-up partitionkey/sortkey method generation if we have type-safe path building
+- [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf) instead of dynamo map type, how does it combine with StringSets, NumberSets, ByteSets
+- [ ] SHOULD double check how `repeated bytes` field are marshalled by default, and how the set option has any effecto or not
 
 ## Documentation backlog
 
-- [ ] Write the rules for what kind of fields can be set as a PK, or SK
+- [ ] Write about the pk/sk annotation
+- [ ] Write about what of fields can be set as a PK, or SK
 - [ ] Write what well-known types encode to what
 - [ ] Type-safe expression path building, document the exceptions for messages in other packages
 - [ ] Write about the "omit" option to ignore fields for dynamo code generation
 
 ## Feature Backlog
 
-- [ ] SHOULD make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
-- [ ] COULD come up with a meschism that doesn't prevent collision of path type method names with field names. i.e: .N() prevents field from being named "N"
-- [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
-- [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option, should also cause path building method to not be generated
-- [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
+- [ ] COULD make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
+- [ ] COULD come up with a mechanism that doesn't prevent collision of path type method names with field names. i.e: .N() prevents field building from cess to "N"
 - [ ] COULD generate query building structure for FilterExpressions/KeyConditionExpressions etc
 - [ ] COULD add errors to the "MarshalDynamoKey" method if range/sort key is empty string, or empty bytes (0 number is fine?)
-- [ ] COULD generate var/consts that return the attribute name for a member, so it can be used in DynamoExpressions
-      , so instead of `attribute_not_exists(pk)` it can be `attribute_not_exists("+modelv1.ProfileSortKey+")` - Should generates methods that returns the SortKey() and PartitionKey() so interfaces can be defined
-      for helper methods
-- [ ] COULD (if we have annotations on what are the keys), to implement a GetItem implementation that fetches
-      the rest of the item from the database.
-- [ ] COULD add option to "skip unsupported" instead of error (but why not just "ignore" the field?)
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
-- [ ] COULD support pk/sk options for fields that are message types, as long as the message has textencoding interface of some sort
+- [ ] COULD support pk/sk method generation for fields that are message types, as long as the message has textencoding interface of some sort
 - [ ] COULD allow customizing the encoder/decoder options
-  - make sure that logic applies to both marshalling, and unmarshalling (new test case)
 - [ ] COULD improve usability of FieldMask encoding, instead of slice of strings of the field names in
       proto definition, could/should be the dynamodb attribute names. But this probably means implement another version of the fieldmaskpb.New() function. But https://pkg.go.dev/google.golang.org/protobuf/types/known/fieldmaskpb#Intersect states that "field.number" paths are also valid
 
@@ -141,6 +131,10 @@ What should the helping do for the various methods
 
 ## Done Backlog
 
+- [x] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
+- [x] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
+- [x] MUST deploy a buf module so users can easily include options
+- [x] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option, should also cause path building method to not be generated
 - [x] COULD implent method on path methods that return an expression.NameBuilder right away, instead of just "String()"
 - [x] SHOULD add method that marshals just the keys (if any keys are configured), fail if more keys, fail if no data in keys
 - [x] SHOULD add code generation that adds methods to return the PartitionKey and SortKey from a message
