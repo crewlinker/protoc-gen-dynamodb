@@ -83,28 +83,32 @@ var _ = Describe("handling example messages", func() {
 			"2":  &types.AttributeValueMemberS{Value: ""},
 		}))
 	})
-
 })
 
 // test the building of paths
 var _ = Describe("path building", func() {
-	It("should recursing type-safe paths", func() {
-		k1 := messagev1.Kitchen{ExtraKitchen: &messagev1.Kitchen{ExtraKitchen: &messagev1.Kitchen{Brand: "foo"}}}
-		p1 := k1.DynamoPath().ExtraKitchen().ExtraKitchen().Brand()
-		Expect(p1.String()).To(Equal(".16.16.1"))
+	It("should allow paths for basic type fields", func() {
+		Expect(messagev1.KitchenPath("").Brand()).To(Equal("1"))
 	})
 
-	It("should allow building paths into messages lists", func() {
-		k1 := messagev1.Kitchen{ApplianceEngines: []*messagev1.Engine{{Brand: "engine1"}}}
-		Expect(k1.DynamoPath().ApplianceEngines().Index(1).Brand().String()).To(Equal(".19[1].1"))
+	It("should allow paths for message type fields", func() {
+		Expect(messagev1.KitchenPath("").ExtraKitchen().Brand()).To(Equal("16.1"))
 	})
 
-	It("should allow building paths into basisc lists", func() {
-		k1 := messagev1.Kitchen{OtherBrands: []string{}}
-		Expect(k1.DynamoPath().OtherBrands().Index(100).String()).To(Equal(".20[100]"))
+	It("should allow paths for lists of basic types", func() {
+		Expect(messagev1.KitchenPath("").OtherBrands().At(10)).To(Equal(".20[10]"))
 	})
 
-	// @TODO test list of basic types
+	It("should allow paths for lists of messages", func() {
+		Expect(messagev1.KitchenPath("").ApplianceEngines().At(3).Brand()).To(Equal("19[3].1"))
+	})
+
+	It("should allow paths to message list itself", func() {
+		Expect(string(messagev1.KitchenPath("").ApplianceEngines())).To(Equal(".19"))
+	})
+
+	// @TODO test message of well-known types
+	// @TODO test list of well-known
 	// @TODO test maps path building
 })
 

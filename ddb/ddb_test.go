@@ -1,9 +1,9 @@
 package ddb_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,18 +14,39 @@ func TestDdb(t *testing.T) {
 	RunSpecs(t, "ddb")
 }
 
-var _ = Describe("expression building", func() {
-
+var _ = Describe("path building", func() {
 	It("should build with list of basic types", func() {
-		var p messagev1.KitchenP
-		fmt.Println("AAAA", p.ApplianceBrands().At(1))
-
+		expr, err := expression.NewBuilder().
+			WithUpdate(
+				expression.Set(
+					expression.Name(messagev1.InKitchen().Brand()),
+					expression.Value("foo"))).
+			Build()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(expr.Names()).To(Equal(map[string]string{
+			"#0": "1",
+		}))
 	})
-
-	// It("should build with nested names", func() {
-	// 	var p messagev1.KitchenP
-	// 	fmt.Println(p.AnotherKitchen().AnotherKitchen().ApplianceEngines().Index(1).V)
-
-	// })
-
 })
+
+var p1 string
+
+func BenchmarkBasicListPathBuilding(b *testing.B) {
+	b.ReportAllocs()
+	for n := 0; n < b.N; n++ {
+		p1 = messagev1.InKitchen().Brand()
+		if p1 != "1" {
+			b.Fatalf("failed to build: %v", p1)
+		}
+	}
+}
+
+func BenchmarkDeepNestingPathBuilding(b *testing.B) {
+	b.ReportAllocs()
+	for n := 0; n < b.N; n++ {
+		p1 = messagev1.KitchenPath("").ExtraKitchen().ExtraKitchen().ApplianceEngines().At(5).Brand()
+		if p1 != "16.16.19[5].1" {
+			b.Fatalf("failed to build: %v", p1)
+		}
+	}
+}
