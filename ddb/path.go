@@ -34,7 +34,6 @@ func (p *Path) Append(e string) Path {
 // ListPath provides the ability to append an index path element
 // for list members.
 type ListPath[T any, TP interface {
-	SetTo(Path)
 	*T
 }] struct {
 	Path
@@ -42,6 +41,11 @@ type ListPath[T any, TP interface {
 
 func (p ListPath[T, TP]) Index(i int) TP {
 	vp := TP(new(T)) // init pointer to
-	vp.SetTo(p.Append(fmt.Sprintf("[%d]", i)))
+
+	switch vpt := any(vp).(type) {
+	case interface{ SetTo(Path) }:
+		vpt.SetTo(p.Append(fmt.Sprintf("[%d]", i)))
+	}
+
 	return vp
 }
