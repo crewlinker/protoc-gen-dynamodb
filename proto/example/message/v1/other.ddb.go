@@ -7,6 +7,7 @@ import (
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	"strings"
 )
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -48,21 +49,23 @@ func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 	return nil
 }
 
-// OtherKitchen allows for constructing type-safe expression names
-type OtherKitchenPath string
-
-// InOtherKitchen starts the building of a path into a kitchen item
-func InOtherKitchen() (p OtherKitchenPath) {
-	return p
+// OtherKitchenP allows for constructing type-safe expression names
+type OtherKitchenP struct {
+	v string
 }
 
 // Set allows generic list builder to replace the path value
-func (p OtherKitchenPath) Set(v string) OtherKitchenPath {
-	p = OtherKitchenPath(v)
+func (p OtherKitchenP) Set(v string) OtherKitchenP {
+	p.v = v
 	return p
 }
 
+// String formats the path and returns it
+func (p OtherKitchenP) String() string {
+	return strings.TrimPrefix(p.v, ".")
+}
+
 // AnotherKitchen returns 'p' with the attribute name appended and allow subselecting nested message
-func (p OtherKitchenPath) AnotherKitchen() KitchenPath {
-	return KitchenPath(p + ".16")
+func (p OtherKitchenP) AnotherKitchen() KitchenP {
+	return KitchenP{v: p.v + ".16"}
 }
