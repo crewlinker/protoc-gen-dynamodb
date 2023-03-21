@@ -490,6 +490,35 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 		m["27"] = m27
 	}
+	if len(x.StringSet) != 0 {
+		m28 := &types.AttributeValueMemberSS{}
+		for _, v := range x.StringSet {
+			m28.Value = append(m28.Value, v)
+		}
+		m["28"] = m28
+	}
+	if len(x.NumberSet) != 0 {
+		m29 := &types.AttributeValueMemberNS{}
+		for _, v := range x.NumberSet {
+			av, err := attributevalue.Marshal(v)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal set item of field 'NumberSet': %w", err)
+			}
+			avn, ok := av.(*types.AttributeValueMemberN)
+			if !ok {
+				return nil, fmt.Errorf("set item of field 'NumberSet' dit not marshal to a N value")
+			}
+			m29.Value = append(m29.Value, avn.Value)
+		}
+		m["29"] = m29
+	}
+	if len(x.BytesSet) != 0 {
+		m30 := &types.AttributeValueMemberBS{}
+		for _, v := range x.BytesSet {
+			m30.Value = append(m30.Value, v)
+		}
+		m["30"] = m30
+	}
 	return m, nil
 }
 
@@ -677,6 +706,18 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 			x.ListOfTs = append(x.ListOfTs, &mv)
 		}
 	}
+	err = attributevalue.Unmarshal(m["28"], &x.StringSet)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'StringSet': %w", err)
+	}
+	err = attributevalue.Unmarshal(m["29"], &x.NumberSet)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'NumberSet': %w", err)
+	}
+	err = attributevalue.Unmarshal(m["30"], &x.BytesSet)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'BytesSet': %w", err)
+	}
 	return nil
 }
 
@@ -829,6 +870,21 @@ func (p KitchenP) ValBytes() ddb.P {
 // ListOfTs returns 'p' appended with the attribute name and allow indexing
 func (p KitchenP) ListOfTs() ddb.BasicListP {
 	return (ddb.BasicListP{}).Set(p.Val() + ".27")
+}
+
+// StringSet returns 'p' appended with the attribute name and allow indexing
+func (p KitchenP) StringSet() ddb.BasicListP {
+	return (ddb.BasicListP{}).Set(p.Val() + ".28")
+}
+
+// NumberSet returns 'p' appended with the attribute name and allow indexing
+func (p KitchenP) NumberSet() ddb.BasicListP {
+	return (ddb.BasicListP{}).Set(p.Val() + ".29")
+}
+
+// BytesSet returns 'p' appended with the attribute name and allow indexing
+func (p KitchenP) BytesSet() ddb.BasicListP {
+	return (ddb.BasicListP{}).Set(p.Val() + ".30")
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
