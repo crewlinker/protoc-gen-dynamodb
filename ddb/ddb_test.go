@@ -19,7 +19,7 @@ var _ = Describe("path building", func() {
 		expr, err := expression.NewBuilder().
 			WithUpdate(
 				expression.Set(
-					expression.Name((messagev1.KitchenP{}).Brand().String()),
+					messagev1.KitchenPath().Brand().N(),
 					expression.Value("foo"))).
 			Build()
 		Expect(err).ToNot(HaveOccurred())

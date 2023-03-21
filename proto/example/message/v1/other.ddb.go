@@ -4,6 +4,7 @@ package messagev1
 
 import (
 	"fmt"
+	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
@@ -63,6 +64,11 @@ func (p OtherKitchenP) Set(v string) OtherKitchenP {
 // String formats the path and returns it
 func (p OtherKitchenP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p OtherKitchenP) N() expression.NameBuilder {
+	return expression.Name(p.String())
 }
 
 // OtherKitchenPath starts the building of an expression path into OtherKitchen

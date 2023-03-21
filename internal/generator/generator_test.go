@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
 	fuzz "github.com/google/gofuzz"
@@ -87,33 +88,27 @@ var _ = Describe("handling example messages", func() {
 
 // test the building of paths
 var _ = Describe("path building", func() {
-	It("should allow paths for basic type fields", func() {
-		Expect(messagev1.KitchenPath().Brand().String()).To(Equal("1"))
-	})
 
-	It("should allow paths for message type fields", func() {
-		Expect(messagev1.KitchenPath().ExtraKitchen().Brand().String()).To(Equal("16.1"))
-	})
+	DescribeTable("string building", func(s interface {
+		fmt.Stringer
+		N() expression.NameBuilder
+	}, exp string) {
+		Expect(s.String()).To(Equal(exp))
 
-	It("should allow paths to lists of basic types itself", func() {
-		Expect(messagev1.KitchenPath().OtherBrands().At(10).String()).To(Equal("20[10]"))
-	})
-
-	It("should allow paths through lists of messages", func() {
-		Expect(messagev1.KitchenPath().ApplianceEngines().At(3).Brand().String()).To(Equal("19[3].1"))
-	})
-
-	It("should allow paths to message list itself", func() {
-		Expect(messagev1.KitchenPath().ApplianceEngines().String()).To(Equal("19"))
-	})
-
-	It("should allow paths to message itself", func() {
-		Expect(messagev1.KitchenPath().ExtraKitchen().String()).To(Equal("16"))
-	})
-
-	It("should allow paths to field with renamed", func() {
-		Expect(messagev1.FieldPresencePath().Str().String()).To(Equal("str"))
-	})
+		// check that expression builder accepts the paths
+		_, err := expression.NewBuilder().WithUpdate(
+			expression.Set(s.N(), expression.Value("foo")),
+		).Build()
+		Expect(err).ToNot(HaveOccurred())
+	},
+		Entry("basic type field", messagev1.KitchenPath().Brand(), "1"),
+		Entry("message type fields", messagev1.KitchenPath().ExtraKitchen().Brand(), "16.1"),
+		Entry("lists of basic types itself", messagev1.KitchenPath().OtherBrands().At(10), "20[10]"),
+		Entry("through list of messages", messagev1.KitchenPath().ApplianceEngines().At(3).Brand(), "19[3].1"),
+		Entry("to list of messages itself", messagev1.KitchenPath().ApplianceEngines(), "19"),
+		Entry("to message field itself", messagev1.KitchenPath().ExtraKitchen(), "16"),
+		Entry("to field with renamed attr", messagev1.FieldPresencePath().Str(), "str"),
+	)
 
 	// @TODO test message of well-known types
 	// @TODO test list of well-known
@@ -159,7 +154,6 @@ var _ = DescribeTable("presence unmarshaling", func(jb string, m map[string]type
 	}, &messagev1.FieldPresence{}),
 
 	Entry("null msg", `{"msg":null}`, map[string]types.AttributeValue{}, &messagev1.FieldPresence{}),
-
 	Entry("str value", `{"strVal":null}`, map[string]types.AttributeValue{}, &messagev1.FieldPresence{}),
 	Entry("str value 2", `{"strVal":""}`, map[string]types.AttributeValue{
 		"strVal": &types.AttributeValueMemberS{},

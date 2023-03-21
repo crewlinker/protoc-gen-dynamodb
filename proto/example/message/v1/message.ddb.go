@@ -5,6 +5,7 @@ package messagev1
 import (
 	"fmt"
 	attributevalue "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -62,6 +63,11 @@ func (p EngineP) Set(v string) EngineP {
 // String formats the path and returns it
 func (p EngineP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p EngineP) N() expression.NameBuilder {
+	return expression.Name(p.String())
 }
 
 // EnginePath starts the building of an expression path into Engine
@@ -166,6 +172,11 @@ func (p CarP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p CarP) N() expression.NameBuilder {
+	return expression.Name(p.String())
+}
+
 // CarPath starts the building of an expression path into Car
 func CarPath() CarP {
 	return CarP{}
@@ -221,6 +232,11 @@ func (p ApplianceP) Set(v string) ApplianceP {
 // String formats the path and returns it
 func (p ApplianceP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p ApplianceP) N() expression.NameBuilder {
+	return expression.Name(p.String())
 }
 
 // AppliancePath starts the building of an expression path into Appliance
@@ -637,6 +653,11 @@ func (p KitchenP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p KitchenP) N() expression.NameBuilder {
+	return expression.Name(p.String())
+}
+
 // KitchenPath starts the building of an expression path into Kitchen
 func KitchenPath() KitchenP {
 	return KitchenP{}
@@ -752,6 +773,11 @@ func (p EmptyP) Set(v string) EmptyP {
 // String formats the path and returns it
 func (p EmptyP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p EmptyP) N() expression.NameBuilder {
+	return expression.Name(p.String())
 }
 
 // EmptyPath starts the building of an expression path into Empty
@@ -1014,6 +1040,11 @@ func (p MapGaloreP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p MapGaloreP) N() expression.NameBuilder {
+	return expression.Name(p.String())
+}
+
 // MapGalorePath starts the building of an expression path into MapGalore
 func MapGalorePath() MapGaloreP {
 	return MapGaloreP{}
@@ -1058,6 +1089,11 @@ func (p ValueGaloreP) Set(v string) ValueGaloreP {
 // String formats the path and returns it
 func (p ValueGaloreP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p ValueGaloreP) N() expression.NameBuilder {
+	return expression.Name(p.String())
 }
 
 // ValueGalorePath starts the building of an expression path into ValueGalore
@@ -1406,6 +1442,11 @@ func (p FieldPresenceP) Set(v string) FieldPresenceP {
 // String formats the path and returns it
 func (p FieldPresenceP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// Name formats the path and returns it as a name builder used directly in expression building
+func (p FieldPresenceP) N() expression.NameBuilder {
+	return expression.Name(p.String())
 }
 
 // FieldPresencePath starts the building of an expression path into FieldPresence
