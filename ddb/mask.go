@@ -6,9 +6,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Mask struct {
-	paths map[string]struct{}
-}
+type Mask struct{}
 
 func NewMask(m proto.Message, p []string) (*Mask, error) {
 	// @TODO error if duplicate
