@@ -18,6 +18,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.45 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.14.6 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
