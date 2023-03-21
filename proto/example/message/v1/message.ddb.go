@@ -217,6 +217,48 @@ func (p ApplianceP) Brand() ddb.P {
 	return (ddb.P{}).Set(p.Val() + ".1")
 }
 
+// MarshalDynamoItem marshals dat into a dynamodb attribute map
+func (x *Ignored) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if x.Visible != "" {
+		m["4"], err = attributevalue.Marshal(x.GetVisible())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Visible': %w", err)
+		}
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *Ignored) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	err = attributevalue.Unmarshal(m["4"], &x.Visible)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Visible': %w", err)
+	}
+	return nil
+}
+
+// IgnoredP allows for constructing type-safe expression names
+type IgnoredP struct {
+	ddb.P
+}
+
+// Set allows generic list builder to replace the path value
+func (p IgnoredP) Set(v string) IgnoredP {
+	p.P = p.P.Set(v)
+	return p
+}
+
+// IgnoredPath starts the building of an expression path into Ignored
+func IgnoredPath() IgnoredP {
+	return IgnoredP{}
+}
+
+// Visible returns 'p' with the attribute name appended
+func (p IgnoredP) Visible() ddb.P {
+	return (ddb.P{}).Set(p.Val() + ".4")
+}
+
 // PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
 func (x *Kitchen) PartitionKey() (name string, value string) {
 	return "1", x.Brand

@@ -139,6 +139,10 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 
 	// generate path building methods for each field
 	for _, field := range m.Fields {
+		if tg.isOmitted(field) {
+			continue // no path building for ignored fields
+		}
+
 		switch {
 		case field.Desc.IsList():
 			tg.genListFieldPath(f, m, field)

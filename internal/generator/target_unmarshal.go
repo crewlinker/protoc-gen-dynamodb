@@ -217,6 +217,10 @@ func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 
 	// generate unmarschalling code per field kind
 	for _, field := range m.Fields {
+		if tg.isOmitted(field) {
+			continue // don't generate unmarshal code for omitted field
+		}
+
 		switch {
 		case field.Oneof != nil && !field.Desc.HasOptionalKeyword():
 			// special case are explicit oneOf fields (not optional fields)

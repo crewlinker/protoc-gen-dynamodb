@@ -12,6 +12,8 @@ message FieldOptions {
     optional bool pk = 2;
     // indicate that the field represents the item's sort key
     optional bool sk = 3;
+    // indicate that the field should be ignored by Dynamo code generation
+    optional bool omit = 4;
 }
 
 extend google.protobuf.FieldOptions {
