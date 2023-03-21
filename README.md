@@ -91,6 +91,8 @@ What should the helping do for the various methods
 
 - [ ] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
 - [ ] MUST deploy a buf module so users can easily include options
+- [ ] MUST clean-up partitionkey/sortkey method generation if we have type-safe path building
+- [ ] MUST make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
 
 ## Documentation backlog
 
@@ -101,7 +103,7 @@ What should the helping do for the various methods
 ## Feature Backlog
 
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
-- [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option
+- [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option, should also cause path building method to not be generated
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
 - [ ] COULD generate query building structure for FilterExpressions/KeyConditionExpressions etc
 - [ ] COULD add errors to the "MarshalDynamoKey" method if range/sort key is empty string, or empty bytes (0 number is fine?)

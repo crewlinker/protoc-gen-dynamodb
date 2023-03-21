@@ -14,6 +14,7 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
+	"strings"
 )
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -47,19 +48,28 @@ func (x *Engine) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err err
 	return nil
 }
 
-// EnginePath allows for constructing type-safe expression names
-type EnginePath struct {
-	ddb.Path
+// Engine allows for constructing type-safe expression names
+type EnginePath string
+
+// InEngine starts the building of a path into a kitchen item
+func InEngine() (p EnginePath) {
+	return p
 }
 
-func (x *Engine) DynamoPath() EnginePath {
-	return EnginePath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p EnginePath) Set(v string) EnginePath {
+	p = EnginePath(v)
+	return p
 }
-func (p EnginePath) Brand() ddb.Path {
-	return p.Append("1")
+
+// Brand returns 'p' with the attribute name appended
+func (p EnginePath) Brand() string {
+	return strings.TrimPrefix(string(p)+".1", ".")
 }
-func (p EnginePath) Dirtyness() ddb.Path {
-	return p.Append("2")
+
+// Dirtyness returns 'p' with the attribute name appended
+func (p EnginePath) Dirtyness() string {
+	return strings.TrimPrefix(string(p)+".2", ".")
 }
 
 // PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
@@ -133,22 +143,33 @@ func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error)
 	return nil
 }
 
-// CarPath allows for constructing type-safe expression names
-type CarPath struct {
-	ddb.Path
+// Car allows for constructing type-safe expression names
+type CarPath string
+
+// InCar starts the building of a path into a kitchen item
+func InCar() (p CarPath) {
+	return p
 }
 
-func (x *Car) DynamoPath() CarPath {
-	return CarPath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p CarPath) Set(v string) CarPath {
+	p = CarPath(v)
+	return p
 }
+
+// Engine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p CarPath) Engine() EnginePath {
-	return EnginePath{p.Append("1")}
+	return EnginePath(p + ".1")
 }
-func (p CarPath) NrOfWheels() ddb.Path {
-	return p.Append("3")
+
+// NrOfWheels returns 'p' with the attribute name appended
+func (p CarPath) NrOfWheels() string {
+	return strings.TrimPrefix(string(p)+".3", ".")
 }
-func (p CarPath) Name() ddb.Path {
-	return p.Append("2")
+
+// Name returns 'p' with the attribute name appended
+func (p CarPath) Name() string {
+	return strings.TrimPrefix(string(p)+".2", ".")
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -172,16 +193,23 @@ func (x *Appliance) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 	return nil
 }
 
-// AppliancePath allows for constructing type-safe expression names
-type AppliancePath struct {
-	ddb.Path
+// Appliance allows for constructing type-safe expression names
+type AppliancePath string
+
+// InAppliance starts the building of a path into a kitchen item
+func InAppliance() (p AppliancePath) {
+	return p
 }
 
-func (x *Appliance) DynamoPath() AppliancePath {
-	return AppliancePath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p AppliancePath) Set(v string) AppliancePath {
+	p = AppliancePath(v)
+	return p
 }
-func (p AppliancePath) Brand() ddb.Path {
-	return p.Append("1")
+
+// Brand returns 'p' with the attribute name appended
+func (p AppliancePath) Brand() string {
+	return strings.TrimPrefix(string(p)+".1", ".")
 }
 
 // PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
@@ -572,64 +600,103 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	return nil
 }
 
-// KitchenPath allows for constructing type-safe expression names
-type KitchenPath struct {
-	ddb.Path
+// Kitchen allows for constructing type-safe expression names
+type KitchenPath string
+
+// InKitchen starts the building of a path into a kitchen item
+func InKitchen() (p KitchenPath) {
+	return p
 }
 
-func (x *Kitchen) DynamoPath() KitchenPath {
-	return KitchenPath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p KitchenPath) Set(v string) KitchenPath {
+	p = KitchenPath(v)
+	return p
 }
-func (p KitchenPath) Brand() ddb.Path {
-	return p.Append("1")
+
+// Brand returns 'p' with the attribute name appended
+func (p KitchenPath) Brand() string {
+	return strings.TrimPrefix(string(p)+".1", ".")
 }
-func (p KitchenPath) IsRenovated() ddb.Path {
-	return p.Append("2")
+
+// IsRenovated returns 'p' with the attribute name appended
+func (p KitchenPath) IsRenovated() string {
+	return strings.TrimPrefix(string(p)+".2", ".")
 }
-func (p KitchenPath) QrCode() ddb.Path {
-	return p.Append("3")
+
+// QrCode returns 'p' with the attribute name appended
+func (p KitchenPath) QrCode() string {
+	return strings.TrimPrefix(string(p)+".3", ".")
 }
-func (p KitchenPath) NumSmallKnifes() ddb.Path {
-	return p.Append("4")
+
+// NumSmallKnifes returns 'p' with the attribute name appended
+func (p KitchenPath) NumSmallKnifes() string {
+	return strings.TrimPrefix(string(p)+".4", ".")
 }
-func (p KitchenPath) NumSharpKnifes() ddb.Path {
-	return p.Append("5")
+
+// NumSharpKnifes returns 'p' with the attribute name appended
+func (p KitchenPath) NumSharpKnifes() string {
+	return strings.TrimPrefix(string(p)+".5", ".")
 }
-func (p KitchenPath) NumBluntKnifes() ddb.Path {
-	return p.Append("6")
+
+// NumBluntKnifes returns 'p' with the attribute name appended
+func (p KitchenPath) NumBluntKnifes() string {
+	return strings.TrimPrefix(string(p)+".6", ".")
 }
-func (p KitchenPath) NumSmallForks() ddb.Path {
-	return p.Append("7")
+
+// NumSmallForks returns 'p' with the attribute name appended
+func (p KitchenPath) NumSmallForks() string {
+	return strings.TrimPrefix(string(p)+".7", ".")
 }
-func (p KitchenPath) NumMediumForks() ddb.Path {
-	return p.Append("8")
+
+// NumMediumForks returns 'p' with the attribute name appended
+func (p KitchenPath) NumMediumForks() string {
+	return strings.TrimPrefix(string(p)+".8", ".")
 }
-func (p KitchenPath) NumLargeForks() ddb.Path {
-	return p.Append("9")
+
+// NumLargeForks returns 'p' with the attribute name appended
+func (p KitchenPath) NumLargeForks() string {
+	return strings.TrimPrefix(string(p)+".9", ".")
 }
-func (p KitchenPath) PercentBlackTiles() ddb.Path {
-	return p.Append("10")
+
+// PercentBlackTiles returns 'p' with the attribute name appended
+func (p KitchenPath) PercentBlackTiles() string {
+	return strings.TrimPrefix(string(p)+".10", ".")
 }
-func (p KitchenPath) PercentWhiteTiles() ddb.Path {
-	return p.Append("11")
+
+// PercentWhiteTiles returns 'p' with the attribute name appended
+func (p KitchenPath) PercentWhiteTiles() string {
+	return strings.TrimPrefix(string(p)+".11", ".")
 }
-func (p KitchenPath) Dirtyness() ddb.Path {
-	return p.Append("12")
+
+// Dirtyness returns 'p' with the attribute name appended
+func (p KitchenPath) Dirtyness() string {
+	return strings.TrimPrefix(string(p)+".12", ".")
 }
+
+// WasherEngine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p KitchenPath) WasherEngine() EnginePath {
-	return EnginePath{p.Append("15")}
+	return EnginePath(p + ".15")
 }
+
+// ExtraKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p KitchenPath) ExtraKitchen() KitchenPath {
-	return KitchenPath{p.Append("16")}
+	return KitchenPath(p + ".16")
 }
-func (p KitchenPath) ApplianceEngines() ddb.ListPath[EnginePath, *EnginePath] {
-	return ddb.ListPath[EnginePath, *EnginePath]{Path: p.Append("19")}
+
+// ApplianceEngines returns 'p' appended with the attribute while allow indexing a nested message
+func (p KitchenPath) ApplianceEngines() ddb.ListPath[EnginePath] {
+	return ddb.ListPath[EnginePath](p + ".19")
 }
-func (p KitchenPath) OtherBrands() ddb.ListPath[ddb.Path, *ddb.Path] {
-	return ddb.ListPath[ddb.Path, *ddb.Path]{Path: p.Append("20")}
+
+// OtherBrands returns 'p' appended with the attribute name and allow indexing
+func (p KitchenPath) OtherBrands() ddb.BasicListPath {
+	return ddb.BasicListPath(p + ".20")
 }
-func (p KitchenPath) OptString() ddb.Path {
-	return p.Append("24")
+
+// OptString returns 'p' with the attribute name appended
+func (p KitchenPath) OptString() string {
+	return strings.TrimPrefix(string(p)+".24", ".")
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -643,13 +710,18 @@ func (x *Empty) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err erro
 	return nil
 }
 
-// EmptyPath allows for constructing type-safe expression names
-type EmptyPath struct {
-	ddb.Path
+// Empty allows for constructing type-safe expression names
+type EmptyPath string
+
+// InEmpty starts the building of a path into a kitchen item
+func InEmpty() (p EmptyPath) {
+	return p
 }
 
-func (x *Empty) DynamoPath() EmptyPath {
-	return EmptyPath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p EmptyPath) Set(v string) EmptyPath {
+	p = EmptyPath(v)
+	return p
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -891,13 +963,18 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 	return nil
 }
 
-// MapGalorePath allows for constructing type-safe expression names
-type MapGalorePath struct {
-	ddb.Path
+// MapGalore allows for constructing type-safe expression names
+type MapGalorePath string
+
+// InMapGalore starts the building of a path into a kitchen item
+func InMapGalore() (p MapGalorePath) {
+	return p
 }
 
-func (x *MapGalore) DynamoPath() MapGalorePath {
-	return MapGalorePath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p MapGalorePath) Set(v string) MapGalorePath {
+	p = MapGalorePath(v)
+	return p
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -925,13 +1002,18 @@ func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (er
 	return nil
 }
 
-// ValueGalorePath allows for constructing type-safe expression names
-type ValueGalorePath struct {
-	ddb.Path
+// ValueGalore allows for constructing type-safe expression names
+type ValueGalorePath string
+
+// InValueGalore starts the building of a path into a kitchen item
+func InValueGalore() (p ValueGalorePath) {
+	return p
 }
 
-func (x *ValueGalore) DynamoPath() ValueGalorePath {
-	return ValueGalorePath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p ValueGalorePath) Set(v string) ValueGalorePath {
+	p = ValueGalorePath(v)
+	return p
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -1261,41 +1343,66 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	return nil
 }
 
-// FieldPresencePath allows for constructing type-safe expression names
-type FieldPresencePath struct {
-	ddb.Path
+// FieldPresence allows for constructing type-safe expression names
+type FieldPresencePath string
+
+// InFieldPresence starts the building of a path into a kitchen item
+func InFieldPresence() (p FieldPresencePath) {
+	return p
 }
 
-func (x *FieldPresence) DynamoPath() FieldPresencePath {
-	return FieldPresencePath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p FieldPresencePath) Set(v string) FieldPresencePath {
+	p = FieldPresencePath(v)
+	return p
 }
-func (p FieldPresencePath) Str() ddb.Path {
-	return p.Append("1")
+
+// Str returns 'p' with the attribute name appended
+func (p FieldPresencePath) Str() string {
+	return strings.TrimPrefix(string(p)+".1", ".")
 }
-func (p FieldPresencePath) OptStr() ddb.Path {
-	return p.Append("2")
+
+// OptStr returns 'p' with the attribute name appended
+func (p FieldPresencePath) OptStr() string {
+	return strings.TrimPrefix(string(p)+".2", ".")
 }
+
+// Msg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresencePath) Msg() EnginePath {
-	return EnginePath{p.Append("3")}
+	return EnginePath(p + ".3")
 }
+
+// OptMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresencePath) OptMsg() EnginePath {
-	return EnginePath{p.Append("4")}
+	return EnginePath(p + ".4")
 }
-func (p FieldPresencePath) StrList() ddb.ListPath[ddb.Path, *ddb.Path] {
-	return ddb.ListPath[ddb.Path, *ddb.Path]{Path: p.Append("5")}
+
+// StrList returns 'p' appended with the attribute name and allow indexing
+func (p FieldPresencePath) StrList() ddb.BasicListPath {
+	return ddb.BasicListPath(p + ".5")
 }
-func (p FieldPresencePath) MsgList() ddb.ListPath[EnginePath, *EnginePath] {
-	return ddb.ListPath[EnginePath, *EnginePath]{Path: p.Append("6")}
+
+// MsgList returns 'p' appended with the attribute while allow indexing a nested message
+func (p FieldPresencePath) MsgList() ddb.ListPath[EnginePath] {
+	return ddb.ListPath[EnginePath](p + ".6")
 }
-func (p FieldPresencePath) Enum() ddb.Path {
-	return p.Append("9")
+
+// Enum returns 'p' with the attribute name appended
+func (p FieldPresencePath) Enum() string {
+	return strings.TrimPrefix(string(p)+".9", ".")
 }
-func (p FieldPresencePath) OptEnum() ddb.Path {
-	return p.Append("10")
+
+// OptEnum returns 'p' with the attribute name appended
+func (p FieldPresencePath) OptEnum() string {
+	return strings.TrimPrefix(string(p)+".10", ".")
 }
-func (p FieldPresencePath) OneofStr() ddb.Path {
-	return p.Append("11")
+
+// OneofStr returns 'p' with the attribute name appended
+func (p FieldPresencePath) OneofStr() string {
+	return strings.TrimPrefix(string(p)+".11", ".")
 }
+
+// OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresencePath) OneofMsg() EnginePath {
-	return EnginePath{p.Append("12")}
+	return EnginePath(p + ".12")
 }

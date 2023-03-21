@@ -48,14 +48,21 @@ func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 	return nil
 }
 
-// OtherKitchenPath allows for constructing type-safe expression names
-type OtherKitchenPath struct {
-	ddb.Path
+// OtherKitchen allows for constructing type-safe expression names
+type OtherKitchenPath string
+
+// InOtherKitchen starts the building of a path into a kitchen item
+func InOtherKitchen() (p OtherKitchenPath) {
+	return p
 }
 
-func (x *OtherKitchen) DynamoPath() OtherKitchenPath {
-	return OtherKitchenPath{ddb.Path{}}
+// Set allows generic list builder to replace the path value
+func (p OtherKitchenPath) Set(v string) OtherKitchenPath {
+	p = OtherKitchenPath(v)
+	return p
 }
+
+// AnotherKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p OtherKitchenPath) AnotherKitchen() KitchenPath {
-	return KitchenPath{p.Append("16")}
+	return KitchenPath(p + ".16")
 }

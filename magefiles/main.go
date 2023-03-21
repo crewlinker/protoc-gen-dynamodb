@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/magefile/mage/sh"
@@ -10,10 +11,15 @@ import (
 
 // Generate generates Go code from definition fiels
 func Generate() error {
-	return sh.Run("buf", "generate",
+	if err := sh.Run("buf", "generate",
 		"--path", "example/message",
 		"--path", "ddb",
-	)
+	); err != nil {
+		return err
+	}
+
+	// having the ddb generated file for our own options blocks generation if it fails
+	return os.Remove(filepath.Join("proto", "ddb", "v1", "options.ddb.go"))
 }
 
 // Checks runs various pre-merge checks

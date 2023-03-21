@@ -1,51 +1,20 @@
 package ddb
 
-import (
-	"fmt"
-	"strings"
-)
+import "strconv"
 
-// Path into a Dynamo protobuf message
-type Path struct{ val string }
+// BasicListPath path is a type for building a path into a list of basic types
+type BasicListPath string
 
-// SetTo allows 'p' to be set to the values of 'p2' by external implementations
-// for generic types since it doesn't allow access to shared fields.
-func (p *Path) SetTo(p2 Path) {
-	p.val = p2.val
+// At append a list index to the path and returns the whole path
+func (p BasicListPath) At(i int) string {
+	return string(p) + "[" + strconv.Itoa(i) + "]"
 }
 
-// String formats the path as a string
-func (p Path) String() string {
-	return p.val
-}
+// ListPath is a type for building paths into a list of messages
+type ListPath[T interface{ Set(v string) T }] string
 
-// Append another element to the path, it modifies 'p' and returns it.
-func (p *Path) Append(e string) Path {
-	switch {
-	case strings.HasPrefix(e, "[") && strings.HasSuffix(e, "]"):
-		p.val += e
-	default:
-		p.val += "." + e
-	}
-
-	return *p
-}
-
-// ListPath provides the ability to append an index path element
-// for list members.
-type ListPath[T any, TP interface {
-	*T
-}] struct {
-	Path
-}
-
-func (p ListPath[T, TP]) Index(i int) TP {
-	vp := TP(new(T)) // init pointer to
-
-	switch vpt := any(vp).(type) {
-	case interface{ SetTo(Path) }:
-		vpt.SetTo(p.Append(fmt.Sprintf("[%d]", i)))
-	}
-
-	return vp
+// At appends a list index to the path and returns T
+func (p ListPath[T]) At(i int) T {
+	var v T
+	return v.Set(string(p) + "[" + strconv.Itoa(i) + "]")
 }
