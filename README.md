@@ -92,17 +92,17 @@ What should the helping do for the various methods
 - [ ] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
 - [ ] MUST deploy a buf module so users can easily include options
 - [ ] MUST clean-up partitionkey/sortkey method generation if we have type-safe path building
-- [ ] MUST make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
-- [ ] COULD implent method on path methods that return an expression.NameBuilder right away, instead of just "String()"
+- [x] COULD implent method on path methods that return an expression.NameBuilder right away, instead of just "String()"
 
 ## Documentation backlog
 
 - [ ] Write the rules for what kind of fields can be set as a PK, or SK
 - [ ] Write what well-known types encode to what
-- [ ] Type-safe expression path building
+- [ ] Type-safe expression path building, document the exceptions for messages in other packages
 
 ## Feature Backlog
 
+- [ ] SHOULD make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
 - [ ] COULD come up with a meschism that doesn't prevent collision of path type method names with field names. i.e: .N() prevents field from being named "N"
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option, should also cause path building method to not be generated
@@ -124,6 +124,7 @@ What should the helping do for the various methods
 
 ## Hardening Backlog
 
+- [ ] COULD we reduce the code duplication in ddb/path.go
 - [ ] SHOULD merge the coverage from running the generator, and from unit tests when running `mage -v test`
 - [ ] SHOULD fuzz the bath building
 - [ ] SHOULD unit test the "ddb" shared package to 100%

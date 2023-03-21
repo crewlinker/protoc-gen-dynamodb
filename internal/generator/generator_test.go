@@ -108,11 +108,17 @@ var _ = Describe("path building", func() {
 		Entry("to list of messages itself", messagev1.KitchenPath().ApplianceEngines(), "19"),
 		Entry("to message field itself", messagev1.KitchenPath().ExtraKitchen(), "16"),
 		Entry("to field with renamed attr", messagev1.FieldPresencePath().Str(), "str"),
-	)
 
-	// @TODO test message of well-known types
-	// @TODO test list of well-known
-	// @TODO test maps path building
+		// message not in the same package only support direct path building, not "Through". Including
+		// well-known types.
+		Entry("well-known message field", messagev1.KitchenPath().Timer(), "17"),
+		Entry("list of well-known message field", messagev1.KitchenPath().ListOfTs().At(4), "27[4]"),
+
+		// map access, als has limit on messages outside of the package
+		Entry("to map of basic types itself", messagev1.MapGalorePath().Int64Int64().Key("a"), "1.a"),
+		Entry("to map of well-known itself", messagev1.MapGalorePath().Stringtimestamp().Key("b"), "17.b"),
+		Entry("through map of messages", messagev1.KitchenPath().ExtraKitchen().Furniture().Key("foo").Brand(), "16.13.foo.1"),
+	)
 })
 
 // assert unmarshalling of various attribute maps

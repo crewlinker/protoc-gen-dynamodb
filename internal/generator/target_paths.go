@@ -25,15 +25,10 @@ func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protoge
 // genMessageFieldPath implements the generation of method for building baths for message type fields
 func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 
-	// for well-known types we need to return specially crafted paths
-	switch field.Message.GoIdent.GoImportPath {
-	case "google.golang.org/protobuf/types/known/durationpb", // @TODO return ddb.Path
-		"google.golang.org/protobuf/types/known/timestamppb", // @TODO return ddb.Path
-		"google.golang.org/protobuf/types/known/anypb",       // @TODO return path that allows selecting 0, or 1
-		"google.golang.org/protobuf/types/known/structpb",    // @TODO return map select
-		"google.golang.org/protobuf/types/known/wrapperspb",  // @TODO return ddb.Path
-		"google.golang.org/protobuf/types/known/fieldmaskpb": // @TODO return ddb.IndexPath
-		return nil // @TODO implement
+	// repeated message field in a different package we don't support any special type-safe path construciton
+	// and instead return a basic path.
+	if !tg.isSamePkgIdent(field.Message.GoIdent) {
+		return tg.genBasicFieldPath(f, m, field) // NOTE: may support traversing of this in the future
 	}
 
 	// generate the method that append the path element
@@ -53,8 +48,11 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 
 // genListFieldPath implements the generation of method for building baths for message type fields
 func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
-	if field.Message == nil {
-		// if its not a list of messages, the path will always end and the generated method will return
+
+	// if it's a list of basic types, or the repeated message is not in the same package we return a
+	// a basic list accessor. NOTE: we maybe support external messages in the future
+	if field.Message == nil || !tg.isSamePkgIdent(field.Message.GoIdent) {
+		// If its not a list of messages, the path will always end and the generated method will return
 		// basic path builder that always returns a string with the final path
 		f.Commentf("%s returns 'p' appended with the attribute name and allow indexing", field.GoName)
 		f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
@@ -67,6 +65,7 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 		return nil
 	}
 
+	// else, we assume its a message in the same package
 	got := tg.fieldGoType(field, "P")
 	f.Commentf("%s returns 'p' appended with the attribute while allow indexing a nested message", field.GoName)
 	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
@@ -74,6 +73,39 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 		Params(Qual(tg.idents.ddb, "ListP").Types(got)).
 		Block(
 			Return(Call(Qual(tg.idents.ddb, "ListP").Types(got).Values()).Dot("Set").Call(
+				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
+			)),
+		)
+
+	return nil
+}
+
+// genMapFieldPath implements the generation of method for building baths for field of a map type
+func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
+	val := field.Message.Fields[1] // value type of the message
+
+	// if it's a list of basic types, or the repeated message is not in the same package we return a
+	// a basic list accessor. NOTE: we maybe support external messages in the future
+	if val.Message == nil || !tg.isSamePkgIdent(val.Message.GoIdent) {
+		f.Commentf("%s returns 'p' appended with the attribute name and allow map keys to be specified", field.GoName)
+		f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+			Params().
+			Params(Qual(tg.idents.ddb, "BasicMapP")).
+			Block(
+				Return(Call(Qual(tg.idents.ddb, "BasicMapP").Values()).
+					Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
+			)
+		return nil
+	}
+
+	// else, we assume its a message in the same package
+	got := tg.fieldGoType(val, "P")
+	f.Commentf("%s returns 'p' appended with the attribute while allow map keys on a nested message", field.GoName)
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+		Params().
+		Params(Qual(tg.idents.ddb, "MapP").Types(got)).
+		Block(
+			Return(Call(Qual(tg.idents.ddb, "MapP").Types(got).Values()).Dot("Set").Call(
 				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
 			)),
 		)
@@ -105,6 +137,7 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 			Return(Qual("strings", "TrimPrefix").Call(Id("p").Dot("v"), Lit("."))),
 		)
 
+	// generate the "N" methot that returns an expression.NameBuilder directly for use in expressions
 	f.Commentf("Name formats the path and returns it as a name builder used directly in expression building")
 	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id("N").
 		Params().
@@ -128,7 +161,7 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 		case field.Desc.IsList():
 			tg.genListFieldPath(f, m, field)
 		case field.Desc.IsMap():
-			// @TODO implement
+			tg.genMapFieldPath(f, m, field)
 		case field.Message != nil:
 			tg.genMessageFieldPath(f, m, field)
 		default:
