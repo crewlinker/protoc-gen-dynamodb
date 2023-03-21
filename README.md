@@ -92,13 +92,13 @@ What should the helping do for the various methods
 - [ ] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
 - [ ] MUST deploy a buf module so users can easily include options
 - [ ] MUST clean-up partitionkey/sortkey method generation if we have type-safe path building
-- [x] COULD implent method on path methods that return an expression.NameBuilder right away, instead of just "String()"
 
 ## Documentation backlog
 
 - [ ] Write the rules for what kind of fields can be set as a PK, or SK
 - [ ] Write what well-known types encode to what
 - [ ] Type-safe expression path building, document the exceptions for messages in other packages
+- [ ] Write about the "omit" option to ignore fields for dynamo code generation
 
 ## Feature Backlog
 
@@ -141,6 +141,7 @@ What should the helping do for the various methods
 
 ## Done Backlog
 
+- [x] COULD implent method on path methods that return an expression.NameBuilder right away, instead of just "String()"
 - [x] SHOULD add method that marshals just the keys (if any keys are configured), fail if more keys, fail if no data in keys
 - [x] SHOULD add code generation that adds methods to return the PartitionKey and SortKey from a message
 - [x] SHOULD run test with parralel and -race enabled

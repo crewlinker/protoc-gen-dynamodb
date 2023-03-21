@@ -41,6 +41,18 @@ message Appliance{
     string brand = 1;
 }
 
+// Ignored message tests omitting of fields works correctly
+message Ignored {
+    //pk is omitted
+    string pk = 1 [(ddb.v1.field).pk=true,(ddb.v1.field).omit=true];
+    //sk is omitted
+    string sk = 2 [(ddb.v1.field).sk=true,(ddb.v1.field).omit=true];
+    // other field is also omitted
+    string other = 3 [(ddb.v1.field).omit=true];
+    // visible method is not omitted
+    string visible = 4;
+}
+
 // Kitchen holds all possible Protobuf field types
 message Kitchen {
     // brand of kitchen

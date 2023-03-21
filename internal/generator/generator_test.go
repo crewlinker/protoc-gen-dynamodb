@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -84,42 +85,75 @@ var _ = Describe("handling example messages", func() {
 			"2":  &types.AttributeValueMemberS{Value: ""},
 		}))
 	})
+
+	It("should handle omit tags correctly", func() {
+		msgt := reflect.TypeOf(&messagev1.Ignored{})
+		_, ok := msgt.MethodByName("SortKey")
+		Expect(ok).To(Equal(false))
+		_, ok = msgt.MethodByName("PartitionKey")
+		Expect(ok).To(Equal(false))
+
+		pt := reflect.TypeOf(&messagev1.IgnoredP{})
+		_, ok = pt.MethodByName("Pk")
+		Expect(ok).To(Equal(false))
+		_, ok = pt.MethodByName("Sk")
+		Expect(ok).To(Equal(false))
+		_, ok = pt.MethodByName("Other")
+		Expect(ok).To(Equal(false))
+
+		By("not marshalling from struct event if fields are not empty")
+		m1, err := (&messagev1.Ignored{Pk: "Pk", Sk: "Sk", Other: "other", Visible: "visible"}).MarshalDynamoItem()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(m1).To(Equal(
+			map[string]types.AttributeValue{
+				"4": &types.AttributeValueMemberS{Value: "visible"},
+			},
+		))
+
+		By("not unmarshalling into struct event if fieldsa re provided")
+		m2 := &messagev1.Ignored{}
+		Expect(m2.UnmarshalDynamoItem(map[string]types.AttributeValue{
+			"1": &types.AttributeValueMemberS{Value: "pk"},
+			"2": &types.AttributeValueMemberS{Value: "sk"},
+			"3": &types.AttributeValueMemberS{Value: "other"},
+			"4": &types.AttributeValueMemberS{Value: "visible"},
+		})).To(Succeed())
+		Expect(m2).To(Equal(&messagev1.Ignored{Visible: "visible"}))
+
+	})
 })
 
 // test the building of paths
-var _ = Describe("path building", func() {
+var _ = DescribeTable("path building", func(s interface {
+	fmt.Stringer
+	N() expression.NameBuilder
+}, exp string) {
+	Expect(s.String()).To(Equal(exp))
 
-	DescribeTable("string building", func(s interface {
-		fmt.Stringer
-		N() expression.NameBuilder
-	}, exp string) {
-		Expect(s.String()).To(Equal(exp))
+	// check that expression builder accepts the paths
+	_, err := expression.NewBuilder().WithUpdate(
+		expression.Set(s.N(), expression.Value("foo")),
+	).Build()
+	Expect(err).ToNot(HaveOccurred())
+},
+	Entry("basic type field", messagev1.KitchenPath().Brand(), "1"),
+	Entry("message type fields", messagev1.KitchenPath().ExtraKitchen().Brand(), "16.1"),
+	Entry("lists of basic types itself", messagev1.KitchenPath().OtherBrands().At(10), "20[10]"),
+	Entry("through list of messages", messagev1.KitchenPath().ApplianceEngines().At(3).Brand(), "19[3].1"),
+	Entry("to list of messages itself", messagev1.KitchenPath().ApplianceEngines(), "19"),
+	Entry("to message field itself", messagev1.KitchenPath().ExtraKitchen(), "16"),
+	Entry("to field with renamed attr", messagev1.FieldPresencePath().Str(), "str"),
 
-		// check that expression builder accepts the paths
-		_, err := expression.NewBuilder().WithUpdate(
-			expression.Set(s.N(), expression.Value("foo")),
-		).Build()
-		Expect(err).ToNot(HaveOccurred())
-	},
-		Entry("basic type field", messagev1.KitchenPath().Brand(), "1"),
-		Entry("message type fields", messagev1.KitchenPath().ExtraKitchen().Brand(), "16.1"),
-		Entry("lists of basic types itself", messagev1.KitchenPath().OtherBrands().At(10), "20[10]"),
-		Entry("through list of messages", messagev1.KitchenPath().ApplianceEngines().At(3).Brand(), "19[3].1"),
-		Entry("to list of messages itself", messagev1.KitchenPath().ApplianceEngines(), "19"),
-		Entry("to message field itself", messagev1.KitchenPath().ExtraKitchen(), "16"),
-		Entry("to field with renamed attr", messagev1.FieldPresencePath().Str(), "str"),
+	// message not in the same package only support direct path building, not "Through". Including
+	// well-known types.
+	Entry("well-known message field", messagev1.KitchenPath().Timer(), "17"),
+	Entry("list of well-known message field", messagev1.KitchenPath().ListOfTs().At(4), "27[4]"),
 
-		// message not in the same package only support direct path building, not "Through". Including
-		// well-known types.
-		Entry("well-known message field", messagev1.KitchenPath().Timer(), "17"),
-		Entry("list of well-known message field", messagev1.KitchenPath().ListOfTs().At(4), "27[4]"),
-
-		// map access, als has limit on messages outside of the package
-		Entry("to map of basic types itself", messagev1.MapGalorePath().Int64Int64().Key("a"), "1.a"),
-		Entry("to map of well-known itself", messagev1.MapGalorePath().Stringtimestamp().Key("b"), "17.b"),
-		Entry("through map of messages", messagev1.KitchenPath().ExtraKitchen().Furniture().Key("foo").Brand(), "16.13.foo.1"),
-	)
-})
+	// map access, als has limit on messages outside of the package
+	Entry("to map of basic types itself", messagev1.MapGalorePath().Int64Int64().Key("a"), "1.a"),
+	Entry("to map of well-known itself", messagev1.MapGalorePath().Stringtimestamp().Key("b"), "17.b"),
+	Entry("through map of messages", messagev1.KitchenPath().ExtraKitchen().Furniture().Key("foo").Brand(), "16.13.foo.1"),
+)
 
 // assert unmarshalling of various attribute maps
 var _ = DescribeTable("kitchen unmarshaling", func(m map[string]types.AttributeValue, exp *messagev1.Kitchen) {

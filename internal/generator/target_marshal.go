@@ -157,6 +157,10 @@ func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 
 	// generate field marshalling code
 	for _, field := range m.Fields {
+		if tg.isOmitted(field) {
+			continue // generate no marshallling code for omitted fields
+		}
+
 		switch {
 		case field.Desc.IsList():
 			// lists are repeated fields

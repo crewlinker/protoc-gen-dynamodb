@@ -43,3 +43,12 @@ func (tg *Target) isKey(f *protogen.Field) (isPk bool, isSk bool) {
 
 	return false, false
 }
+
+// determine if the field is marked as the partition/sk key
+func (tg *Target) isOmitted(f *protogen.Field) bool {
+	if fopts := FieldOptions(f); fopts != nil && fopts.Omit != nil {
+		return *fopts.Omit
+	}
+
+	return false
+}

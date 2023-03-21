@@ -12,6 +12,10 @@ import (
 func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 	var pkf, skf *protogen.Field
 	for _, field := range m.Fields {
+		if tg.isOmitted(field) {
+			continue // omitted, don't try to turn it into a key
+		}
+
 		isPk, isSk := tg.isKey(field)
 		if isPk && isSk {
 			// check that field cannot be marked as both sk and pk
