@@ -106,7 +106,6 @@ var _ = Describe("path building", func() {
 
 	// @TODO test list of basic types
 	// @TODO test maps path building
-
 })
 
 // assert unmarshalling of various attribute maps
