@@ -16,7 +16,7 @@ func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protoge
 		Params(Qual(tg.idents.ddb, "P")).
 		Block(
 			Return(
-				Call(Qual(tg.idents.ddb, "P").Values()).Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number()))),
+				Call(Qual(tg.idents.ddb, "P").Values()).Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field)))),
 			),
 		)
 	return nil
@@ -44,7 +44,7 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 		Params(Id(field.Message.GoIdent.GoName + "P")).
 		Block(
 			Return(Id(field.Message.GoIdent.GoName + "P").Values(Dict{
-				Id("v"): Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
+				Id("v"): Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
 			})),
 		)
 
@@ -62,7 +62,7 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 			Params(Qual(tg.idents.ddb, "BasicListP")).
 			Block(
 				Return(Call(Qual(tg.idents.ddb, "BasicListP").Values()).
-					Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())))),
+					Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
 			)
 		return nil
 	}
@@ -74,7 +74,7 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 		Params(Qual(tg.idents.ddb, "ListP").Types(got)).
 		Block(
 			Return(Call(Qual(tg.idents.ddb, "ListP").Types(got).Values()).Dot("Set").Call(
-				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
+				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
 			)),
 		)
 
@@ -103,6 +103,15 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 		Params(String()).
 		Block(
 			Return(Qual("strings", "TrimPrefix").Call(Id("p").Dot("v"), Lit("."))),
+		)
+
+	// Generate path function to make it more ergonomic to start a path
+	f.Commentf("%sPath starts the building of an expression path into %s", m.GoIdent.GoName, m.GoIdent.GoName)
+	f.Func().Id(m.GoIdent.GoName + "Path").
+		Params().
+		Params(Id(m.GoIdent.GoName + "P")).
+		Block(
+			Return(Id(m.GoIdent.GoName + "P").Values()),
 		)
 
 	// generate path building methods for each field

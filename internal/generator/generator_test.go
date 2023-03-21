@@ -88,27 +88,31 @@ var _ = Describe("handling example messages", func() {
 // test the building of paths
 var _ = Describe("path building", func() {
 	It("should allow paths for basic type fields", func() {
-		Expect((messagev1.KitchenP{}).Brand().String()).To(Equal("1"))
+		Expect(messagev1.KitchenPath().Brand().String()).To(Equal("1"))
 	})
 
 	It("should allow paths for message type fields", func() {
-		Expect((messagev1.KitchenP{}).ExtraKitchen().Brand().String()).To(Equal("16.1"))
+		Expect(messagev1.KitchenPath().ExtraKitchen().Brand().String()).To(Equal("16.1"))
 	})
 
 	It("should allow paths to lists of basic types itself", func() {
-		Expect((messagev1.KitchenP{}).OtherBrands().At(10).String()).To(Equal("20[10]"))
+		Expect(messagev1.KitchenPath().OtherBrands().At(10).String()).To(Equal("20[10]"))
 	})
 
 	It("should allow paths through lists of messages", func() {
-		Expect((messagev1.KitchenP{}).ApplianceEngines().At(3).Brand().String()).To(Equal("19[3].1"))
+		Expect(messagev1.KitchenPath().ApplianceEngines().At(3).Brand().String()).To(Equal("19[3].1"))
 	})
 
 	It("should allow paths to message list itself", func() {
-		Expect((messagev1.KitchenP{}).ApplianceEngines().String()).To(Equal("19"))
+		Expect(messagev1.KitchenPath().ApplianceEngines().String()).To(Equal("19"))
 	})
 
 	It("should allow paths to message itself", func() {
-		Expect((messagev1.KitchenP{}).ExtraKitchen().String()).To(Equal("16"))
+		Expect(messagev1.KitchenPath().ExtraKitchen().String()).To(Equal("16"))
+	})
+
+	It("should allow paths to field with renamed", func() {
+		Expect(messagev1.FieldPresencePath().Str().String()).To(Equal("str"))
 	})
 
 	// @TODO test message of well-known types
