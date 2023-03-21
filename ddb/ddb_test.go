@@ -19,7 +19,7 @@ var _ = Describe("path building", func() {
 		expr, err := expression.NewBuilder().
 			WithUpdate(
 				expression.Set(
-					expression.Name(messagev1.InKitchen().Brand()),
+					expression.Name((messagev1.KitchenP{}).Brand().String()),
 					expression.Value("foo"))).
 			Build()
 		Expect(err).ToNot(HaveOccurred())
@@ -31,21 +31,21 @@ var _ = Describe("path building", func() {
 
 var p1 string
 
-func BenchmarkBasicListPathBuilding(b *testing.B) {
+func BenchmarkDeepNestingPathBuilding(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		p1 = messagev1.InKitchen().Brand()
-		if p1 != "1" {
+		p1 = (messagev1.KitchenP{}).ExtraKitchen().ExtraKitchen().ApplianceEngines().At(5).Brand().String()
+		if p1 != "16.16.19[5].1" {
 			b.Fatalf("failed to build: %v", p1)
 		}
 	}
 }
 
-func BenchmarkDeepNestingPathBuilding(b *testing.B) {
+func BenchmarkPathBasicListBuilding(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		p1 = messagev1.KitchenPath("").ExtraKitchen().ExtraKitchen().ApplianceEngines().At(5).Brand()
-		if p1 != "16.16.19[5].1" {
+		p1 = (messagev1.KitchenP{}).ExtraKitchen().ExtraKitchen().OtherBrands().At(5).String()
+		if p1 != "16.16.20[5]" {
 			b.Fatalf("failed to build: %v", p1)
 		}
 	}

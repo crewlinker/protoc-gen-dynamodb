@@ -11,12 +11,13 @@ import (
 func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 	f.Commentf("%s returns 'p' with the attribute name appended", field.GoName)
 	f.Func().
-		Params(Id("p").Id(m.GoIdent.GoName + "Path")).Id(field.GoName).
+		Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
 		Params().
-		Params(String()).
+		Params(Qual(tg.idents.ddb, "P")).
 		Block(
 			Return(
-				Qual("strings", "TrimPrefix").Call(String().Call(Id("p")).Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())), Lit("."))),
+				Call(Qual(tg.idents.ddb, "P").Values()).Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number()))),
+			),
 		)
 	return nil
 }
@@ -38,13 +39,13 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 	// generate the method that append the path element
 	f.Commentf("%s returns 'p' with the attribute name appended and allow subselecting nested message", field.GoName)
 	f.Func().
-		Params(Id("p").Id(m.GoIdent.GoName + "Path")).Id(field.GoName).
+		Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
 		Params().
-		Params(Id(field.Message.GoIdent.GoName + "Path")).
+		Params(Id(field.Message.GoIdent.GoName + "P")).
 		Block(
-			Return(Id(field.Message.GoIdent.GoName + "Path").Call(
-				Id("p").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
-			)),
+			Return(Id(field.Message.GoIdent.GoName + "P").Values(Dict{
+				Id("v"): Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
+			})),
 		)
 
 	return nil
@@ -56,25 +57,24 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 		// if its not a list of messages, the path will always end and the generated method will return
 		// basic path builder that always returns a string with the final path
 		f.Commentf("%s returns 'p' appended with the attribute name and allow indexing", field.GoName)
-		f.Func().Params(Id("p").Id(m.GoIdent.GoName + "Path")).Id(field.GoName).
+		f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
 			Params().
-			Params(Qual(tg.idents.ddb, "BasicListPath")).
+			Params(Qual(tg.idents.ddb, "BasicListP")).
 			Block(
-				Return(Qual(tg.idents.ddb, "BasicListPath").Call(
-					Id("p").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
-				)),
+				Return(Call(Qual(tg.idents.ddb, "BasicListP").Values()).
+					Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())))),
 			)
 		return nil
 	}
 
-	got := tg.fieldGoType(field, "Path")
+	got := tg.fieldGoType(field, "P")
 	f.Commentf("%s returns 'p' appended with the attribute while allow indexing a nested message", field.GoName)
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "Path")).Id(field.GoName).
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
 		Params().
-		Params(Qual(tg.idents.ddb, "ListPath").Types(got)).
+		Params(Qual(tg.idents.ddb, "ListP").Types(got)).
 		Block(
-			Return(Qual(tg.idents.ddb, "ListPath").Types(got).Call(
-				Id("p").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
+			Return(Call(Qual(tg.idents.ddb, "ListP").Types(got).Values()).Dot("Set").Call(
+				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%d", field.Desc.Number())),
 			)),
 		)
 
@@ -83,22 +83,26 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 
 // genMessagePaths k
 func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
-	f.Commentf("%s allows for constructing type-safe expression names", m.GoIdent.GoName)
-	f.Type().Id(m.GoIdent.GoName + "Path").String()
-
-	// generate a function that makes it more ergonomic to start building a path
-	f.Commentf("In%s starts the building of a path into a kitchen item", m.GoIdent.GoName)
-	f.Func().Id("In" + m.GoIdent.GoName).Params().Params(Id("p").Id(m.GoIdent.GoName + "Path")).
-		Block(Return(Id("p")))
+	f.Commentf("%sP allows for constructing type-safe expression names", m.GoIdent.GoName)
+	f.Type().Id(m.GoIdent.GoName + "P").Struct(Id("v").String())
 
 	// generate the "Set" method for the path struct, required to make generic list builder work
 	f.Commentf("Set allows generic list builder to replace the path value")
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName+"Path")).Id("Set").
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName+"P")).Id("Set").
 		Params(Id("v").String()).
-		Params(Id(m.GoIdent.GoName+"Path")).
+		Params(Id(m.GoIdent.GoName+"P")).
 		Block(
-			Id("p").Op("=").Id(m.GoIdent.GoName+"Path").Call(Id("v")),
+			Id("p").Dot("v").Op("=").Id("v"),
 			Return(Id("p")),
+		)
+
+	// generate the "String" method for the path struct, required to allow paths to be formatted correctly
+	f.Commentf("String formats the path and returns it")
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id("String").
+		Params().
+		Params(String()).
+		Block(
+			Return(Qual("strings", "TrimPrefix").Call(Id("p").Dot("v"), Lit("."))),
 		)
 
 	// generate path building methods for each field

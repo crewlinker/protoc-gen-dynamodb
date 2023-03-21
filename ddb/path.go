@@ -1,20 +1,44 @@
 package ddb
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
-// BasicListPath path is a type for building a path into a list of basic types
-type BasicListPath string
+// P is the path to a basic field
+type P struct{ v string }
 
-// At append a list index to the path and returns the whole path
-func (p BasicListPath) At(i int) string {
-	return string(p) + "[" + strconv.Itoa(i) + "]"
+// String formats  the path correctly
+func (p P) String() string { return strings.TrimPrefix(p.v, ".") }
+
+// Set set the path value
+func (p P) Set(v string) P { p.v = v; return p }
+
+// BasicListP is the path to a list of basic types
+type BasicListP struct{ v string }
+
+// String formats the path and returns it
+func (p BasicListP) String() string { return strings.TrimPrefix(p.v, ".") }
+
+// Set sets the path value
+func (p BasicListP) Set(v string) BasicListP { p.v = v; return p }
+
+// At returns the path to the basic type at the provided index
+func (p BasicListP) At(i int) P {
+	return P{p.v + "[" + strconv.Itoa(i) + "]"}
 }
 
-// ListPath is a type for building paths into a list of messages
-type ListPath[T interface{ Set(v string) T }] string
+// ListP is the path to a list of messages
+type ListP[T interface{ Set(v string) T }] struct{ v string }
 
-// At appends a list index to the path and returns T
-func (p ListPath[T]) At(i int) T {
+// String formats the path and returns it
+func (p ListP[T]) String() string { return strings.TrimPrefix(p.v, ".") }
+
+// Set sets the path value
+func (p ListP[T]) Set(v string) ListP[T] { p.v = v; return p }
+
+// At returns the path to the basic type at the provided index
+func (p ListP[T]) At(i int) T {
 	var v T
-	return v.Set(string(p) + "[" + strconv.Itoa(i) + "]")
+	return v.Set(p.v + "[" + strconv.Itoa(i) + "]")
 }
