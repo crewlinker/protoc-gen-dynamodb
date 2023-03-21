@@ -105,6 +105,14 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 			Return(Qual("strings", "TrimPrefix").Call(Id("p").Dot("v"), Lit("."))),
 		)
 
+	f.Commentf("Name formats the path and returns it as a name builder used directly in expression building")
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id("N").
+		Params().
+		Params(Qual("github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression", "NameBuilder")).
+		Block(
+			Return(Qual("github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression", "Name").Call(Id("p").Dot("String").Call())),
+		)
+
 	// Generate path function to make it more ergonomic to start a path
 	f.Commentf("%sPath starts the building of an expression path into %s", m.GoIdent.GoName, m.GoIdent.GoName)
 	f.Func().Id(m.GoIdent.GoName + "Path").

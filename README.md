@@ -93,6 +93,7 @@ What should the helping do for the various methods
 - [ ] MUST deploy a buf module so users can easily include options
 - [ ] MUST clean-up partitionkey/sortkey method generation if we have type-safe path building
 - [ ] MUST make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
+- [ ] COULD implent method on path methods that return an expression.NameBuilder right away, instead of just "String()"
 
 ## Documentation backlog
 
@@ -102,6 +103,7 @@ What should the helping do for the various methods
 
 ## Feature Backlog
 
+- [ ] COULD come up with a meschism that doesn't prevent collision of path type method names with field names. i.e: .N() prevents field from being named "N"
 - [ ] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [ ] SHOULD allow skipping certain fields for all dynamodb marshalling/unmarshalling: ignore option, should also cause path building method to not be generated
 - [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf)
@@ -122,6 +124,7 @@ What should the helping do for the various methods
 
 ## Hardening Backlog
 
+- [ ] SHOULD merge the coverage from running the generator, and from unit tests when running `mage -v test`
 - [ ] SHOULD fuzz the bath building
 - [ ] SHOULD unit test the "ddb" shared package to 100%
 - [ ] SHOULD test boolean key maps
