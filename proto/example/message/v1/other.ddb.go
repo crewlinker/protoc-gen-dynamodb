@@ -4,11 +4,9 @@ package messagev1
 
 import (
 	"fmt"
-	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	"strings"
 )
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -52,23 +50,13 @@ func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 
 // OtherKitchenP allows for constructing type-safe expression names
 type OtherKitchenP struct {
-	v string
+	ddb.P
 }
 
 // Set allows generic list builder to replace the path value
 func (p OtherKitchenP) Set(v string) OtherKitchenP {
-	p.v = v
+	p.P = p.P.Set(v)
 	return p
-}
-
-// String formats the path and returns it
-func (p OtherKitchenP) String() string {
-	return strings.TrimPrefix(p.v, ".")
-}
-
-// Name formats the path and returns it as a name builder used directly in expression building
-func (p OtherKitchenP) N() expression.NameBuilder {
-	return expression.Name(p.String())
 }
 
 // OtherKitchenPath starts the building of an expression path into OtherKitchen
@@ -78,10 +66,10 @@ func OtherKitchenPath() OtherKitchenP {
 
 // AnotherKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p OtherKitchenP) AnotherKitchen() KitchenP {
-	return KitchenP{v: p.v + ".16"}
+	return KitchenP{}.Set(p.Val() + ".16")
 }
 
 // OtherTimer returns 'p' with the attribute name appended
 func (p OtherKitchenP) OtherTimer() ddb.P {
-	return (ddb.P{}).Set(p.v + ".17")
+	return (ddb.P{}).Set(p.Val() + ".17")
 }

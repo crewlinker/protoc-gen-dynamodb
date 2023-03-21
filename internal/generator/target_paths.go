@@ -16,7 +16,7 @@ func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protoge
 		Params(Qual(tg.idents.ddb, "P")).
 		Block(
 			Return(
-				Call(Qual(tg.idents.ddb, "P").Values()).Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field)))),
+				Call(Qual(tg.idents.ddb, "P").Values()).Dot("Set").Call(Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field)))),
 			),
 		)
 	return nil
@@ -38,9 +38,9 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 		Params().
 		Params(Id(field.Message.GoIdent.GoName + "P")).
 		Block(
-			Return(Id(field.Message.GoIdent.GoName + "P").Values(Dict{
-				Id("v"): Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
-			})),
+			Return(Id(field.Message.GoIdent.GoName + "P").Values().Dot("Set").Call(
+				Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
+			)),
 		)
 
 	return nil
@@ -60,7 +60,7 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 			Params(Qual(tg.idents.ddb, "BasicListP")).
 			Block(
 				Return(Call(Qual(tg.idents.ddb, "BasicListP").Values()).
-					Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
+					Dot("Set").Call(Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
 			)
 		return nil
 	}
@@ -73,7 +73,7 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 		Params(Qual(tg.idents.ddb, "ListP").Types(got)).
 		Block(
 			Return(Call(Qual(tg.idents.ddb, "ListP").Types(got).Values()).Dot("Set").Call(
-				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
+				Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
 			)),
 		)
 
@@ -93,7 +93,7 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 			Params(Qual(tg.idents.ddb, "BasicMapP")).
 			Block(
 				Return(Call(Qual(tg.idents.ddb, "BasicMapP").Values()).
-					Dot("Set").Call(Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
+					Dot("Set").Call(Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
 			)
 		return nil
 	}
@@ -106,7 +106,7 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 		Params(Qual(tg.idents.ddb, "MapP").Types(got)).
 		Block(
 			Return(Call(Qual(tg.idents.ddb, "MapP").Types(got).Values()).Dot("Set").Call(
-				Id("p").Dot("v").Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
+				Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
 			)),
 		)
 
@@ -116,7 +116,7 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 // genMessagePaths k
 func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 	f.Commentf("%sP allows for constructing type-safe expression names", m.GoIdent.GoName)
-	f.Type().Id(m.GoIdent.GoName + "P").Struct(Id("v").String())
+	f.Type().Id(m.GoIdent.GoName + "P").Struct(Qual(tg.idents.ddb, "P"))
 
 	// generate the "Set" method for the path struct, required to make generic list builder work
 	f.Commentf("Set allows generic list builder to replace the path value")
@@ -124,26 +124,8 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 		Params(Id("v").String()).
 		Params(Id(m.GoIdent.GoName+"P")).
 		Block(
-			Id("p").Dot("v").Op("=").Id("v"),
+			Id("p").Dot("P").Op("=").Id("p").Dot("P").Dot("Set").Call(Id("v")),
 			Return(Id("p")),
-		)
-
-	// generate the "String" method for the path struct, required to allow paths to be formatted correctly
-	f.Commentf("String formats the path and returns it")
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id("String").
-		Params().
-		Params(String()).
-		Block(
-			Return(Qual("strings", "TrimPrefix").Call(Id("p").Dot("v"), Lit("."))),
-		)
-
-	// generate the "N" methot that returns an expression.NameBuilder directly for use in expressions
-	f.Commentf("Name formats the path and returns it as a name builder used directly in expression building")
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id("N").
-		Params().
-		Params(Qual("github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression", "NameBuilder")).
-		Block(
-			Return(Qual("github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression", "Name").Call(Id("p").Dot("String").Call())),
 		)
 
 	// Generate path function to make it more ergonomic to start a path
