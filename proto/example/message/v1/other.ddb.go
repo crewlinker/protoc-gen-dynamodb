@@ -65,6 +65,11 @@ func (p OtherKitchenP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// OtherKitchenPath starts the building of an expression path into OtherKitchen
+func OtherKitchenPath() OtherKitchenP {
+	return OtherKitchenP{}
+}
+
 // AnotherKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p OtherKitchenP) AnotherKitchen() KitchenP {
 	return KitchenP{v: p.v + ".16"}

@@ -64,6 +64,11 @@ func (p EngineP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// EnginePath starts the building of an expression path into Engine
+func EnginePath() EngineP {
+	return EngineP{}
+}
+
 // Brand returns 'p' with the attribute name appended
 func (p EngineP) Brand() ddb.P {
 	return (ddb.P{}).Set(p.v + ".1")
@@ -161,6 +166,11 @@ func (p CarP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// CarPath starts the building of an expression path into Car
+func CarPath() CarP {
+	return CarP{}
+}
+
 // Engine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p CarP) Engine() EngineP {
 	return EngineP{v: p.v + ".1"}
@@ -168,7 +178,7 @@ func (p CarP) Engine() EngineP {
 
 // NrOfWheels returns 'p' with the attribute name appended
 func (p CarP) NrOfWheels() ddb.P {
-	return (ddb.P{}).Set(p.v + ".3")
+	return (ddb.P{}).Set(p.v + ".ws")
 }
 
 // Name returns 'p' with the attribute name appended
@@ -211,6 +221,11 @@ func (p ApplianceP) Set(v string) ApplianceP {
 // String formats the path and returns it
 func (p ApplianceP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// AppliancePath starts the building of an expression path into Appliance
+func AppliancePath() ApplianceP {
+	return ApplianceP{}
 }
 
 // Brand returns 'p' with the attribute name appended
@@ -622,6 +637,11 @@ func (p KitchenP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// KitchenPath starts the building of an expression path into Kitchen
+func KitchenPath() KitchenP {
+	return KitchenP{}
+}
+
 // Brand returns 'p' with the attribute name appended
 func (p KitchenP) Brand() ddb.P {
 	return (ddb.P{}).Set(p.v + ".1")
@@ -732,6 +752,11 @@ func (p EmptyP) Set(v string) EmptyP {
 // String formats the path and returns it
 func (p EmptyP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// EmptyPath starts the building of an expression path into Empty
+func EmptyPath() EmptyP {
+	return EmptyP{}
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -989,6 +1014,11 @@ func (p MapGaloreP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// MapGalorePath starts the building of an expression path into MapGalore
+func MapGalorePath() MapGaloreP {
+	return MapGaloreP{}
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -1028,6 +1058,11 @@ func (p ValueGaloreP) Set(v string) ValueGaloreP {
 // String formats the path and returns it
 func (p ValueGaloreP) String() string {
 	return strings.TrimPrefix(p.v, ".")
+}
+
+// ValueGalorePath starts the building of an expression path into ValueGalore
+func ValueGalorePath() ValueGaloreP {
+	return ValueGaloreP{}
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -1373,52 +1408,57 @@ func (p FieldPresenceP) String() string {
 	return strings.TrimPrefix(p.v, ".")
 }
 
+// FieldPresencePath starts the building of an expression path into FieldPresence
+func FieldPresencePath() FieldPresenceP {
+	return FieldPresenceP{}
+}
+
 // Str returns 'p' with the attribute name appended
 func (p FieldPresenceP) Str() ddb.P {
-	return (ddb.P{}).Set(p.v + ".1")
+	return (ddb.P{}).Set(p.v + ".str")
 }
 
 // OptStr returns 'p' with the attribute name appended
 func (p FieldPresenceP) OptStr() ddb.P {
-	return (ddb.P{}).Set(p.v + ".2")
+	return (ddb.P{}).Set(p.v + ".optStr")
 }
 
 // Msg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresenceP) Msg() EngineP {
-	return EngineP{v: p.v + ".3"}
+	return EngineP{v: p.v + ".msg"}
 }
 
 // OptMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresenceP) OptMsg() EngineP {
-	return EngineP{v: p.v + ".4"}
+	return EngineP{v: p.v + ".optMsg"}
 }
 
 // StrList returns 'p' appended with the attribute name and allow indexing
 func (p FieldPresenceP) StrList() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.v + ".5")
+	return (ddb.BasicListP{}).Set(p.v + ".strList")
 }
 
 // MsgList returns 'p' appended with the attribute while allow indexing a nested message
 func (p FieldPresenceP) MsgList() ddb.ListP[EngineP] {
-	return (ddb.ListP[EngineP]{}).Set(p.v + ".6")
+	return (ddb.ListP[EngineP]{}).Set(p.v + ".msgList")
 }
 
 // Enum returns 'p' with the attribute name appended
 func (p FieldPresenceP) Enum() ddb.P {
-	return (ddb.P{}).Set(p.v + ".9")
+	return (ddb.P{}).Set(p.v + ".enum")
 }
 
 // OptEnum returns 'p' with the attribute name appended
 func (p FieldPresenceP) OptEnum() ddb.P {
-	return (ddb.P{}).Set(p.v + ".10")
+	return (ddb.P{}).Set(p.v + ".optEnum")
 }
 
 // OneofStr returns 'p' with the attribute name appended
 func (p FieldPresenceP) OneofStr() ddb.P {
-	return (ddb.P{}).Set(p.v + ".11")
+	return (ddb.P{}).Set(p.v + ".oneofStr")
 }
 
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresenceP) OneofMsg() EngineP {
-	return EngineP{v: p.v + ".12"}
+	return EngineP{v: p.v + ".oneofMsg"}
 }
