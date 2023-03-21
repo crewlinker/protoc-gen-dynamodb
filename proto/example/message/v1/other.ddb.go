@@ -80,3 +80,8 @@ func OtherKitchenPath() OtherKitchenP {
 func (p OtherKitchenP) AnotherKitchen() KitchenP {
 	return KitchenP{v: p.v + ".16"}
 }
+
+// OtherTimer returns 'p' with the attribute name appended
+func (p OtherKitchenP) OtherTimer() ddb.P {
+	return (ddb.P{}).Set(p.v + ".17")
+}

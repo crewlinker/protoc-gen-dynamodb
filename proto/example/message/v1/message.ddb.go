@@ -465,6 +465,21 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 		m["26"] = m26
 	}
+	if len(x.ListOfTs) != 0 {
+		m27 := &types.AttributeValueMemberL{}
+		for k, v := range x.ListOfTs {
+			if v == nil {
+				m27.Value = append(m27.Value, &types.AttributeValueMemberNULL{Value: true})
+				continue
+			}
+			mv, err := ddb.MarshalDynamoMessage(v)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal item '%d' of field 'ListOfTs': %w", k, err)
+			}
+			m27.Value = append(m27.Value, mv)
+		}
+		m["27"] = m27
+	}
 	return m, nil
 }
 
@@ -634,6 +649,24 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 			return fmt.Errorf("failed to unmarshal field 'ValBytes': %w", err)
 		}
 	}
+	if m["27"] != nil {
+		m27, ok := m["27"].(*types.AttributeValueMemberL)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal field 'ListOfTs': no list attribute provided")
+		}
+		for k, v := range m27.Value {
+			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+				x.ListOfTs = append(x.ListOfTs, nil)
+				continue
+			}
+			var mv timestamppb.Timestamp
+			err = ddb.UnmarshalDynamoMessage(v, &mv)
+			if err != nil {
+				return fmt.Errorf("failed to unmarshal item '%d' of field 'ListOfTs': %w", k, err)
+			}
+			x.ListOfTs = append(x.ListOfTs, &mv)
+		}
+	}
 	return nil
 }
 
@@ -723,6 +756,16 @@ func (p KitchenP) Dirtyness() ddb.P {
 	return (ddb.P{}).Set(p.v + ".12")
 }
 
+// Furniture returns 'p' appended with the attribute while allow map keys on a nested message
+func (p KitchenP) Furniture() ddb.MapP[ApplianceP] {
+	return (ddb.MapP[ApplianceP]{}).Set(p.v + ".13")
+}
+
+// Calendar returns 'p' appended with the attribute name and allow map keys to be specified
+func (p KitchenP) Calendar() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".14")
+}
+
 // WasherEngine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p KitchenP) WasherEngine() EngineP {
 	return EngineP{v: p.v + ".15"}
@@ -731,6 +774,16 @@ func (p KitchenP) WasherEngine() EngineP {
 // ExtraKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p KitchenP) ExtraKitchen() KitchenP {
 	return KitchenP{v: p.v + ".16"}
+}
+
+// Timer returns 'p' with the attribute name appended
+func (p KitchenP) Timer() ddb.P {
+	return (ddb.P{}).Set(p.v + ".17")
+}
+
+// WallTime returns 'p' with the attribute name appended
+func (p KitchenP) WallTime() ddb.P {
+	return (ddb.P{}).Set(p.v + ".18")
 }
 
 // ApplianceEngines returns 'p' appended with the attribute while allow indexing a nested message
@@ -743,9 +796,39 @@ func (p KitchenP) OtherBrands() ddb.BasicListP {
 	return (ddb.BasicListP{}).Set(p.v + ".20")
 }
 
+// SomeAny returns 'p' with the attribute name appended
+func (p KitchenP) SomeAny() ddb.P {
+	return (ddb.P{}).Set(p.v + ".21")
+}
+
+// SomeMask returns 'p' with the attribute name appended
+func (p KitchenP) SomeMask() ddb.P {
+	return (ddb.P{}).Set(p.v + ".22")
+}
+
+// SomeValue returns 'p' with the attribute name appended
+func (p KitchenP) SomeValue() ddb.P {
+	return (ddb.P{}).Set(p.v + ".23")
+}
+
 // OptString returns 'p' with the attribute name appended
 func (p KitchenP) OptString() ddb.P {
 	return (ddb.P{}).Set(p.v + ".24")
+}
+
+// ValStr returns 'p' with the attribute name appended
+func (p KitchenP) ValStr() ddb.P {
+	return (ddb.P{}).Set(p.v + ".25")
+}
+
+// ValBytes returns 'p' with the attribute name appended
+func (p KitchenP) ValBytes() ddb.P {
+	return (ddb.P{}).Set(p.v + ".26")
+}
+
+// ListOfTs returns 'p' appended with the attribute name and allow indexing
+func (p KitchenP) ListOfTs() ddb.BasicListP {
+	return (ddb.BasicListP{}).Set(p.v + ".27")
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -1050,6 +1133,91 @@ func MapGalorePath() MapGaloreP {
 	return MapGaloreP{}
 }
 
+// Int64Int64 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Int64Int64() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".1")
+}
+
+// Uint64Uint64 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Uint64Uint64() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".2")
+}
+
+// Fixed64Fixed64 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Fixed64Fixed64() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".3")
+}
+
+// Sint64Sint64 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Sint64Sint64() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".4")
+}
+
+// Sfixed64Sfixed64 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Sfixed64Sfixed64() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".5")
+}
+
+// Int32Int32 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Int32Int32() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".6")
+}
+
+// Uint32Uint32 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Uint32Uint32() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".7")
+}
+
+// Fixed32Fixed32 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Fixed32Fixed32() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".8")
+}
+
+// Sint32Sint32 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Sint32Sint32() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".9")
+}
+
+// Sfixed32Sfixed32 returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Sfixed32Sfixed32() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".10")
+}
+
+// Stringstring returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Stringstring() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".11")
+}
+
+// Boolbool returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Boolbool() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".12")
+}
+
+// Stringbytes returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Stringbytes() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".13")
+}
+
+// Stringdouble returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Stringdouble() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".14")
+}
+
+// Stringfloat returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Stringfloat() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".15")
+}
+
+// Stringduration returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Stringduration() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".16")
+}
+
+// Stringtimestamp returns 'p' appended with the attribute name and allow map keys to be specified
+func (p MapGaloreP) Stringtimestamp() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".17")
+}
+
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
 func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -1099,6 +1267,11 @@ func (p ValueGaloreP) N() expression.NameBuilder {
 // ValueGalorePath starts the building of an expression path into ValueGalore
 func ValueGalorePath() ValueGaloreP {
 	return ValueGaloreP{}
+}
+
+// SomeValue returns 'p' with the attribute name appended
+func (p ValueGaloreP) SomeValue() ddb.P {
+	return (ddb.P{}).Set(p.v + ".1")
 }
 
 // MarshalDynamoItem marshals dat into a dynamodb attribute map
@@ -1484,6 +1657,16 @@ func (p FieldPresenceP) MsgList() ddb.ListP[EngineP] {
 	return (ddb.ListP[EngineP]{}).Set(p.v + ".msgList")
 }
 
+// StrMap returns 'p' appended with the attribute name and allow map keys to be specified
+func (p FieldPresenceP) StrMap() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.v + ".strMap")
+}
+
+// MsgMap returns 'p' appended with the attribute while allow map keys on a nested message
+func (p FieldPresenceP) MsgMap() ddb.MapP[EngineP] {
+	return (ddb.MapP[EngineP]{}).Set(p.v + ".msgMap")
+}
+
 // Enum returns 'p' with the attribute name appended
 func (p FieldPresenceP) Enum() ddb.P {
 	return (ddb.P{}).Set(p.v + ".enum")
@@ -1502,4 +1685,49 @@ func (p FieldPresenceP) OneofStr() ddb.P {
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresenceP) OneofMsg() EngineP {
 	return EngineP{v: p.v + ".oneofMsg"}
+}
+
+// StrVal returns 'p' with the attribute name appended
+func (p FieldPresenceP) StrVal() ddb.P {
+	return (ddb.P{}).Set(p.v + ".strVal")
+}
+
+// BoolVal returns 'p' with the attribute name appended
+func (p FieldPresenceP) BoolVal() ddb.P {
+	return (ddb.P{}).Set(p.v + ".boolVal")
+}
+
+// BytesVal returns 'p' with the attribute name appended
+func (p FieldPresenceP) BytesVal() ddb.P {
+	return (ddb.P{}).Set(p.v + ".bytesVal")
+}
+
+// DoubleVal returns 'p' with the attribute name appended
+func (p FieldPresenceP) DoubleVal() ddb.P {
+	return (ddb.P{}).Set(p.v + ".doubleVal")
+}
+
+// FloatVal returns 'p' with the attribute name appended
+func (p FieldPresenceP) FloatVal() ddb.P {
+	return (ddb.P{}).Set(p.v + ".floatVal")
+}
+
+// Int32Val returns 'p' with the attribute name appended
+func (p FieldPresenceP) Int32Val() ddb.P {
+	return (ddb.P{}).Set(p.v + ".int32Val")
+}
+
+// Int64Val returns 'p' with the attribute name appended
+func (p FieldPresenceP) Int64Val() ddb.P {
+	return (ddb.P{}).Set(p.v + ".int64Val")
+}
+
+// Uint32Val returns 'p' with the attribute name appended
+func (p FieldPresenceP) Uint32Val() ddb.P {
+	return (ddb.P{}).Set(p.v + ".uint32Val")
+}
+
+// Uint64Val returns 'p' with the attribute name appended
+func (p FieldPresenceP) Uint64Val() ddb.P {
+	return (ddb.P{}).Set(p.v + ".uint64Val")
 }

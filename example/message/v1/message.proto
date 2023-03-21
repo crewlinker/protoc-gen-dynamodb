@@ -103,6 +103,9 @@ message Kitchen {
     google.protobuf.StringValue val_str = 25;
     // string value (other kind of optional)
     google.protobuf.BytesValue val_bytes = 26;
+
+    // list of timestamps
+    repeated google.protobuf.Timestamp list_of_ts = 27;
 }
 
 // Empty message
