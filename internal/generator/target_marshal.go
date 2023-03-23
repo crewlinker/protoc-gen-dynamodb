@@ -60,7 +60,7 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 		),
 
 		// marshal non-nil map value by calling the centrally generated function
-		List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v")),
+		List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshalMessage).Call(Id("v")),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal map value of field '"+f.GoName+"': %w"), Err())),
 		),
@@ -84,7 +84,7 @@ func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only marshal message field if the value is not nil at runtime
 		If(tg.marshalPresenceCond(f)...).Block(
-			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Add(tg.idents.marshal).Call(Id("x").Dot("Get"+f.GoName).Call()),
+			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Add(tg.idents.marshalMessage).Call(Id("x").Dot("Get"+f.GoName).Call()),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -167,7 +167,6 @@ func (tg *Target) genSetFieldMarshal(f *protogen.Field) []Code {
 
 // genListFieldMarshal generates marshal code for a repeated field
 func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
-	mid := fmt.Sprintf("m%d", f.Desc.Number())
 
 	// if its not a list of messages, it could be marked as as a set
 	if f.Message == nil && tg.isSet(f) {
@@ -179,30 +178,12 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 
 	// for messages we loop over each item and marshal them one by one
 	return []Code{
-		// only marshal if its not the zero  value
+		// only marshal if its not the zero value
 		If(tg.marshalPresenceCond(f)...).Block(
-			Id(mid).Op(":=").Op("&").Qual(dynamodbtypes, "AttributeValueMemberL").Values(),
-			For(List(Id("k"), Id("v")).Op(":=").Range().Id("x").Dot(f.GoName)).Block(
-
-				// the value can also be nil, append null attribute and continue
-				If(Id("v").Op("==").Nil()).Block(
-
-					Id(mid).Dot("Value").Op("=").
-						Append(Id(mid).Dot("Value"), Op("&").Qual(dynamodbtypes, "AttributeValueMemberNULL").Values(
-							Dict{Id("Value"): Lit(true)})),
-
-					Continue(), // next map item
-				),
-
-				// else, marshal the item
-				List(Id("mv"), Err()).Op(":=").Add(tg.idents.marshal).Call(Id("v")),
-				If(Err().Op("!=").Nil()).Block(
-					Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
-				),
-				Id(mid).Dot("Value").Op("=").
-					Append(Id(mid).Dot("Value"), Id("mv")),
+			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalRepeatedMessage").Call(Id("x").Dot(f.GoName)),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal repeated message field '"+f.GoName+"': %w"), Err())),
 			),
-			Id("m").Index(Lit(tg.attrName(f))).Op("=").Id(mid),
 		),
 	}
 }
