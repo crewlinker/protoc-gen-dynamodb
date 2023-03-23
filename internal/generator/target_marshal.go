@@ -51,7 +51,7 @@ func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
 				Id("m").Index(Lit(tg.attrName(f))),
 				Id("err"),
 			).Op("=").
-				Qual(attributevalues, "Marshal").Call(Id("x").Dot("Get"+f.GoName).Call()),
+				Qual(tg.idents.ddb, "Marshal").Call(Id("x").Dot("Get"+f.GoName).Call()),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -98,7 +98,7 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 
 	// render method body
-	body := []Code{Id("m").Op("=").Make(Map(String()).Qual(dynamodbtypes, "AttributeValue"))}
+	body := []Code{Id("m").Op("=").Make(Map(String()).Qual(types, "AttributeValue"))}
 
 	// generate field marshalling code
 	for _, field := range m.Fields {
@@ -117,7 +117,7 @@ func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 			// nested message, not part of a one-of
 			body = append(body, tg.genMessageFieldMarshal(field)...)
 		default:
-			// else, assume attributevalue package can handle it
+			// else, assume basic marshalling can handle it
 			body = append(body, tg.genBasicFieldMarshal(field)...)
 		}
 	}
@@ -131,7 +131,7 @@ func (tg *Target) genMessageMarshal(f *File, m *protogen.Message) error {
 		Params(Id("x").Op("*").Id(m.GoIdent.GoName)).Id("MarshalDynamoItem").
 		Params().
 		Params(
-			Id("m").Map(String()).Qual(dynamodbtypes, "AttributeValue"),
+			Id("m").Map(String()).Qual(types, "AttributeValue"),
 			Id("err").Id("error"),
 		).Block(body...)
 	return nil

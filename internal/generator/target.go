@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	attributevalues = "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	dynamodbtypes   = "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	// we refer to this in the code in all sorts of places so lets setup a handy shortcut
+	types = "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 // Target facilitates generation from a single protobuf file
