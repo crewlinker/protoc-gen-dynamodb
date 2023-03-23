@@ -19,91 +19,36 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 		return tg.genBasicFieldUnmarshal(f)
 	}
 
-	// generate loop code for unmarshalling the map key
-	var loop []Code
-	var addUnmarshalKeyErr bool
+	// we cannot solve key unmarshalling using type parameters so we determine
+	// the correct function here.
+	keyType := tg.fieldGoType(key)
+	var keyFunc *Statement
 	switch key.Desc.Kind() {
 	case protoreflect.StringKind:
-		loop = append(loop, Id("mk").Op(":=").
-			Id("k"))
-	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-		loop = append(loop, List(Id("mk"), Err()).Op(":=").
-			Qual("strconv", "ParseInt").Call(Id("k"), Lit(10), Lit(64)))
-		addUnmarshalKeyErr = true
-	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-		loop = append(loop, List(Id("mk"), Err()).Op(":=").
-			Qual("strconv", "ParseUint").Call(Id("k"), Lit(10), Lit(64)))
-		addUnmarshalKeyErr = true
-	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-		loop = append(loop, List(Id("mk"), Err()).Op(":=").
-			Qual("strconv", "ParseInt").Call(Id("k"), Lit(10), Lit(32)))
-		addUnmarshalKeyErr = true
-	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-		loop = append(loop, List(Id("mk"), Err()).Op(":=").
-			Qual("strconv", "ParseUint").Call(Id("k"), Lit(10), Lit(32)))
-		addUnmarshalKeyErr = true
+		keyFunc = Qual(tg.idents.ddb, "StringMapKey")
 	case protoreflect.BoolKind:
-		loop = append(loop,
-			Var().Id("mk").Id("bool"),
-			Switch(Id("k")).Block(
-				Case(Lit("true")).Block(
-					Id("mk").Op("=").Lit(true),
-				),
-				Case(Lit("false")).Block(
-					Id("mk").Op("=").Lit(false),
-				),
-				Default().Block(
-					Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map key for field '"+f.GoName+"': not 'true' or 'false' value"))),
-				),
-			))
+		keyFunc = Qual(tg.idents.ddb, "BoolMapKey")
+	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind,
+		protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
+		keyFunc = Qual(tg.idents.ddb, "UintMapKey").Types(keyType)
+	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind,
+		protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
+		keyFunc = Qual(tg.idents.ddb, "IntMapKey").Types(keyType)
 	default:
-		panic("unsupported key type for map: " + key.Desc.Kind().String())
+		panic("unsupported map key type: " + key.Desc.Kind().String())
 	}
 
-	if addUnmarshalKeyErr {
-		loop = append(loop, If(Err().Op("!=").Nil()).Block(
-			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map key for field '"+f.GoName+"': %w"), Err())),
-		))
-	}
-
-	// unmarshal the map values
-	loop = append(loop,
-		// if the map value is NULL, we just assign nil and don't attempt to unmarshal it
-		If(List(Id("_"), Id("ok")).Op(":=").Id("v").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")), Id("ok")).Block(
-			Id("x").Dot(f.GoName).Index(tg.fieldGoType(key).Call(Id("mk"))).Op("=").Nil(),
-			Continue(),
-		),
-
-		// else, we unmarshal into a not-nil message
-		Var().Id("mv").Add(tg.fieldGoType(val)),
-		Err().Op("=").Add(tg.idents.unmarshalMessage).Call(Id("v"), Op("&").Id("mv")),
-		If(Err().Op("!=").Nil()).Block(
-			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map value for field '"+f.GoName+"': %w"), Err())),
-		),
-
-		// assign map value while type casting to map key, the cast is only necessary because ParseInt always
-		// returns 64-bit values while we sometime wanna assign 32-bit values. It should downcast at worst
-		Id("x").Dot(f.GoName).Index(tg.fieldGoType(key).Call(Id("mk"))).Op("=").Op("&").Id("mv"),
-	)
-
-	mid := fmt.Sprintf("m%d", f.Desc.Number())
-	valtypid := tg.fieldGoType(val)
-	if val.Message != nil {
-		valtypid = Op("*").Add(valtypid) // in case it's a message, pointer ref
-	}
-
+	// defer to the generic unmarshal implementation
 	return []Code{
-
-		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
-			Id("x").Dot(f.GoName).
-				Op("=").Make(Map(tg.fieldGoType(key)).Add(valtypid)),
-			List(Id(mid), Id("ok")).Op(":=").
-				Id("m").Index(Lit(tg.attrName(f))).Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberM")),
-			If(Op("!").Id("ok")).Block(
-				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': no map attribute provided"))),
+			List(Id("x").Dot(f.GoName),
+				Err()).Op("=").Qual(tg.idents.ddb, "UnmarshalMappedMessage").Types(keyType, tg.fieldGoType(val)).Call(
+				Id("m").Index(Lit(tg.attrName(f))),
+				keyFunc,
 			),
-			For(List(Id("k"), Id("v")).Op(":=").Range().Id(mid).Dot("Value")).Block(loop...),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal repeated message field '"+f.GoName+"': %w"), Err())),
+			),
 		),
 	}
 }
@@ -114,7 +59,7 @@ func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
 		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Add(tg.idents.unmarshalMessage).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
+			Err().Op("=").Qual(tg.idents.ddb, "UnmarshalMessage").Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -167,7 +112,7 @@ func (tg *Target) genOneOfFieldUnmarshal(f *protogen.Field) []Code {
 		// oneof field is a message
 		marshal = append(marshal,
 			Id("mo").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Add(tg.idents.unmarshalMessage).Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
+			Err().Op("=").Qual(tg.idents.ddb, "UnmarshalMessage").Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
 		)
 	default:
 		// else, assume the oneof field is a basic type

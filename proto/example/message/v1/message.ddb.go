@@ -13,10 +13,9 @@ import (
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
-	"strconv"
 )
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Engine) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Brand != "" {
@@ -99,7 +98,7 @@ func (x *Car) MarshalDynamoKey() (m map[string]types.AttributeValue, err error) 
 	return
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Car) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Engine != nil {
@@ -175,7 +174,7 @@ func (p CarP) Name() ddb.P {
 	return (ddb.P{}).Set(p.Val() + ".2")
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Appliance) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Brand != "" {
@@ -217,7 +216,7 @@ func (p ApplianceP) Brand() ddb.P {
 	return (ddb.P{}).Set(p.Val() + ".1")
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Ignored) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Visible != "" {
@@ -285,7 +284,7 @@ func (x *Kitchen) MarshalDynamoKey() (m map[string]types.AttributeValue, err err
 	return
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Brand != "" {
@@ -361,23 +360,10 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 	}
 	if len(x.Furniture) != 0 {
-		m13 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Furniture {
-			mk := fmt.Sprintf("%d", k)
-			if mk == "" {
-				return nil, fmt.Errorf("failed to marshal map key of field 'Furniture': map key cannot be empty")
-			}
-			if v == nil {
-				m13.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
-				continue
-			}
-			mv, err := ddb.MarshalMessage(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Furniture': %w", err)
-			}
-			m13.Value[mk] = mv
+		m["13"], err = ddb.MarshalMappedMessage(x.Furniture)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'Furniture': %w", err)
 		}
-		m["13"] = m13
 	}
 	if len(x.Calendar) != 0 {
 		m["14"], err = attributevalue.Marshal(x.GetCalendar())
@@ -555,26 +541,9 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		return fmt.Errorf("failed to unmarshal field 'Dirtyness': %w", err)
 	}
 	if m["13"] != nil {
-		x.Furniture = make(map[int64]*Appliance)
-		m13, ok := m["13"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Furniture': no map attribute provided")
-		}
-		for k, v := range m13.Value {
-			mk, err := strconv.ParseInt(k, 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map key for field 'Furniture': %w", err)
-			}
-			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
-				x.Furniture[int64(mk)] = nil
-				continue
-			}
-			var mv Appliance
-			err = ddb.UnmarshalMessage(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Furniture': %w", err)
-			}
-			x.Furniture[int64(mk)] = &mv
+		x.Furniture, err = ddb.UnmarshalMappedMessage[int64, Appliance](m["13"], ddb.IntMapKey[int64])
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Furniture': %w", err)
 		}
 	}
 	err = attributevalue.Unmarshal(m["14"], &x.Calendar)
@@ -845,7 +814,7 @@ func (p KitchenP) BytesSet() ddb.BasicListP {
 	return (ddb.BasicListP{}).Set(p.Val() + ".30")
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Empty) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	return m, nil
@@ -872,7 +841,7 @@ func EmptyPath() EmptyP {
 	return EmptyP{}
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if len(x.Int64Int64) != 0 {
@@ -966,42 +935,28 @@ func (x *MapGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err 
 		}
 	}
 	if len(x.Stringduration) != 0 {
-		m16 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Stringduration {
-			mk := k
-			if mk == "" {
-				return nil, fmt.Errorf("failed to marshal map key of field 'Stringduration': map key cannot be empty")
-			}
-			if v == nil {
-				m16.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
-				continue
-			}
-			mv, err := ddb.MarshalMessage(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Stringduration': %w", err)
-			}
-			m16.Value[mk] = mv
+		m["16"], err = ddb.MarshalMappedMessage(x.Stringduration)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'Stringduration': %w", err)
 		}
-		m["16"] = m16
 	}
 	if len(x.Stringtimestamp) != 0 {
-		m17 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.Stringtimestamp {
-			mk := k
-			if mk == "" {
-				return nil, fmt.Errorf("failed to marshal map key of field 'Stringtimestamp': map key cannot be empty")
-			}
-			if v == nil {
-				m17.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
-				continue
-			}
-			mv, err := ddb.MarshalMessage(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'Stringtimestamp': %w", err)
-			}
-			m17.Value[mk] = mv
+		m["17"], err = ddb.MarshalMappedMessage(x.Stringtimestamp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'Stringtimestamp': %w", err)
 		}
-		m["17"] = m17
+	}
+	if len(x.Boolengine) != 0 {
+		m["18"], err = ddb.MarshalMappedMessage(x.Boolengine)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'Boolengine': %w", err)
+		}
+	}
+	if len(x.Uintengine) != 0 {
+		m["19"], err = ddb.MarshalMappedMessage(x.Uintengine)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'Uintengine': %w", err)
+		}
 	}
 	return m, nil
 }
@@ -1069,43 +1024,27 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 		return fmt.Errorf("failed to unmarshal field 'Stringfloat': %w", err)
 	}
 	if m["16"] != nil {
-		x.Stringduration = make(map[string]*durationpb.Duration)
-		m16, ok := m["16"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Stringduration': no map attribute provided")
-		}
-		for k, v := range m16.Value {
-			mk := k
-			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
-				x.Stringduration[string(mk)] = nil
-				continue
-			}
-			var mv durationpb.Duration
-			err = ddb.UnmarshalMessage(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Stringduration': %w", err)
-			}
-			x.Stringduration[string(mk)] = &mv
+		x.Stringduration, err = ddb.UnmarshalMappedMessage[string, durationpb.Duration](m["16"], ddb.StringMapKey)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Stringduration': %w", err)
 		}
 	}
 	if m["17"] != nil {
-		x.Stringtimestamp = make(map[string]*timestamppb.Timestamp)
-		m17, ok := m["17"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'Stringtimestamp': no map attribute provided")
+		x.Stringtimestamp, err = ddb.UnmarshalMappedMessage[string, timestamppb.Timestamp](m["17"], ddb.StringMapKey)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Stringtimestamp': %w", err)
 		}
-		for k, v := range m17.Value {
-			mk := k
-			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
-				x.Stringtimestamp[string(mk)] = nil
-				continue
-			}
-			var mv timestamppb.Timestamp
-			err = ddb.UnmarshalMessage(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'Stringtimestamp': %w", err)
-			}
-			x.Stringtimestamp[string(mk)] = &mv
+	}
+	if m["18"] != nil {
+		x.Boolengine, err = ddb.UnmarshalMappedMessage[bool, Engine](m["18"], ddb.BoolMapKey)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Boolengine': %w", err)
+		}
+	}
+	if m["19"] != nil {
+		x.Uintengine, err = ddb.UnmarshalMappedMessage[uint64, Engine](m["19"], ddb.UintMapKey[uint64])
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Uintengine': %w", err)
 		}
 	}
 	return nil
@@ -1212,7 +1151,17 @@ func (p MapGaloreP) Stringtimestamp() ddb.BasicMapP {
 	return (ddb.BasicMapP{}).Set(p.Val() + ".17")
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// Boolengine returns 'p' appended with the attribute while allow map keys on a nested message
+func (p MapGaloreP) Boolengine() ddb.MapP[EngineP] {
+	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".18")
+}
+
+// Uintengine returns 'p' appended with the attribute while allow map keys on a nested message
+func (p MapGaloreP) Uintengine() ddb.MapP[EngineP] {
+	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".19")
+}
+
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.SomeValue != nil {
@@ -1258,7 +1207,7 @@ func (p ValueGaloreP) SomeValue() ddb.P {
 	return (ddb.P{}).Set(p.Val() + ".1")
 }
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.Str != "" {
@@ -1306,23 +1255,10 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 		}
 	}
 	if len(x.MsgMap) != 0 {
-		m8 := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
-		for k, v := range x.MsgMap {
-			mk := k
-			if mk == "" {
-				return nil, fmt.Errorf("failed to marshal map key of field 'MsgMap': map key cannot be empty")
-			}
-			if v == nil {
-				m8.Value[mk] = &types.AttributeValueMemberNULL{Value: true}
-				continue
-			}
-			mv, err := ddb.MarshalMessage(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal map value of field 'MsgMap': %w", err)
-			}
-			m8.Value[mk] = mv
+		m["msgMap"], err = ddb.MarshalMappedMessage(x.MsgMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'MsgMap': %w", err)
 		}
-		m["msgMap"] = m8
 	}
 	if x.Enum != 0 {
 		m["enum"], err = attributevalue.Marshal(x.GetEnum())
@@ -1454,23 +1390,9 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 		return fmt.Errorf("failed to unmarshal field 'StrMap': %w", err)
 	}
 	if m["msgMap"] != nil {
-		x.MsgMap = make(map[string]*Engine)
-		m8, ok := m["msgMap"].(*types.AttributeValueMemberM)
-		if !ok {
-			return fmt.Errorf("failed to unmarshal field 'MsgMap': no map attribute provided")
-		}
-		for k, v := range m8.Value {
-			mk := k
-			if _, ok := v.(*types.AttributeValueMemberNULL); ok {
-				x.MsgMap[string(mk)] = nil
-				continue
-			}
-			var mv Engine
-			err = ddb.UnmarshalMessage(v, &mv)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal map value for field 'MsgMap': %w", err)
-			}
-			x.MsgMap[string(mk)] = &mv
+		x.MsgMap, err = ddb.UnmarshalMappedMessage[string, Engine](m["msgMap"], ddb.StringMapKey)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'MsgMap': %w", err)
 		}
 	}
 	err = attributevalue.Unmarshal(m["enum"], &x.Enum)
