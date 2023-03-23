@@ -459,33 +459,22 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 	}
 	if len(x.StringSet) != 0 {
-		m28 := &types.AttributeValueMemberSS{}
-		for _, v := range x.StringSet {
-			m28.Value = append(m28.Value, v)
+		m["28"], err = ddb.MarshalSet(x.StringSet)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal set item of field 'StringSet': %w", err)
 		}
-		m["28"] = m28
 	}
 	if len(x.NumberSet) != 0 {
-		m29 := &types.AttributeValueMemberNS{}
-		for _, v := range x.NumberSet {
-			av, err := attributevalue.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal set item of field 'NumberSet': %w", err)
-			}
-			avn, ok := av.(*types.AttributeValueMemberN)
-			if !ok {
-				return nil, fmt.Errorf("set item of field 'NumberSet' dit not marshal to a N value")
-			}
-			m29.Value = append(m29.Value, avn.Value)
+		m["29"], err = ddb.MarshalSet(x.NumberSet)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal set item of field 'NumberSet': %w", err)
 		}
-		m["29"] = m29
 	}
 	if len(x.BytesSet) != 0 {
-		m30 := &types.AttributeValueMemberBS{}
-		for _, v := range x.BytesSet {
-			m30.Value = append(m30.Value, v)
+		m["30"], err = ddb.MarshalSet(x.BytesSet)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal set item of field 'BytesSet': %w", err)
 		}
-		m["30"] = m30
 	}
 	return m, nil
 }

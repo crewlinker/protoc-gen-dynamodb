@@ -141,6 +141,37 @@ func UnmarshalRepeatedMessage[T any, TP ProtoMessage[T]](m types.AttributeValue)
 	return
 }
 
+// MarshalSet will marshal a slice of 'T' to a dynamo set.
+func MarshalSet[T ~uint64 | ~uint32 | ~int32 | ~int64 | string | []byte](s []T) (types.AttributeValue, error) {
+	switch st := any(s).(type) {
+	case []string:
+		a := &types.AttributeValueMemberSS{}
+		a.Value = append(a.Value, st...)
+		return a, nil
+	case [][]byte:
+		a := &types.AttributeValueMemberBS{}
+		a.Value = append(a.Value, st...)
+		return a, nil
+	case []uint64, []uint32, []int32, []int64:
+		a := &types.AttributeValueMemberNS{}
+		for _, v := range s {
+			av, err := attributevalue.Marshal(v)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal numeric set item: %w", err)
+			}
+
+			avn, ok := av.(*types.AttributeValueMemberN)
+			if !ok {
+				return nil, fmt.Errorf("expected N member encoding for numeric set item, got: %T", av)
+			}
+			a.Value = append(a.Value, avn.Value)
+		}
+		return a, nil
+	default:
+		return nil, fmt.Errorf("unsupported set item encoding: %T", st)
+	}
+}
+
 // MarshalRepeatedMessage provides a generic function for marshalling a repeated field as long as the
 // generated code provides the concrete type as the Type parameter.
 func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP) (types.AttributeValue, error) {
