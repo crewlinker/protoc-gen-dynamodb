@@ -70,11 +70,11 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 		return nil
 	}
 
-	body := []Code{Id("m").Op("=").Make(Map(String()).Qual(dynamodbtypes, "AttributeValue"))}
+	body := []Code{Id("m").Op("=").Make(Map(String()).Qual(types, "AttributeValue"))}
 	if pkf != nil {
 		body = append(body,
 			List(Id("pk"), Id("pkv")).Op(":=").Id("x").Dot("PartitionKey").Call(),
-			List(Id("m").Index(Id("pk")), Err()).Op("=").Qual(attributevalues, "Marshal").Call(Id("pkv")),
+			List(Id("m").Index(Id("pk")), Err()).Op("=").Qual(tg.idents.ddb, "Marshal").Call(Id("pkv")),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal partition key field: %w"), Err())),
 			),
@@ -84,7 +84,7 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 	if skf != nil {
 		body = append(body,
 			List(Id("sk"), Id("skv")).Op(":=").Id("x").Dot("SortKey").Call(),
-			List(Id("m").Index(Id("sk")), Err()).Op("=").Qual(attributevalues, "Marshal").Call(Id("skv")),
+			List(Id("m").Index(Id("sk")), Err()).Op("=").Qual(tg.idents.ddb, "Marshal").Call(Id("skv")),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal sort key field: %w"), Err())),
 			),
@@ -96,7 +96,7 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 		Params(Id("x").Op("*").Id(m.GoIdent.GoName)).Id("MarshalDynamoKey").
 		Params().
 		Params(
-			Id("m").Map(String()).Qual(dynamodbtypes, "AttributeValue"),
+			Id("m").Map(String()).Qual(types, "AttributeValue"),
 			Id("err").Id("error"),
 		).
 		Block(append(body, Return())...)

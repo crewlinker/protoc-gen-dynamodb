@@ -369,3 +369,15 @@ func UnmarshalMessage(m types.AttributeValue, x proto.Message) (err error) {
 		return fmt.Errorf("unmarshal of message type unsupported: %+T", xt)
 	}
 }
+
+// Marshal will marshal basic types, and composite types that only hold basic types. It defers to the
+// offical AWS sdk but is still put here to make it easier to change behaviour in the future.
+func Marshal(in any) (types.AttributeValue, error) {
+	return attributevalue.Marshal(in)
+}
+
+// Unmarshal will marshal basic types, and composite types that only hold basic types. It defers to the
+// offical AWS sdk but is still put here to make it easier to change behaviour in the future.
+func Unmarshal(av types.AttributeValue, out any) error {
+	return attributevalue.Unmarshal(av, out)
+}
