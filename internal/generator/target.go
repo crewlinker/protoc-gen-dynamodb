@@ -6,6 +6,7 @@ import (
 	"path"
 	"runtime/debug"
 
+	ddbv1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
 	. "github.com/dave/jennifer/jen"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -22,7 +23,18 @@ type Target struct {
 	src    *protogen.File
 	logs   *zap.Logger
 	idents struct {
-		ddb string
+		ddb   string
+		ddbv1 string
+	}
+}
+
+// genEmbedOption generates the statement to configure embed encoding
+func (tg *Target) genEmbedOption(f *protogen.Field) *Statement {
+	switch tg.embedEncoding(f) {
+	case ddbv1.Encoding_ENCODING_JSON:
+		return Qual(tg.idents.ddb, "Embed").Call(Qual(tg.idents.ddbv1, "Encoding_ENCODING_JSON"))
+	default:
+		return Qual(tg.idents.ddb, "Embed").Call(Qual(tg.idents.ddbv1, "Encoding_ENCODING_UNSPECIFIED"))
 	}
 }
 
@@ -142,6 +154,7 @@ func (tg *Target) Generate(w io.Writer) error {
 
 	// tg idents provides various identifiers
 	tg.idents.ddb = path.Join(bi.Path, "ddb")
+	tg.idents.ddbv1 = path.Join(bi.Path, "proto", "ddb", "v1")
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {

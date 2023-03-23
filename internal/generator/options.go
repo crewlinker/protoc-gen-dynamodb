@@ -61,3 +61,11 @@ func (tg *Target) isSet(f *protogen.Field) bool {
 
 	return false
 }
+
+// returns the embedding encoding
+func (tg *Target) embedEncoding(f *protogen.Field) ddbv1.Encoding {
+	if fopts := FieldOptions(f); fopts != nil && fopts.Embed != nil {
+		return *fopts.Embed
+	}
+	return ddbv1.Encoding_ENCODING_UNSPECIFIED
+}

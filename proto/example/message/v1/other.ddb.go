@@ -6,6 +6,7 @@ import (
 	"fmt"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
+	v1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -13,14 +14,14 @@ import (
 func (x *OtherKitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.AnotherKitchen != nil {
-		m16, err := ddb.MarshalMessage(x.GetAnotherKitchen())
+		m16, err := ddb.MarshalMessage(x.GetAnotherKitchen(), ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'AnotherKitchen': %w", err)
 		}
 		m["16"] = m16
 	}
 	if x.OtherTimer != nil {
-		m17, err := ddb.MarshalMessage(x.GetOtherTimer())
+		m17, err := ddb.MarshalMessage(x.GetOtherTimer(), ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'OtherTimer': %w", err)
 		}
@@ -33,14 +34,14 @@ func (x *OtherKitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, e
 func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	if m["16"] != nil {
 		x.AnotherKitchen = new(Kitchen)
-		err = ddb.UnmarshalMessage(m["16"], x.AnotherKitchen)
+		err = ddb.UnmarshalMessage(m["16"], x.AnotherKitchen, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'AnotherKitchen': %w", err)
 		}
 	}
 	if m["17"] != nil {
 		x.OtherTimer = new(durationpb.Duration)
-		err = ddb.UnmarshalMessage(m["17"], x.OtherTimer)
+		err = ddb.UnmarshalMessage(m["17"], x.OtherTimer, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'OtherTimer': %w", err)
 		}

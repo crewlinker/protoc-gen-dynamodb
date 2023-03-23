@@ -59,7 +59,11 @@ func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
 		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Qual(tg.idents.ddb, "UnmarshalMessage").Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
+			Err().Op("=").Qual(tg.idents.ddb, "UnmarshalMessage").Call(
+				Id("m").Index(Lit(tg.attrName(f))),
+				Id("x").Dot(f.GoName),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -74,6 +78,7 @@ func (tg *Target) genBasicFieldUnmarshal(f *protogen.Field) []Code {
 			Qual(tg.idents.ddb, "Unmarshal").Call(
 			Id("m").Index(Lit(tg.attrName(f))),
 			Op("&").Id("x").Dot(f.GoName),
+			tg.genEmbedOption(f),
 		),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),

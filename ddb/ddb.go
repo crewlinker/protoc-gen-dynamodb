@@ -2,11 +2,13 @@
 package ddb
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	ddbv1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -141,6 +143,24 @@ func UnmarshalRepeatedMessage[T any, TP ProtoMessage[T]](m types.AttributeValue)
 	return
 }
 
+// MarshalRepeatedMessage provides a generic function for marshalling a repeated field as long as the
+// generated code provides the concrete type as the Type parameter.
+func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP) (types.AttributeValue, error) {
+	a := &types.AttributeValueMemberL{}
+	for i, m := range x {
+		if m == nil {
+			a.Value = append(a.Value, &types.AttributeValueMemberNULL{Value: true})
+			continue
+		}
+		v, err := MarshalMessage(m)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal item '%d' of repeated message field': %w", i, err)
+		}
+		a.Value = append(a.Value, v)
+	}
+	return a, nil
+}
+
 // MarshalSet will marshal a slice of 'T' to a dynamo set.
 func MarshalSet[T ~uint64 | ~uint32 | ~int32 | ~int64 | string | []byte](s []T) (types.AttributeValue, error) {
 	switch st := any(s).(type) {
@@ -172,34 +192,28 @@ func MarshalSet[T ~uint64 | ~uint32 | ~int32 | ~int64 | string | []byte](s []T) 
 	}
 }
 
-// MarshalRepeatedMessage provides a generic function for marshalling a repeated field as long as the
-// generated code provides the concrete type as the Type parameter.
-func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP) (types.AttributeValue, error) {
-	a := &types.AttributeValueMemberL{}
-	for i, m := range x {
-		if m == nil {
-			a.Value = append(a.Value, &types.AttributeValueMemberNULL{Value: true})
-			continue
-		}
-		v, err := MarshalMessage(m)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal item '%d' of repeated message field': %w", i, err)
-		}
-		a.Value = append(a.Value, v)
-	}
-	return a, nil
-}
-
 // MarshalMessage will marshal a protobuf message 'm' into an attribute value. It supports several
 // well-known Protobuf types and if 'x' implements its own MarshalDynamoItem method it will be called to
 // delegate the marshalling.
-func MarshalMessage(x proto.Message) (a types.AttributeValue, err error) {
+func MarshalMessage(x proto.Message, os ...Option) (a types.AttributeValue, err error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		return jsonMarshal(x)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
+	// check if the message implements its own marshalling, if so defer to that
 	if mx, ok := x.(interface {
 		MarshalDynamoItem() (map[string]types.AttributeValue, error)
 	}); ok {
 		mm, err := mx.MarshalDynamoItem()
 		return &types.AttributeValueMemberM{Value: mm}, err
 	}
+
+	// else, check for some special well-known types and handle these cases specifically
 	switch xt := x.(type) {
 	case *durationpb.Duration, *timestamppb.Timestamp:
 		xjson, err := protojson.Marshal(xt)
@@ -252,7 +266,16 @@ func MarshalMessage(x proto.Message) (a types.AttributeValue, err error) {
 // UnmarshalMessage will attempt to unmarshal 'm' into a protobuf message 'x'. It provides special
 // support for several well-known protobuf message types. If 'x' implements the MarshalDynamoItem method
 // it will be called to delegate the unmarshalling.
-func UnmarshalMessage(m types.AttributeValue, x proto.Message) (err error) {
+func UnmarshalMessage(m types.AttributeValue, x proto.Message, os ...Option) (err error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		return jsonUnmarshal(m, x)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
 	if mx, ok := x.(interface {
 		UnmarshalDynamoItem(map[string]types.AttributeValue) error
 	}); ok {
@@ -262,6 +285,7 @@ func UnmarshalMessage(m types.AttributeValue, x proto.Message) (err error) {
 		}
 		return mx.UnmarshalDynamoItem(mm.Value)
 	}
+
 	switch xt := x.(type) {
 	case *durationpb.Duration, *timestamppb.Timestamp:
 		ms, ok := m.(*types.AttributeValueMemberS)
@@ -372,12 +396,72 @@ func UnmarshalMessage(m types.AttributeValue, x proto.Message) (err error) {
 
 // Marshal will marshal basic types, and composite types that only hold basic types. It defers to the
 // offical AWS sdk but is still put here to make it easier to change behaviour in the future.
-func Marshal(in any) (types.AttributeValue, error) {
-	return attributevalue.Marshal(in)
+func Marshal(in any, os ...Option) (types.AttributeValue, error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		return jsonMarshal(in)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+		return attributevalue.Marshal(in)
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
 }
 
-// Unmarshal will marshal basic types, and composite types that only hold basic types. It defers to the
-// offical AWS sdk but is still put here to make it easier to change behaviour in the future.
-func Unmarshal(av types.AttributeValue, out any) error {
-	return attributevalue.Unmarshal(av, out)
+// Unmarshal will marshal basic types, and composite types that only hold basic types. It takes into
+// account the embed encoding option.
+func Unmarshal(av types.AttributeValue, out any, os ...Option) error {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		return jsonUnmarshal(av, out)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+		return attributevalue.Unmarshal(av, out)
+	default:
+		return fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+}
+
+// jsonUnmarshal unmarshals 'av' into 'out'. In case 'out' is a proto.Message it will use
+// protojson encoding.
+func jsonUnmarshal(av types.AttributeValue, out any) (err error) {
+	if av == nil {
+		return nil // nothing to decode
+	}
+
+	sav, ok := av.(*types.AttributeValueMemberS)
+	if !ok {
+		return fmt.Errorf("expected json encoded embed in S attribute value, got: %T", av)
+	}
+
+	switch out := out.(type) {
+	case proto.Message:
+		err = protojson.Unmarshal([]byte(sav.Value), out)
+	default:
+		err = json.Unmarshal([]byte(sav.Value), out)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal json: %w", err)
+	}
+
+	return nil
+}
+
+// jsonMarshal marshals 'in' to a dynamo S attribute. In case 'in' is a proto.Message it will
+// use protojson encoding, else it will use the stdlib json encoding.
+func jsonMarshal(in any) (av types.AttributeValue, err error) {
+	var b []byte
+	switch in := in.(type) {
+	case proto.Message:
+		b, err = protojson.Marshal(in)
+	default:
+		b, err = json.Marshal(in)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to json marshal: %w", err)
+	}
+
+	return &types.AttributeValueMemberS{Value: string(b)}, nil
 }
