@@ -34,7 +34,10 @@ func (tg *Target) genMessageFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only marshal message field if the value is not nil at runtime
 		If(tg.marshalPresenceCond(f)...).Block(
-			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Qual(tg.idents.ddb, "MarshalMessage").Call(Id("x").Dot("Get"+f.GoName).Call()),
+			List(Id(fmt.Sprintf("m%d", f.Desc.Number())), Id("err")).Op(":=").Qual(tg.idents.ddb, "MarshalMessage").Call(
+				Id("x").Dot("Get"+f.GoName).Call(),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -51,7 +54,10 @@ func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
 				Id("m").Index(Lit(tg.attrName(f))),
 				Id("err"),
 			).Op("=").
-				Qual(tg.idents.ddb, "Marshal").Call(Id("x").Dot("Get"+f.GoName).Call()),
+				Qual(tg.idents.ddb, "Marshal").Call(
+				Id("x").Dot("Get"+f.GoName).Call(),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal field '"+f.GoName+"': %w"), Err())),
 			),

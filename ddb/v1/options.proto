@@ -4,6 +4,14 @@ package ddb.v1;
 import "google/protobuf/descriptor.proto";
 option go_package = "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1;ddbv1";
 
+// encoding kinds
+enum Encoding{
+    // unspecified encoding
+    ENCODING_UNSPECIFIED=0;
+    // json encoding
+    ENCODING_JSON = 1;
+}
+
 // FieldOptions presents options to configure fields to interact with protobuf powered rpc
 message FieldOptions {
     // specify the name of the DynamoDB attribute
@@ -16,6 +24,8 @@ message FieldOptions {
     optional bool omit = 4;
     // indicate that the field should be marshalled and unmarshalled from dynamo as a set
     optional bool set = 5;
+    // allows for embedding the field's value as an encoded json or binary protobuf
+    optional Encoding embed = 6; 
 }
 
 extend google.protobuf.FieldOptions {

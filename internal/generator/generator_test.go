@@ -321,6 +321,53 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 		}, nil),
 )
 
+// Assert marshalling of json embeddings
+var _ = DescribeTable("json embed marshalling", func(k *messagev1.JsonFields, exp map[string]types.AttributeValue, expErr string) {
+	m, err := k.MarshalDynamoItem()
+	if expErr == "" {
+		Expect(err).To(BeNil())
+	} else {
+		Expect(err).To(MatchError(expErr))
+	}
+
+	// check message equality
+	Expect(m).To(Equal(exp))
+},
+	Entry("zero value",
+		&messagev1.JsonFields{},
+		map[string]types.AttributeValue{}, nil),
+	Entry("some data",
+		&messagev1.JsonFields{
+			JsonStrList: []string{"a", "b", "c"},
+			JsonEngine:  &messagev1.Engine{Brand: "brand-a"},
+		},
+		map[string]types.AttributeValue{
+			"1": &types.AttributeValueMemberS{Value: `["a","b","c"]`},
+			"3": &types.AttributeValueMemberS{Value: `{"brand":"brand-a"}`},
+		}, nil),
+)
+
+// We fuzz json embedding
+var _ = DescribeTable("json embed fuzz", func(seed int64) {
+	f := fuzz.NewWithSeed(seed).NilChance(0.5)
+	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
+	for i := 0; i < 10000; i++ {
+		var in, out messagev1.JsonFields
+		f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
+
+		item, err := in.MarshalDynamoItem()
+		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
+			continue // skip, unsupported variant
+		}
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(out.UnmarshalDynamoItem(item)).To(Succeed())
+		ExpectProtoEqual(&in, &out)
+	}
+},
+	Entry("now()", time.Now().UnixNano()),
+)
+
 // We fuzz our implementation by filling the kitchen message with random data, then marshal and unmarshal
 // to check if it results in the output being equal to the input.
 var _ = DescribeTable("kitchen fuzz", func(seed int64) {
