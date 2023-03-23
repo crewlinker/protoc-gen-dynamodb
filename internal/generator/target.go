@@ -22,9 +22,7 @@ type Target struct {
 	src    *protogen.File
 	logs   *zap.Logger
 	idents struct {
-		ddb              string
-		marshalMessage   Code
-		unmarshalMessage Code
+		ddb string
 	}
 }
 
@@ -142,10 +140,8 @@ func (tg *Target) Generate(w io.Writer) error {
 		return fmt.Errorf("failed to read build info: binary not build with modules support")
 	}
 
+	// tg idents provides various identifiers
 	tg.idents.ddb = path.Join(bi.Path, "ddb")
-	tg.idents.marshalMessage, tg.idents.unmarshalMessage =
-		Qual(tg.idents.ddb, "MarshalMessage"),
-		Qual(tg.idents.ddb, "UnmarshalMessage")
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {

@@ -172,6 +172,11 @@ message MapGalore {
     map<string,google.protobuf.Duration> stringduration = 16;
     // string/duration
     map<string,google.protobuf.Timestamp> stringtimestamp = 17;
+
+    // maps to messages
+    map<bool,Engine> boolengine = 18;
+    // maps to messages
+    map<uint64,Engine> uintengine = 19;
 }
 
 // Message for testing structpb value marshalling

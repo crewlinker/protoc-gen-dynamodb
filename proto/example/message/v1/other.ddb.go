@@ -9,7 +9,7 @@ import (
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
-// MarshalDynamoItem marshals dat into a dynamodb attribute map
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *OtherKitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.AnotherKitchen != nil {

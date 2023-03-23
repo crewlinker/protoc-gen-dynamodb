@@ -17,12 +17,110 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// UnmarshalRepeatedMessage provides a generic function for unmarshalling a repeated field of messages from
-// the DynamoDB representation.
-func UnmarshalRepeatedMessage[T any, TP interface {
+// ProtoMessage is a constraint to a protobuf message pointer.
+type ProtoMessage[T any] interface {
 	proto.Message
 	*T
-}](m types.AttributeValue) (xl []TP, err error) {
+}
+
+// UintMapKey parses 's' as an unsigned integer value
+func UintMapKey[K ~uint32 | ~uint64](s string) (K, error) {
+	k, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return K(k), nil
+}
+
+// IntMapKey parses 's' as a signed integer value
+func IntMapKey[K ~int32 | ~int64](s string) (K, error) {
+	k, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return K(k), nil
+}
+
+// BoolMapKey parses 's' as a boolean 'true' or 'false' value
+func BoolMapKey(s string) (bool, error) {
+	switch s {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	default:
+		return false, fmt.Errorf("invalid bool key: %v", s)
+	}
+}
+
+// StringMapKey parses 's' as a string map key
+func StringMapKey(s string) (string, error) {
+	return s, nil
+}
+
+// UnmarshalMappedMessage decodes the dynamodb representation of a map of messages
+func UnmarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](m types.AttributeValue, fv func(s string) (K, error)) (xm map[K]TP, err error) {
+	xm = make(map[K]TP)
+	mm, ok := m.(*types.AttributeValueMemberM)
+	if !ok {
+		return nil, fmt.Errorf("failed to unmarshal mapped field: no map attribute provided")
+	}
+	for k, v := range mm.Value {
+		kv, err := fv(k)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal map key: %w", err)
+		}
+		if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+			xm[kv] = nil // set explicit nil
+			continue
+		}
+		var mv TP = new(T)
+		if err = UnmarshalMessage(v, mv); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal message map value: %w", err)
+		}
+		xm[kv] = mv
+	}
+	return
+}
+
+// MarshalMappedMessage takes a map of messages and marshals it to a dynamodb representation
+func MarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](x map[K]TP) (types.AttributeValue, error) {
+	m := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
+	for k, v := range x {
+		var kv string
+		switch kt := any(k).(type) {
+		case string:
+			kv = kt
+		case bool:
+			if kt {
+				kv = "true"
+			} else {
+				kv = "false"
+			}
+		case int32, int64, uint32, uint64:
+			kv = fmt.Sprintf("%d", kt)
+		default:
+			return nil, fmt.Errorf("unsupported map key type: %T", k)
+		}
+		if kv == "" {
+			return nil, fmt.Errorf("failed to marshal map key: map key cannot be empty")
+		}
+		if v == nil {
+			m.Value[kv] = &types.AttributeValueMemberNULL{Value: true}
+			continue
+		}
+		mv, err := MarshalMessage(v)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message: %w", err)
+		}
+		m.Value[kv] = mv
+	}
+	return m, nil
+}
+
+// UnmarshalRepeatedMessage provides a generic function for unmarshalling a repeated field of messages from
+// the DynamoDB representation.
+func UnmarshalRepeatedMessage[T any, TP ProtoMessage[T]](m types.AttributeValue) (xl []TP, err error) {
 	ml, ok := m.(*types.AttributeValueMemberL)
 	if !ok {
 		return nil, fmt.Errorf("failed to unmarshal repeated field: dynamo value is not a list")
@@ -45,10 +143,7 @@ func UnmarshalRepeatedMessage[T any, TP interface {
 
 // MarshalRepeatedMessage provides a generic function for marshalling a repeated field as long as the
 // generated code provides the concrete type as the Type parameter.
-func MarshalRepeatedMessage[T any, TP interface {
-	proto.Message
-	*T
-}](x []TP) (types.AttributeValue, error) {
+func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP) (types.AttributeValue, error) {
 	a := &types.AttributeValueMemberL{}
 	for i, m := range x {
 		if m == nil {
