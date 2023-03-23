@@ -76,7 +76,7 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 
 		// else, we unmarshal into a not-nil message
 		Var().Id("mv").Add(tg.fieldGoType(val)),
-		Err().Op("=").Add(tg.idents.unmarshal).Call(Id("v"), Op("&").Id("mv")),
+		Err().Op("=").Add(tg.idents.unmarshalMessage).Call(Id("v"), Op("&").Id("mv")),
 		If(Err().Op("!=").Nil()).Block(
 			Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal map value for field '"+f.GoName+"': %w"), Err())),
 		),
@@ -114,7 +114,7 @@ func (tg *Target) genMessageFieldUnmarshal(f *protogen.Field) []Code {
 		// only unmarshal map, if the attribute is not nil
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			Id("x").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Add(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
+			Err().Op("=").Add(tg.idents.unmarshalMessage).Call(Id("m").Index(Lit(tg.attrName(f))), Id("x").Dot(f.GoName)),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': %w"), Err())),
 			),
@@ -138,8 +138,6 @@ func (tg *Target) genBasicFieldUnmarshal(f *protogen.Field) []Code {
 
 // genListFieldUnmarshal generates Unmarshal code for a repeated field
 func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
-	mid := fmt.Sprintf("m%d", f.Desc.Number())
-
 	// if its not a list of messages, no recursing is necessary and we can just
 	// unmarshal like a basic type
 	if f.Message == nil {
@@ -149,27 +147,10 @@ func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
 	// for messages we loop over each item and unmarshal them one by one
 	return []Code{
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
-			List(Id(mid), Id("ok")).Op(":=").Id("m").Index(Lit(tg.attrName(f))).Assert(Op("*").Qual(dynamodbtypes, " AttributeValueMemberL")),
-			If(Op("!").Id("ok")).Block(
-				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal field '"+f.GoName+"': no list attribute provided"))),
-			),
-			For(List(Id("k"), Id("v")).Op(":=").Range().Id(mid).Dot("Value")).Block(
-				// for list items, they can also be NULL attributes, so we take special
-				// care of that scenario.
-				If(List(Id("_"), Id("ok")).Op(":=").Id("v").Assert(Op("*").Qual(dynamodbtypes, "AttributeValueMemberNULL")), Id("ok")).Block(
-					Id("x").Dot(f.GoName).Op("=").Append(Id("x").Dot(f.GoName), Nil()),
-					Continue(),
-				),
-				// else, init empty message and ummarshal into it
-				Var().Id("mv").Add(tg.fieldGoType(f)),
-				Err().Op("=").Add(tg.idents.unmarshal).Call(
-					Id("v"),
-					Op("&").Id("mv"),
-				),
-				If(Err().Op("!=").Nil()).Block(
-					Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal item '%d' of field '"+f.GoName+"': %w"), Id("k"), Err())),
-				),
-				Id("x").Dot(f.GoName).Op("=").Append(Id("x").Dot(f.GoName), Op("&").Id("mv")),
+			List(Id("x").Dot(f.GoName),
+				Err()).Op("=").Qual(tg.idents.ddb, "UnmarshalRepeatedMessage").Types(tg.fieldGoType(f)).Call(Id("m").Index(Lit(tg.attrName(f)))),
+			If(Err().Op("!=").Nil()).Block(
+				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal repeated message field '"+f.GoName+"': %w"), Err())),
 			),
 		),
 	}
@@ -186,7 +167,7 @@ func (tg *Target) genOneOfFieldUnmarshal(f *protogen.Field) []Code {
 		// oneof field is a message
 		marshal = append(marshal,
 			Id("mo").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Add(tg.idents.unmarshal).Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
+			Err().Op("=").Add(tg.idents.unmarshalMessage).Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
 		)
 	default:
 		// else, assume the oneof field is a basic type

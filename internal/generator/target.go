@@ -22,9 +22,9 @@ type Target struct {
 	src    *protogen.File
 	logs   *zap.Logger
 	idents struct {
-		ddb       string
-		marshal   Code
-		unmarshal Code
+		ddb              string
+		marshalMessage   Code
+		unmarshalMessage Code
 	}
 }
 
@@ -143,9 +143,9 @@ func (tg *Target) Generate(w io.Writer) error {
 	}
 
 	tg.idents.ddb = path.Join(bi.Path, "ddb")
-	tg.idents.marshal, tg.idents.unmarshal =
-		Qual(tg.idents.ddb, "MarshalDynamoMessage"),
-		Qual(tg.idents.ddb, "UnmarshalDynamoMessage")
+	tg.idents.marshalMessage, tg.idents.unmarshalMessage =
+		Qual(tg.idents.ddb, "MarshalMessage"),
+		Qual(tg.idents.ddb, "UnmarshalMessage")
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {

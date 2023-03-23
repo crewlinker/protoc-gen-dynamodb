@@ -102,35 +102,39 @@ What should the helping do for the various methods
 
 ## Feature Backlog
 
+- [ ] SHOULD generate a method that validates a ddb.Path as a masking feature
+- [ ] SHOULD write code that takes a (validated) ddb.Path and only encodes those values on a struct
 - [ ] COULD make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
 - [ ] COULD come up with a mechanism that doesn't prevent collision of path type method names with field names. i.e: .N() prevents field building from cess to "N"
 - [ ] COULD generate query building structure for FilterExpressions/KeyConditionExpressions etc
 - [ ] COULD add errors to the "MarshalDynamoKey" method if range/sort key is empty string, or empty bytes (0 number is fine?)
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
 - [ ] COULD support pk/sk method generation for fields that are message types, as long as the message has textencoding interface of some sort
-- [ ] COULD allow customizing the encoder/decoder options
+- [ ] COULD allow customizing the encoder/decoder options. But this will probably cause the package to be inconsistent, which options are usefull anyway?
 - [ ] COULD improve usability of FieldMask encoding, instead of slice of strings of the field names in
       proto definition, could/should be the dynamodb attribute names. But this probably means implement another version of the fieldmaskpb.New() function. But https://pkg.go.dev/google.golang.org/protobuf/types/known/fieldmaskpb#Intersect states that "field.number" paths are also valid
 
 ## Hardening Backlog
 
-- [ ] COULD we reduce the code duplication in ddb/path.go
+- [ ] COULD benchmark the encoding of the kitchen example and compare it with direct encoding of the
+      attributevalue package.
 - [ ] SHOULD merge the coverage from running the generator, and from unit tests when running `mage -v test`
-- [ ] SHOULD fuzz the bath building
 - [ ] SHOULD unit test the "ddb" shared package to 100%
 - [ ] SHOULD test boolean key maps
 - [ ] SHOULD fix go vet checks failure
 - [ ] SHOULD Add test that errors when unsupported map type is used
-- [ ] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
 - [ ] SHOULD Fuzz the "FieldPresence" message as well, but this might require revamping the fuzzing setup because
       of interface types in the generated types
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used
       in fields without problem
 - [ ] SHOULD turn panics into errors (or add catch mechanism)
+- [ ] COULD fuzz the path building
 - [ ] COULD fuzz using official go toolchain fuzzing
 
 ## Done Backlog
 
+- [x] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
+- [x] COULD we reduce the code duplication in ddb/path.go
 - [x] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc
 - [x] MUST generate methods that return PartitionKey (name/value), and SortKey (name/value)
 - [x] MUST deploy a buf module so users can easily include options

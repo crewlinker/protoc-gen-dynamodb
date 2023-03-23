@@ -17,10 +17,57 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// MarshalDynamoMessage will marshal a protobuf message 'm' into an attribute value. It supports several
+// UnmarshalRepeatedMessage provides a generic function for unmarshalling a repeated field of messages from
+// the DynamoDB representation.
+func UnmarshalRepeatedMessage[T any, TP interface {
+	proto.Message
+	*T
+}](m types.AttributeValue) (xl []TP, err error) {
+	ml, ok := m.(*types.AttributeValueMemberL)
+	if !ok {
+		return nil, fmt.Errorf("failed to unmarshal repeated field: dynamo value is not a list")
+	}
+
+	for i, v := range ml.Value {
+		if _, ok := v.(*types.AttributeValueMemberNULL); ok {
+			xl = append(xl, nil) // append explicit nil
+			continue
+		}
+
+		var mv TP = new(T)
+		if err = UnmarshalMessage(v, mv); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal message item '%d' of field: %w", i, err)
+		}
+		xl = append(xl, mv)
+	}
+	return
+}
+
+// MarshalRepeatedMessage provides a generic function for marshalling a repeated field as long as the
+// generated code provides the concrete type as the Type parameter.
+func MarshalRepeatedMessage[T any, TP interface {
+	proto.Message
+	*T
+}](x []TP) (types.AttributeValue, error) {
+	a := &types.AttributeValueMemberL{}
+	for i, m := range x {
+		if m == nil {
+			a.Value = append(a.Value, &types.AttributeValueMemberNULL{Value: true})
+			continue
+		}
+		v, err := MarshalMessage(m)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal item '%d' of repeated message field': %w", i, err)
+		}
+		a.Value = append(a.Value, v)
+	}
+	return a, nil
+}
+
+// MarshalMessage will marshal a protobuf message 'm' into an attribute value. It supports several
 // well-known Protobuf types and if 'x' implements its own MarshalDynamoItem method it will be called to
 // delegate the marshalling.
-func MarshalDynamoMessage(x proto.Message) (a types.AttributeValue, err error) {
+func MarshalMessage(x proto.Message) (a types.AttributeValue, err error) {
 	if mx, ok := x.(interface {
 		MarshalDynamoItem() (map[string]types.AttributeValue, error)
 	}); ok {
@@ -76,10 +123,10 @@ func MarshalDynamoMessage(x proto.Message) (a types.AttributeValue, err error) {
 	}
 }
 
-// UnmarshalDynamoMessage will attempt to unmarshal 'm' into a protobuf message 'x'. It provides special
+// UnmarshalMessage will attempt to unmarshal 'm' into a protobuf message 'x'. It provides special
 // support for several well-known protobuf message types. If 'x' implements the MarshalDynamoItem method
 // it will be called to delegate the unmarshalling.
-func UnmarshalDynamoMessage(m types.AttributeValue, x proto.Message) (err error) {
+func UnmarshalMessage(m types.AttributeValue, x proto.Message) (err error) {
 	if mx, ok := x.(interface {
 		UnmarshalDynamoItem(map[string]types.AttributeValue) error
 	}); ok {
