@@ -122,7 +122,27 @@ func MarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](x map[K]TP) (
 
 // UnmarshalRepeatedMessage provides a generic function for unmarshalling a repeated field of messages from
 // the DynamoDB representation.
-func UnmarshalRepeatedMessage[T any, TP ProtoMessage[T]](m types.AttributeValue) (xl []TP, err error) {
+func UnmarshalRepeatedMessage[T any, TP ProtoMessage[T]](m types.AttributeValue, os ...Option) (xl []TP, err error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		var outer []json.RawMessage
+		if err := jsonUnmarshal(m, &outer); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal outer slice: %w", err)
+		}
+		for i, b := range outer {
+			var mv TP = new(T)
+			if err := protojson.Unmarshal(b, mv); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal message item '%d': %w", i, err)
+			}
+			xl = append(xl, mv)
+		}
+		return
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
 	ml, ok := m.(*types.AttributeValueMemberL)
 	if !ok {
 		return nil, fmt.Errorf("failed to unmarshal repeated field: dynamo value is not a list")
@@ -145,7 +165,22 @@ func UnmarshalRepeatedMessage[T any, TP ProtoMessage[T]](m types.AttributeValue)
 
 // MarshalRepeatedMessage provides a generic function for marshalling a repeated field as long as the
 // generated code provides the concrete type as the Type parameter.
-func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP) (types.AttributeValue, error) {
+func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP, os ...Option) (av types.AttributeValue, err error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		outer := make([]json.RawMessage, len(x))
+		for i, m := range x {
+			if outer[i], err = protojson.Marshal(m); err != nil {
+				return nil, fmt.Errorf("failed to marshal repeated message '%d': %w", i, err)
+			}
+		}
+		return jsonMarshal(outer)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
 	a := &types.AttributeValueMemberL{}
 	for i, m := range x {
 		if m == nil {

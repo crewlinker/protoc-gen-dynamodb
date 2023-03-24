@@ -400,7 +400,7 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		m["18"] = m18
 	}
 	if len(x.ApplianceEngines) != 0 {
-		m["19"], err = ddb.MarshalRepeatedMessage(x.ApplianceEngines)
+		m["19"], err = ddb.MarshalRepeatedMessage(x.ApplianceEngines, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal repeated message field 'ApplianceEngines': %w", err)
 		}
@@ -453,7 +453,7 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		m["26"] = m26
 	}
 	if len(x.ListOfTs) != 0 {
-		m["27"], err = ddb.MarshalRepeatedMessage(x.ListOfTs)
+		m["27"], err = ddb.MarshalRepeatedMessage(x.ListOfTs, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal repeated message field 'ListOfTs': %w", err)
 		}
@@ -568,7 +568,7 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		}
 	}
 	if m["19"] != nil {
-		x.ApplianceEngines, err = ddb.UnmarshalRepeatedMessage[Engine](m["19"])
+		x.ApplianceEngines, err = ddb.UnmarshalRepeatedMessage[Engine](m["19"], ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal repeated message field 'ApplianceEngines': %w", err)
 		}
@@ -617,7 +617,7 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		}
 	}
 	if m["27"] != nil {
-		x.ListOfTs, err = ddb.UnmarshalRepeatedMessage[timestamppb.Timestamp](m["27"])
+		x.ListOfTs, err = ddb.UnmarshalRepeatedMessage[timestamppb.Timestamp](m["27"], ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal repeated message field 'ListOfTs': %w", err)
 		}
@@ -1232,7 +1232,7 @@ func (x *FieldPresence) MarshalDynamoItem() (m map[string]types.AttributeValue, 
 		}
 	}
 	if len(x.MsgList) != 0 {
-		m["msgList"], err = ddb.MarshalRepeatedMessage(x.MsgList)
+		m["msgList"], err = ddb.MarshalRepeatedMessage(x.MsgList, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal repeated message field 'MsgList': %w", err)
 		}
@@ -1369,7 +1369,7 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 		return fmt.Errorf("failed to unmarshal field 'StrList': %w", err)
 	}
 	if m["msgList"] != nil {
-		x.MsgList, err = ddb.UnmarshalRepeatedMessage[Engine](m["msgList"])
+		x.MsgList, err = ddb.UnmarshalRepeatedMessage[Engine](m["msgList"], ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal repeated message field 'MsgList': %w", err)
 		}
@@ -1612,6 +1612,18 @@ func (x *JsonFields) MarshalDynamoItem() (m map[string]types.AttributeValue, err
 		}
 		m["3"] = m3
 	}
+	if len(x.JsonIntMap) != 0 {
+		m["4"], err = ddb.Marshal(x.GetJsonIntMap(), ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'JsonIntMap': %w", err)
+		}
+	}
+	if len(x.JsonEngineList) != 0 {
+		m["2"], err = ddb.MarshalRepeatedMessage(x.JsonEngineList, ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal repeated message field 'JsonEngineList': %w", err)
+		}
+	}
 	return m, nil
 }
 
@@ -1626,6 +1638,16 @@ func (x *JsonFields) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err
 		err = ddb.UnmarshalMessage(m["3"], x.JsonEngine, ddb.Embed(v1.Encoding_ENCODING_JSON))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'JsonEngine': %w", err)
+		}
+	}
+	err = ddb.Unmarshal(m["4"], &x.JsonIntMap, ddb.Embed(v1.Encoding_ENCODING_JSON))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'JsonIntMap': %w", err)
+	}
+	if m["2"] != nil {
+		x.JsonEngineList, err = ddb.UnmarshalRepeatedMessage[Engine](m["2"], ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'JsonEngineList': %w", err)
 		}
 	}
 	return nil
@@ -1655,4 +1677,14 @@ func (p JsonFieldsP) JsonStrList() ddb.BasicListP {
 // JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p JsonFieldsP) JsonEngine() EngineP {
 	return EngineP{}.Set(p.Val() + ".3")
+}
+
+// JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
+func (p JsonFieldsP) JsonIntMap() ddb.BasicMapP {
+	return (ddb.BasicMapP{}).Set(p.Val() + ".4")
+}
+
+// JsonEngineList returns 'p' appended with the attribute while allow indexing a nested message
+func (p JsonFieldsP) JsonEngineList() ddb.ListP[EngineP] {
+	return (ddb.ListP[EngineP]{}).Set(p.Val() + ".2")
 }

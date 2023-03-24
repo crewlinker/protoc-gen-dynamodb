@@ -338,12 +338,16 @@ var _ = DescribeTable("json embed marshalling", func(k *messagev1.JsonFields, ex
 		map[string]types.AttributeValue{}, nil),
 	Entry("some data",
 		&messagev1.JsonFields{
-			JsonStrList: []string{"a", "b", "c"},
-			JsonEngine:  &messagev1.Engine{Brand: "brand-a"},
+			JsonStrList:    []string{"a", "b", "c"},
+			JsonEngine:     &messagev1.Engine{Brand: "brand-a"},
+			JsonIntMap:     map[int64]string{100: "foo", 200: "bar"},
+			JsonEngineList: []*messagev1.Engine{{Brand: "bar"}, {Brand: "foo"}},
 		},
 		map[string]types.AttributeValue{
 			"1": &types.AttributeValueMemberS{Value: `["a","b","c"]`},
 			"3": &types.AttributeValueMemberS{Value: `{"brand":"brand-a"}`},
+			"4": &types.AttributeValueMemberS{Value: `{"100":"foo","200":"bar"}`},
+			"2": &types.AttributeValueMemberS{Value: `[{"brand":"bar"},{"brand":"foo"}]`},
 		}, nil),
 )
 
