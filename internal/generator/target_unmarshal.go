@@ -45,6 +45,7 @@ func (tg *Target) genMapFieldUnmarshal(f *protogen.Field) (c []Code) {
 				Err()).Op("=").Qual(tg.idents.ddb, "UnmarshalMappedMessage").Types(keyType, tg.fieldGoType(val)).Call(
 				Id("m").Index(Lit(tg.attrName(f))),
 				keyFunc,
+				tg.genEmbedOption(f),
 			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal repeated message field '"+f.GoName+"': %w"), Err())),

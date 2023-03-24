@@ -20,7 +20,10 @@ func (tg *Target) genMapFieldMarshal(f *protogen.Field) (c []Code) {
 	// for messages we loop over each item and marshal them one by one
 	return []Code{
 		If(tg.marshalPresenceCond(f)...).Block(
-			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalMappedMessage").Call(Id("x").Dot(f.GoName)),
+			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalMappedMessage").Call(
+				Id("x").Dot(f.GoName),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal mapped message field '"+f.GoName+"': %w"), Err())),
 			),

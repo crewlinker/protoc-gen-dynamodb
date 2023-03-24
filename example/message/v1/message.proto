@@ -244,10 +244,8 @@ message JsonFields {
     Engine json_engine = 3 [(ddb.v1.field).embed=ENCODING_JSON];
     // map with an iteger key
     map<int64,string> json_int_map = 4 [(ddb.v1.field).embed=ENCODING_JSON];
-
     // encode a list of messages
     repeated Engine json_engine_list = 2 [(ddb.v1.field).embed=ENCODING_JSON];
-
-    // // map with bool key, and message type
-    // map<bool,Engine> json_engine_map = 5 [(ddb.v1.field).embed=ENCODING_JSON];
+    // map with bool key, and message type
+    map<bool,Engine> json_engine_map = 5 [(ddb.v1.field).embed=ENCODING_JSON];
 }
