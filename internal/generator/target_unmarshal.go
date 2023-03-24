@@ -122,7 +122,10 @@ func (tg *Target) genOneOfFieldUnmarshal(f *protogen.Field) []Code {
 		// oneof field is a message
 		unmarshal = append(unmarshal,
 			Id("mo").Dot(f.GoName).Op("=").New(tg.fieldGoType(f)),
-			Err().Op("=").Qual(tg.idents.ddb, "UnmarshalMessage").Call(Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName)),
+			Err().Op("=").Qual(tg.idents.ddb, "UnmarshalMessage").Call(
+				Id("m").Index(Lit(tg.attrName(f))), Id("mo").Dot(f.GoName),
+				tg.genEmbedOption(f),
+			),
 		)
 	default:
 		// else, assume the oneof field is a basic type
@@ -131,6 +134,7 @@ func (tg *Target) genOneOfFieldUnmarshal(f *protogen.Field) []Code {
 				Qual(tg.idents.ddb, "Unmarshal").Call(
 				Id("m").Index(Lit(tg.attrName(f))),
 				Op("&").Id("mo").Dot(f.GoName),
+				tg.genEmbedOption(f),
 			))
 	}
 
@@ -172,13 +176,11 @@ func (tg *Target) genMessageUnmarshal(f *File, m *protogen.Message) error {
 		}
 	}
 
-	body = append(body, Return(Nil()))
-
 	f.Comment(`UnmarshalDynamoItem unmarshals data from a dynamodb attribute map`)
 	f.Func().
 		Params(Id("x").Op("*").Id(m.GoIdent.GoName)).Id("UnmarshalDynamoItem").
 		Params(Id("m").Map(String()).Qual(types, "AttributeValue")).
-		Params(Id("err").Id("error")).Block(body...)
+		Params(Id("err").Id("error")).Block(append(body, Return(Nil()))...)
 
 	return nil
 }

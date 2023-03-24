@@ -355,6 +355,34 @@ var _ = DescribeTable("json embed marshalling", func(k *messagev1.JsonFields, ex
 		}, nil),
 )
 
+// Assert marshalling of json embeddings
+var _ = DescribeTable("json embed oneof", func(in *messagev1.JsonOneofs, exp map[string]types.AttributeValue, expErr string) {
+	m, err := in.MarshalDynamoItem()
+	if expErr == "" {
+		Expect(err).To(BeNil())
+	} else {
+		Expect(err).To(MatchError(expErr))
+	}
+	Expect(m).To(Equal(exp))
+	var out messagev1.JsonOneofs
+	Expect(out.UnmarshalDynamoItem(m)).To(Succeed())
+	ExpectProtoEqual(in, &out)
+},
+	Entry("zero value",
+		&messagev1.JsonOneofs{},
+		map[string]types.AttributeValue{}, nil),
+	Entry("one part",
+		&messagev1.JsonOneofs{JsonOo: &messagev1.JsonOneofs_OneofMsg{OneofMsg: &messagev1.Engine{Brand: "brand"}}},
+		map[string]types.AttributeValue{
+			"8": &types.AttributeValueMemberS{Value: `{"brand":"brand"}`},
+		}, nil),
+	Entry("one part",
+		&messagev1.JsonOneofs{JsonOo: &messagev1.JsonOneofs_OneofStr{OneofStr: "foo"}},
+		map[string]types.AttributeValue{
+			"7": &types.AttributeValueMemberS{Value: `"foo"`},
+		}, nil),
+)
+
 // We fuzz json embedding
 var _ = DescribeTable("json embed fuzz", func(seed int64) {
 	f := fuzz.NewWithSeed(seed).NilChance(0.5)
@@ -577,7 +605,7 @@ func PbTimestampFuzz(s *timestamppb.Timestamp, c fuzz.Continue) {
 // PbValueFuzz fuzzes code for structpb value. It doesn't recurse because go fuzz can't handle
 // maps or lists with interface values.
 func PbValueFuzz(s *structpb.Value, c fuzz.Continue) {
-	switch c.Rand.Int63n(8) {
+	switch c.Int63n(8) {
 	case 0:
 		s.Kind = &structpb.Value_BoolValue{BoolValue: c.RandBool()}
 		return
