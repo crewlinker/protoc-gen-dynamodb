@@ -92,7 +92,10 @@ func (tg *Target) genListFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		// only marshal if its not the zero value
 		If(tg.marshalPresenceCond(f)...).Block(
-			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalRepeatedMessage").Call(Id("x").Dot(f.GoName)),
+			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalRepeatedMessage").Call(
+				Id("x").Dot(f.GoName),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal repeated message field '"+f.GoName+"': %w"), Err())),
 			),

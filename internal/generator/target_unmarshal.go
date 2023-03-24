@@ -98,7 +98,10 @@ func (tg *Target) genListFieldUnmarshal(f *protogen.Field) []Code {
 	return []Code{
 		If(Id("m").Index(Lit(tg.attrName(f))).Op("!=").Nil()).Block(
 			List(Id("x").Dot(f.GoName),
-				Err()).Op("=").Qual(tg.idents.ddb, "UnmarshalRepeatedMessage").Types(tg.fieldGoType(f)).Call(Id("m").Index(Lit(tg.attrName(f)))),
+				Err()).Op("=").Qual(tg.idents.ddb, "UnmarshalRepeatedMessage").Types(tg.fieldGoType(f)).Call(
+				Id("m").Index(Lit(tg.attrName(f))),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Qual("fmt", "Errorf").Call(Lit("failed to unmarshal repeated message field '"+f.GoName+"': %w"), Err())),
 			),
