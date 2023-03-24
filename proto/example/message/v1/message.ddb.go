@@ -1394,7 +1394,7 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	}
 	if m["oneofStr"] != nil {
 		var mo FieldPresence_OneofStr
-		err = ddb.Unmarshal(m["oneofStr"], &mo.OneofStr)
+		err = ddb.Unmarshal(m["oneofStr"], &mo.OneofStr, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'OneofStr': %w", err)
 		}
@@ -1403,7 +1403,7 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	if m["oneofMsg"] != nil {
 		var mo FieldPresence_OneofMsg
 		mo.OneofMsg = new(Engine)
-		err = ddb.UnmarshalMessage(m["oneofMsg"], mo.OneofMsg)
+		err = ddb.UnmarshalMessage(m["oneofMsg"], mo.OneofMsg, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'OneofMsg': %w", err)
 		}
@@ -1719,4 +1719,71 @@ func (p JsonFieldsP) JsonEngineMap() ddb.MapP[EngineP] {
 // JsonNrSet returns 'p' appended with the attribute name and allow indexing
 func (p JsonFieldsP) JsonNrSet() ddb.BasicListP {
 	return (ddb.BasicListP{}).Set(p.Val() + ".6")
+}
+
+// MarshalDynamoItem marshals data into a dynamodb attribute map
+func (x *JsonOneofs) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if onev, ok := x.JsonOo.(*JsonOneofs_OneofStr); ok && onev != nil {
+		m["7"], err = ddb.Marshal(x.GetOneofStr(), ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'OneofStr': %w", err)
+		}
+	}
+	if onev, ok := x.JsonOo.(*JsonOneofs_OneofMsg); ok && onev != nil {
+		m8, err := ddb.MarshalMessage(x.GetOneofMsg(), ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'OneofMsg': %w", err)
+		}
+		m["8"] = m8
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *JsonOneofs) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	if m["7"] != nil {
+		var mo JsonOneofs_OneofStr
+		err = ddb.Unmarshal(m["7"], &mo.OneofStr, ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'OneofStr': %w", err)
+		}
+		x.JsonOo = &mo
+	}
+	if m["8"] != nil {
+		var mo JsonOneofs_OneofMsg
+		mo.OneofMsg = new(Engine)
+		err = ddb.UnmarshalMessage(m["8"], mo.OneofMsg, ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal field 'OneofMsg': %w", err)
+		}
+		x.JsonOo = &mo
+	}
+	return nil
+}
+
+// JsonOneofsP allows for constructing type-safe expression names
+type JsonOneofsP struct {
+	ddb.P
+}
+
+// Set allows generic list builder to replace the path value
+func (p JsonOneofsP) Set(v string) JsonOneofsP {
+	p.P = p.P.Set(v)
+	return p
+}
+
+// JsonOneofsPath starts the building of an expression path into JsonOneofs
+func JsonOneofsPath() JsonOneofsP {
+	return JsonOneofsP{}
+}
+
+// OneofStr returns 'p' with the attribute name appended
+func (p JsonOneofsP) OneofStr() ddb.P {
+	return (ddb.P{}).Set(p.Val() + ".7")
+}
+
+// OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
+func (p JsonOneofsP) OneofMsg() EngineP {
+	return EngineP{}.Set(p.Val() + ".8")
 }

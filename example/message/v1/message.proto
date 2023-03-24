@@ -251,3 +251,14 @@ message JsonFields {
     // json encoding of a set
     repeated int64 json_nr_set = 6 [(ddb.v1.field).embed=ENCODING_JSON,(ddb.v1.field).set=true];
 }
+
+// JsonOneOfs for testing json message with oneof field
+message JsonOneofs {
+    // one of field
+    oneof json_oo {
+        // string option
+        string oneof_str = 7 [(ddb.v1.field).embed=ENCODING_JSON];
+        // msg one option
+        Engine oneof_msg = 8 [(ddb.v1.field).embed=ENCODING_JSON];
+    }
+}
