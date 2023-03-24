@@ -240,12 +240,14 @@ message FieldPresence {
 message JsonFields {
     // encode a list of basic types into json
     repeated string json_str_list = 1 [(ddb.v1.field).embed=ENCODING_JSON];
-    // embed a json message directly
-    Engine json_engine = 3 [(ddb.v1.field).embed=ENCODING_JSON];
+    // embed a json message directly with custom name
+    Engine json_engine = 3 [(ddb.v1.field).embed=ENCODING_JSON, (ddb.v1.field).name="json_engine"];
     // map with an iteger key
     map<int64,string> json_int_map = 4 [(ddb.v1.field).embed=ENCODING_JSON];
     // encode a list of messages
     repeated Engine json_engine_list = 2 [(ddb.v1.field).embed=ENCODING_JSON];
     // map with bool key, and message type
     map<bool,Engine> json_engine_map = 5 [(ddb.v1.field).embed=ENCODING_JSON];
+    // json encoding of a set
+    repeated int64 json_nr_set = 6 [(ddb.v1.field).embed=ENCODING_JSON,(ddb.v1.field).set=true];
 }

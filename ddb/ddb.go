@@ -227,7 +227,16 @@ func MarshalRepeatedMessage[T any, TP ProtoMessage[T]](x []TP, os ...Option) (av
 }
 
 // MarshalSet will marshal a slice of 'T' to a dynamo set.
-func MarshalSet[T ~uint64 | ~uint32 | ~int32 | ~int64 | string | []byte](s []T) (types.AttributeValue, error) {
+func MarshalSet[T ~uint64 | ~uint32 | ~int32 | ~int64 | string | []byte](s []T, os ...Option) (types.AttributeValue, error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		return jsonMarshal(s)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
 	switch st := any(s).(type) {
 	case []string:
 		a := &types.AttributeValueMemberSS{}

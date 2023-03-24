@@ -459,19 +459,19 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 		}
 	}
 	if len(x.StringSet) != 0 {
-		m["28"], err = ddb.MarshalSet(x.StringSet)
+		m["28"], err = ddb.MarshalSet(x.StringSet, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal set item of field 'StringSet': %w", err)
 		}
 	}
 	if len(x.NumberSet) != 0 {
-		m["29"], err = ddb.MarshalSet(x.NumberSet)
+		m["29"], err = ddb.MarshalSet(x.NumberSet, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal set item of field 'NumberSet': %w", err)
 		}
 	}
 	if len(x.BytesSet) != 0 {
-		m["30"], err = ddb.MarshalSet(x.BytesSet)
+		m["30"], err = ddb.MarshalSet(x.BytesSet, ddb.Embed(v1.Encoding_ENCODING_UNSPECIFIED))
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal set item of field 'BytesSet': %w", err)
 		}
@@ -1610,7 +1610,7 @@ func (x *JsonFields) MarshalDynamoItem() (m map[string]types.AttributeValue, err
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal field 'JsonEngine': %w", err)
 		}
-		m["3"] = m3
+		m["json_engine"] = m3
 	}
 	if len(x.JsonIntMap) != 0 {
 		m["4"], err = ddb.Marshal(x.GetJsonIntMap(), ddb.Embed(v1.Encoding_ENCODING_JSON))
@@ -1630,6 +1630,12 @@ func (x *JsonFields) MarshalDynamoItem() (m map[string]types.AttributeValue, err
 			return nil, fmt.Errorf("failed to marshal mapped message field 'JsonEngineMap': %w", err)
 		}
 	}
+	if len(x.JsonNrSet) != 0 {
+		m["6"], err = ddb.MarshalSet(x.JsonNrSet, ddb.Embed(v1.Encoding_ENCODING_JSON))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal set item of field 'JsonNrSet': %w", err)
+		}
+	}
 	return m, nil
 }
 
@@ -1639,9 +1645,9 @@ func (x *JsonFields) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal field 'JsonStrList': %w", err)
 	}
-	if m["3"] != nil {
+	if m["json_engine"] != nil {
 		x.JsonEngine = new(Engine)
-		err = ddb.UnmarshalMessage(m["3"], x.JsonEngine, ddb.Embed(v1.Encoding_ENCODING_JSON))
+		err = ddb.UnmarshalMessage(m["json_engine"], x.JsonEngine, ddb.Embed(v1.Encoding_ENCODING_JSON))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal field 'JsonEngine': %w", err)
 		}
@@ -1661,6 +1667,10 @@ func (x *JsonFields) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal repeated message field 'JsonEngineMap': %w", err)
 		}
+	}
+	err = ddb.Unmarshal(m["6"], &x.JsonNrSet, ddb.Embed(v1.Encoding_ENCODING_JSON))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'JsonNrSet': %w", err)
 	}
 	return nil
 }
@@ -1688,7 +1698,7 @@ func (p JsonFieldsP) JsonStrList() ddb.BasicListP {
 
 // JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p JsonFieldsP) JsonEngine() EngineP {
-	return EngineP{}.Set(p.Val() + ".3")
+	return EngineP{}.Set(p.Val() + ".json_engine")
 }
 
 // JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
@@ -1704,4 +1714,9 @@ func (p JsonFieldsP) JsonEngineList() ddb.ListP[EngineP] {
 // JsonEngineMap returns 'p' appended with the attribute while allow map keys on a nested message
 func (p JsonFieldsP) JsonEngineMap() ddb.MapP[EngineP] {
 	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".5")
+}
+
+// JsonNrSet returns 'p' appended with the attribute name and allow indexing
+func (p JsonFieldsP) JsonNrSet() ddb.BasicListP {
+	return (ddb.BasicListP{}).Set(p.Val() + ".6")
 }
