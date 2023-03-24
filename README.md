@@ -89,20 +89,11 @@ What should the helping do for the various methods
 
 ## Minimal Viable Backlog
 
-- [ ] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf) instead of dynamo map type, how does it combine with StringSets, NumberSets, ByteSets
 - [ ] SHOULD double check how `repeated bytes` field are marshalled by default, and how the set option has any effecto or not
-
-## Documentation backlog
-
-- [ ] Write about the pk/sk annotation
-- [ ] Write about what of fields can be set as a PK, or SK
-- [ ] Write what well-known types encode to what
-- [ ] Type-safe expression path building, document the exceptions for messages in other packages
-- [ ] Write about the "omit" option to ignore fields for dynamo code generation
 
 ## Feature Backlog
 
-- [ ] SHOULD generate a method that validates a ddb.Path as a masking feature
+- [ ] SHOULD generate a method that validates a ddb.Path for a masking feature
 - [ ] SHOULD write code that takes a (validated) ddb.Path and only encodes those values on a struct
 - [ ] COULD make path-building work with well-known types, and lists of well-known types (how to deduplicate effort?)
 - [ ] COULD come up with a mechanism that doesn't prevent collision of path type method names with field names. i.e: .N() prevents field building from cess to "N"
@@ -111,8 +102,6 @@ What should the helping do for the various methods
 - [ ] COULD make it configurable on how to handle nil/empty fields like stdlib json package
 - [ ] COULD support pk/sk method generation for fields that are message types, as long as the message has textencoding interface of some sort
 - [ ] COULD allow customizing the encoder/decoder options. But this will probably cause the package to be inconsistent, which options are usefull anyway?
-- [ ] COULD improve usability of FieldMask encoding, instead of slice of strings of the field names in
-      proto definition, could/should be the dynamodb attribute names. But this probably means implement another version of the fieldmaskpb.New() function. But https://pkg.go.dev/google.golang.org/protobuf/types/known/fieldmaskpb#Intersect states that "field.number" paths are also valid
 
 ## Hardening Backlog
 
@@ -122,7 +111,7 @@ What should the helping do for the various methods
 - [ ] SHOULD unit test the "ddb" shared package to 100%
 - [ ] SHOULD test boolean key maps
 - [ ] SHOULD fix go vet checks failure
-- [ ] SHOULD Add test that errors when unsupported map type is used
+- [ ] SHOULD Add test that errors when unsupported map key/value type is used
 - [ ] SHOULD Fuzz the "FieldPresence" message as well, but this might require revamping the fuzzing setup because
       of interface types in the generated types
 - [ ] SHOULD test that messages from external packages that DO implement the MarshalDynamoItem can be used
@@ -133,6 +122,7 @@ What should the helping do for the various methods
 
 ## Done Backlog
 
+- [x] SHOULD support encoding compex types (messages, maps, strucpb, oneof values as json AND/OR binary protobuf) instead of dynamo map type, how does it combine with StringSets, NumberSets, ByteSets
 - [x] SHOULD test with coverage test as described here: https://go.dev/blog/integration-test-coverage
 - [x] COULD we reduce the code duplication in ddb/path.go
 - [x] SHOULD add field option to support (un)marshalling StringSets, NumberSets, ByteSets etc

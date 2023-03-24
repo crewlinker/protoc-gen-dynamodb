@@ -74,7 +74,10 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 	if pkf != nil {
 		body = append(body,
 			List(Id("pk"), Id("pkv")).Op(":=").Id("x").Dot("PartitionKey").Call(),
-			List(Id("m").Index(Id("pk")), Err()).Op("=").Qual(tg.idents.ddb, "Marshal").Call(Id("pkv")),
+			List(Id("m").Index(Id("pk")), Err()).Op("=").Qual(tg.idents.ddb, "Marshal").Call(
+				Id("pkv"),
+				tg.genEmbedOption(pkf),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal partition key field: %w"), Err())),
 			),
@@ -84,7 +87,10 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 	if skf != nil {
 		body = append(body,
 			List(Id("sk"), Id("skv")).Op(":=").Id("x").Dot("SortKey").Call(),
-			List(Id("m").Index(Id("sk")), Err()).Op("=").Qual(tg.idents.ddb, "Marshal").Call(Id("skv")),
+			List(Id("m").Index(Id("sk")), Err()).Op("=").Qual(tg.idents.ddb, "Marshal").Call(
+				Id("skv"),
+				tg.genEmbedOption(skf),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal sort key field: %w"), Err())),
 			),

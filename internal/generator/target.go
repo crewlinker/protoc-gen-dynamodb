@@ -33,8 +33,10 @@ func (tg *Target) genEmbedOption(f *protogen.Field) *Statement {
 	switch tg.embedEncoding(f) {
 	case ddbv1.Encoding_ENCODING_JSON:
 		return Qual(tg.idents.ddb, "Embed").Call(Qual(tg.idents.ddbv1, "Encoding_ENCODING_JSON"))
+	case ddbv1.Encoding_ENCODING_DYNAMO:
+		return Qual(tg.idents.ddb, "Embed").Call(Qual(tg.idents.ddbv1, "Encoding_ENCODING_DYNAMO"))
 	default:
-		return Qual(tg.idents.ddb, "Embed").Call(Qual(tg.idents.ddbv1, "Encoding_ENCODING_UNSPECIFIED"))
+		return Qual(tg.idents.ddb, "Embed").Call(Qual(tg.idents.ddbv1, "Encoding_ENCODING_DYNAMO"))
 	}
 }
 
