@@ -72,7 +72,10 @@ func (tg *Target) genBasicFieldMarshal(f *protogen.Field) []Code {
 func (tg *Target) genSetFieldMarshal(f *protogen.Field) []Code {
 	return []Code{
 		If(tg.marshalPresenceCond(f)...).Block(
-			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalSet").Call(Id("x").Dot(f.GoName)),
+			List(Id("m").Index(Lit(tg.attrName(f))), Err()).Op("=").Qual(tg.idents.ddb, "MarshalSet").Call(
+				Id("x").Dot(f.GoName),
+				tg.genEmbedOption(f),
+			),
 			If(Err().Op("!=").Nil()).Block(
 				Return(Nil(), Qual("fmt", "Errorf").Call(Lit("failed to marshal set item of field '"+f.GoName+"': %w"), Err())),
 			),
