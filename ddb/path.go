@@ -13,6 +13,9 @@ type P struct{ v string }
 // N returns the path as a namebuilder for direct use in expressions
 func (p P) N() expression.NameBuilder { return expression.Name(p.String()) }
 
+// K returns the path as a keybuilder for direct use in expressions
+func (p P) K() expression.KeyBuilder { return expression.Key(p.String()) }
+
 // String formats  the path correctly
 func (p P) String() string { return strings.TrimPrefix(p.v, ".") }
 

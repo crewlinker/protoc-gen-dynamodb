@@ -15,7 +15,17 @@ func TestDdb(t *testing.T) {
 }
 
 var _ = Describe("path building", func() {
-	It("should build with list of basic types", func() {
+	It("should build a valid key condition", func() {
+		expr, err := expression.NewBuilder().
+			WithKeyCondition(messagev1.KitchenPath().Brand().K().Equal(expression.Value("foo"))).
+			Build()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(expr.Names()).To(Equal(map[string]string{
+			"#0": "1",
+		}))
+	})
+
+	It("should build update expression with name", func() {
 		expr, err := expression.NewBuilder().
 			WithUpdate(
 				expression.Set(
