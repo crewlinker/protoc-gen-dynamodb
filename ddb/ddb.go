@@ -61,7 +61,32 @@ func StringMapKey(s string) (string, error) {
 }
 
 // UnmarshalMappedMessage decodes the dynamodb representation of a map of messages
-func UnmarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](m types.AttributeValue, fv func(s string) (K, error)) (xm map[K]TP, err error) {
+func UnmarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](m types.AttributeValue, fv func(s string) (K, error), os ...Option) (xm map[K]TP, err error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		var outer map[string]json.RawMessage
+		if err := jsonUnmarshal(m, &outer); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal outer map: %w", err)
+		}
+		xm = make(map[K]TP)
+		for k, b := range outer {
+			kv, err := fv(k)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal map key: %w", err)
+			}
+			var mv TP = new(T)
+			if err := protojson.Unmarshal(b, mv); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal mapped message '%s': %w", k, err)
+			}
+			xm[kv] = mv
+		}
+		return
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
 	xm = make(map[K]TP)
 	mm, ok := m.(*types.AttributeValueMemberM)
 	if !ok {
@@ -86,26 +111,31 @@ func UnmarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](m types.Att
 }
 
 // MarshalMappedMessage takes a map of messages and marshals it to a dynamodb representation
-func MarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](x map[K]TP) (types.AttributeValue, error) {
+func MarshalMappedMessage[K comparable, T any, TP ProtoMessage[T]](x map[K]TP, os ...Option) (types.AttributeValue, error) {
+	opts := applyOptions(os...)
+	switch opts.embedEncoding {
+	case ddbv1.Encoding_ENCODING_JSON:
+		outer := make(map[string]json.RawMessage, len(x))
+		for k, v := range x {
+			kv, err := marshalMapKey(k)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal map key: %w", err)
+			}
+			if outer[kv], err = protojson.Marshal(v); err != nil {
+				return nil, fmt.Errorf("failed to marshal mapped message '%s': %w", kv, err)
+			}
+		}
+		return jsonMarshal(outer)
+	case ddbv1.Encoding_ENCODING_UNSPECIFIED:
+	default:
+		return nil, fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
+	}
+
 	m := &types.AttributeValueMemberM{Value: make(map[string]types.AttributeValue)}
 	for k, v := range x {
-		var kv string
-		switch kt := any(k).(type) {
-		case string:
-			kv = kt
-		case bool:
-			if kt {
-				kv = "true"
-			} else {
-				kv = "false"
-			}
-		case int32, int64, uint32, uint64:
-			kv = fmt.Sprintf("%d", kt)
-		default:
-			return nil, fmt.Errorf("unsupported map key type: %T", k)
-		}
-		if kv == "" {
-			return nil, fmt.Errorf("failed to marshal map key: map key cannot be empty")
+		kv, err := marshalMapKey(k)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal map key: %w", err)
 		}
 		if v == nil {
 			m.Value[kv] = &types.AttributeValueMemberNULL{Value: true}
@@ -455,6 +485,29 @@ func Unmarshal(av types.AttributeValue, out any, os ...Option) error {
 	default:
 		return fmt.Errorf("unsupported embed encoding: %v", opts.embedEncoding)
 	}
+}
+
+// marshalMapKey marshals the key of a map to a string
+func marshalMapKey[K comparable](k K) (string, error) {
+	var kv string
+	switch kt := any(k).(type) {
+	case string:
+		kv = kt
+	case bool:
+		if kt {
+			kv = "true"
+		} else {
+			kv = "false"
+		}
+	case int32, int64, uint32, uint64:
+		kv = fmt.Sprintf("%d", kt)
+	default:
+		return "", fmt.Errorf("unsupported map key type: %T", k)
+	}
+	if kv == "" {
+		return "", fmt.Errorf("failed to marshal map key: map key cannot be empty")
+	}
+	return kv, nil
 }
 
 // jsonUnmarshal unmarshals 'av' into 'out'. In case 'out' is a proto.Message it will use
