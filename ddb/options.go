@@ -9,6 +9,7 @@ type opts struct {
 
 // applyOptions merges the options together into a single struct
 func applyOptions(os ...Option) (o opts) {
+	o.embedEncoding = ddbv1.Encoding_ENCODING_DYNAMO
 	for _, f := range os {
 		f(&o)
 	}

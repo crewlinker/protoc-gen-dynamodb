@@ -10,6 +10,8 @@ enum Encoding{
     ENCODING_UNSPECIFIED=0;
     // json encoding
     ENCODING_JSON = 1;
+    // dynamo encoding
+    ENCODING_DYNAMO = 2;
 }
 
 // FieldOptions presents options to configure fields to interact with protobuf powered rpc
