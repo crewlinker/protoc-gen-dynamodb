@@ -56,7 +56,7 @@ type stateFn func(l lexer) (lexer, stateFn)
 // append the captured field key into the result
 func emitField(l lexer) (lexer, stateFn) {
 	l.res = append(l.res, PathElement{l.input[l.start:l.pos], -1})
-	return l, lexStart
+	return l, lexDotOrBracket
 }
 
 // append the captured index to the result
@@ -74,7 +74,7 @@ func emitIndex(l lexer) (lexer, stateFn) {
 	}
 
 	l.res = append(l.res, part)
-	return l, lexStart
+	return l, lexDotOrBracket
 }
 
 // parse a string key into a map
@@ -107,8 +107,8 @@ func lexIndex(l lexer) (lexer, stateFn) {
 	}
 }
 
-// start state
-func lexStart(l lexer) (lexer, stateFn) {
+// state after a part
+func lexDotOrBracket(l lexer) (lexer, stateFn) {
 	switch l.next() {
 	case '.':
 		l.ignore()
@@ -120,6 +120,20 @@ func lexStart(l lexer) (lexer, stateFn) {
 		return l, nil // done
 	default:
 		return l, l.errorf("expected dot or bracket")
+	}
+}
+
+// start state if not a operator char, assume its a field
+func lexStart(l lexer) (lexer, stateFn) {
+	switch l.next() {
+	case '.':
+		l.ignore()
+		return l, lexField
+	case '[':
+		l.ignore()
+		return l, lexIndex
+	default:
+		return l, lexField
 	}
 }
 
