@@ -29,6 +29,18 @@ var _ = DescribeTable("parse path", func(s string, expParts []PathElement, expEr
 	Entry("3", "foo.bar.dar", []PathElement{{"foo", -1}, {"bar", -1}, {"dar", -1}}, nil),
 )
 
+var _ = Describe("select map values", func() {
+	It("should select", func() {
+		av := map[string]types.AttributeValue{"foo": &types.AttributeValueMemberN{Value: "100"}}
+		vals, err := SelectMapValues(av, "foo")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(vals).To(Equal(map[string]types.AttributeValue{
+			"foo": &types.AttributeValueMemberN{Value: "100"},
+		}))
+
+	})
+})
+
 var _ = DescribeTable("select values", func(av types.AttributeValue, paths []string, expVals map[string]types.AttributeValue, expErr error) {
 	vals, err := SelectValues(av, paths...)
 	if expErr != nil {

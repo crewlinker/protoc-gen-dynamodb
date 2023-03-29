@@ -212,3 +212,9 @@ func SelectValues(v types.AttributeValue, paths ...string) (res map[string]types
 	}
 	return
 }
+
+// SelectMapValues is a convenient wrapper around SelectValues for the common scenario of selecting from
+// map of attribute values.
+func SelectMapValues(v map[string]types.AttributeValue, paths ...string) (res map[string]types.AttributeValue, err error) {
+	return SelectValues(&types.AttributeValueMemberM{Value: v}, paths...)
+}
