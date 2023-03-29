@@ -72,29 +72,9 @@ func (p EngineP) Dirtyness() ddb.P {
 	return (ddb.P{}).Set(p.Val() + ".2")
 }
 
-// PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
-func (x *Car) PartitionKey() (name string, value int64) {
-	return "ws", x.NrOfWheels
-}
-
-// Sortkey returns the name of the Dynamo attribute that holds the sort key and the current value of that key in the struct
-func (x *Car) SortKey() (name string, value string) {
-	return "2", x.Name
-}
-
-// MarshalDynamoKey encodes only the item's key attributes into a DynamoDB attribute map
-func (x *Car) MarshalDynamoKey() (m map[string]types.AttributeValue, err error) {
-	m = make(map[string]types.AttributeValue)
-	pk, pkv := x.PartitionKey()
-	m[pk], err = ddb.Marshal(pkv, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal partition key field: %w", err)
-	}
-	sk, skv := x.SortKey()
-	m[sk], err = ddb.Marshal(skv, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal sort key field: %w", err)
-	}
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (x *Car) DynamoKeyNames() (v []string) {
+	v = append(v, "ws")
 	return
 }
 
@@ -258,29 +238,10 @@ func (p IgnoredP) Visible() ddb.P {
 	return (ddb.P{}).Set(p.Val() + ".4")
 }
 
-// PartitionKey returns the name of the Dynamo attribute that holds th partition key and the current value of that key in the struct
-func (x *Kitchen) PartitionKey() (name string, value string) {
-	return "1", x.Brand
-}
-
-// Sortkey returns the name of the Dynamo attribute that holds the sort key and the current value of that key in the struct
-func (x *Kitchen) SortKey() (name string, value []byte) {
-	return "3", x.QrCode
-}
-
-// MarshalDynamoKey encodes only the item's key attributes into a DynamoDB attribute map
-func (x *Kitchen) MarshalDynamoKey() (m map[string]types.AttributeValue, err error) {
-	m = make(map[string]types.AttributeValue)
-	pk, pkv := x.PartitionKey()
-	m[pk], err = ddb.Marshal(pkv, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal partition key field: %w", err)
-	}
-	sk, skv := x.SortKey()
-	m[sk], err = ddb.Marshal(skv, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal sort key field: %w", err)
-	}
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (x *Kitchen) DynamoKeyNames() (v []string) {
+	v = append(v, "1")
+	v = append(v, "3")
 	return
 }
 

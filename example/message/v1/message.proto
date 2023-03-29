@@ -32,7 +32,7 @@ message Car {
     // how many wheels does the car have
     int64 nr_of_wheels = 3 [(ddb.v1.field).pk=true,(ddb.v1.field).name="ws"];
     // name of the car
-    string name = 2 [(ddb.v1.field).sk=true];
+    string name = 2;
 }
 
 // Appliance in the kitchen
