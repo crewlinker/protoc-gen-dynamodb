@@ -43,22 +43,23 @@ func main() {
 			ddbf := gp.NewGeneratedFile(fmt.Sprintf("%s.ddb.go", pf.GeneratedFilenamePrefix), pf.GoImportPath)
 
 			// generated file for typed document path in a sub directory for more expressiveness
-			ddbPkgName := fmt.Sprintf("%sddb", string(pf.GoPackageName))
-			ddbFp := filepath.Join(
+			pathPkgName := "ddbpath" // NOTE: this could be made customizalbe through options
+			pathFp := filepath.Join(
 				filepath.Dir(pf.GeneratedFilenamePrefix),
-				ddbPkgName,
+				pathPkgName,
 				fmt.Sprintf("%s.go", filepath.Base(pf.GeneratedFilenamePrefix)),
 			)
 
-			ddbImpName, _ := strconv.Unquote(pf.GoImportPath.String())
-			ddbImpName = path.Join(ddbImpName, ddbPkgName)
+			pathImpName, _ := strconv.Unquote(pf.GoImportPath.String())
+			pathImpName = path.Join(pathImpName, pathPkgName)
 
-			tg := gen.CreateTarget(pf, ddbImpName)
+			// init target, and generate components for it
+			tg := gen.CreateTarget(pf, pathImpName)
 			if err := tg.GenerateMessageLogic(ddbf); err != nil {
 				return fmt.Errorf("failed to generate message logic for '%s': %w", *pf.Proto.Name, err)
 			}
 
-			if err := tg.GeneratePathBuilding(gp.NewGeneratedFile(ddbFp, pf.GoImportPath)); err != nil {
+			if err := tg.GeneratePathBuilding(gp.NewGeneratedFile(pathFp, pf.GoImportPath), pathPkgName); err != nil {
 				return fmt.Errorf("failed to generate path building code for '%s': %w", *pf.Proto.Name, err)
 			}
 
