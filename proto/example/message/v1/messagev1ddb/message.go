@@ -56,7 +56,7 @@ func (p Car) Name() expression.NameBuilder {
 }
 
 // DynamoKeyNames returns the attribute names of the partition and sort keys respectively
-func (p Car) DynamoKeyNames() (v []string) {
+func CarKeyNames() (v []string) {
 	v = append(v, "ws")
 	return
 }
@@ -255,7 +255,7 @@ func (p Kitchen) BytesSet() ddbpath.List {
 }
 
 // DynamoKeyNames returns the attribute names of the partition and sort keys respectively
-func (p Kitchen) DynamoKeyNames() (v []string) {
+func KitchenKeyNames() (v []string) {
 	v = append(v, "1")
 	v = append(v, "3")
 	return
