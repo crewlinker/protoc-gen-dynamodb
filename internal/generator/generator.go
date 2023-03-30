@@ -3,6 +3,8 @@ package generator
 
 import (
 	"fmt"
+	"path"
+	"runtime/debug"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -29,8 +31,19 @@ func NewGenerator(logs *zap.Logger, opts Config) (g *Generator, err error) {
 
 // CreateTarget inits a target for a generator
 func (g Generator) CreateTarget(pf *protogen.File) *Target {
-	return &Target{
+	tg := &Target{
 		src:  pf,
 		logs: g.logs.Named(fmt.Sprintf("target[%s]", *pf.Proto.Name)),
 	}
+
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("failed to read build info: binary not build with modules support")
+	}
+
+	// tg idents provides various identifiers
+	tg.idents.ddb = path.Join(bi.Path, "ddb")
+	tg.idents.ddbattr = path.Join(bi.Path, "ddb", "ddbattr")
+	tg.idents.ddbv1 = path.Join(bi.Path, "proto", "ddb", "v1")
+	return tg
 }

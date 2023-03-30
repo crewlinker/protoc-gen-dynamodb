@@ -48,29 +48,3 @@ func (x *OtherKitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (e
 	}
 	return nil
 }
-
-// OtherKitchenP allows for constructing type-safe expression names
-type OtherKitchenP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p OtherKitchenP) Set(v string) OtherKitchenP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// OtherKitchenPath starts the building of an expression path into OtherKitchen
-func OtherKitchenPath() OtherKitchenP {
-	return OtherKitchenP{}
-}
-
-// AnotherKitchen returns 'p' with the attribute name appended and allow subselecting nested message
-func (p OtherKitchenP) AnotherKitchen() KitchenP {
-	return KitchenP{}.Set(p.Val() + ".16")
-}
-
-// OtherTimer returns 'p' with the attribute name appended
-func (p OtherKitchenP) OtherTimer() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".17")
-}

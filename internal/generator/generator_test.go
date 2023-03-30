@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
+	"github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/messagev1ddb"
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega/format"
 	"github.com/samber/lo"
@@ -71,7 +72,7 @@ var _ = Describe("handling example messages", func() {
 		_, ok = msgt.MethodByName("PartitionKey")
 		Expect(ok).To(Equal(false))
 
-		pt := reflect.TypeOf(&messagev1.IgnoredP{})
+		pt := reflect.TypeOf(&messagev1ddb.Ignored{})
 		_, ok = pt.MethodByName("Pk")
 		Expect(ok).To(Equal(false))
 		_, ok = pt.MethodByName("Sk")
@@ -101,35 +102,46 @@ var _ = Describe("handling example messages", func() {
 })
 
 // test the building of paths
-var _ = DescribeTable("path building", func(s interface {
-	fmt.Stringer
-	N() expression.NameBuilder
-}, exp string) {
-	Expect(s.String()).To(Equal(exp))
+var _ = DescribeTable("path building", func(s expression.NameBuilder, expCondition string, expNames map[string]string) {
 
 	// check that expression builder accepts the paths
-	_, err := expression.NewBuilder().WithUpdate(
-		expression.Set(s.N(), expression.Value("foo")),
-	).Build()
+	expr, err := expression.NewBuilder().WithCondition(s.AttributeExists()).Build()
 	Expect(err).ToNot(HaveOccurred())
+
+	Expect(*expr.Condition()).To(Equal(fmt.Sprintf(`attribute_exists (%s)`, expCondition)))
+	Expect(expr.Names()).To(Equal(expNames))
+
 },
-	Entry("basic type field", messagev1.KitchenPath().Brand(), "1"),
-	Entry("message type fields", messagev1.KitchenPath().ExtraKitchen().Brand(), "16.1"),
-	Entry("lists of basic types itself", messagev1.KitchenPath().OtherBrands().At(10), "20[10]"),
-	Entry("through list of messages", messagev1.KitchenPath().ApplianceEngines().At(3).Brand(), "19[3].1"),
-	Entry("to list of messages itself", messagev1.KitchenPath().ApplianceEngines(), "19"),
-	Entry("to message field itself", messagev1.KitchenPath().ExtraKitchen(), "16"),
-	Entry("to field with renamed attr", messagev1.FieldPresencePath().Str(), "str"),
+	Entry("basic type field",
+		(messagev1ddb.Kitchen{}).Brand(),
+		"#0",
+		map[string]string{"#0": "1"}),
+	Entry("nested field",
+		(messagev1ddb.Kitchen{}).ExtraKitchen().Brand(),
+		"#0.#1",
+		map[string]string{"#0": "16", "#1": "1"}),
+	Entry("extra nested field",
+		(messagev1ddb.Kitchen{}).ExtraKitchen().ExtraKitchen().Brand(),
+		"#0.#0.#1",
+		map[string]string{"#0": "16", "#1": "1"}),
 
-	// message not in the same package only support direct path building, not "Through". Including
-	// well-known types.
-	Entry("well-known message field", messagev1.KitchenPath().Timer(), "17"),
-	Entry("list of well-known message field", messagev1.KitchenPath().ListOfTs().At(4), "27[4]"),
+	Entry("basic type list",
+		(messagev1ddb.Kitchen{}).OtherBrands().Index(10),
+		"#0[10]",
+		map[string]string{"#0": "20"}),
+	Entry("message list",
+		(messagev1ddb.Kitchen{}).ApplianceEngines().Index(3).Brand(),
+		"#0[3].#1",
+		map[string]string{"#0": "19", "#1": "1"}),
 
-	// map access, als has limit on messages outside of the package
-	Entry("to map of basic types itself", messagev1.MapGalorePath().Int64Int64().Key("a"), "1.a"),
-	Entry("to map of well-known itself", messagev1.MapGalorePath().Stringtimestamp().Key("b"), "17.b"),
-	Entry("through map of messages", messagev1.KitchenPath().ExtraKitchen().Furniture().Key("foo").Brand(), "16.13.foo.1"),
+	Entry("basic type map",
+		(messagev1ddb.Kitchen{}).Calendar().Key("bar"),
+		"#0.#1",
+		map[string]string{"#0": "14", "#1": "bar"}),
+	Entry("message map",
+		(messagev1ddb.Kitchen{}).Furniture().Key("dar").Brand(),
+		"#0.#1.#2",
+		map[string]string{"#0": "13", "#1": "dar", "#2": "1"}),
 )
 
 // assert unmarshalling of various attribute maps
