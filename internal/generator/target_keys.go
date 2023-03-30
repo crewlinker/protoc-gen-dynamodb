@@ -73,7 +73,7 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 
 	f.Comment("DynamoKeyNames returns the attribute names of the partition and sort keys respectively")
 	f.Func().
-		Params(Id("p").Id(m.GoIdent.GoName)).Id("DynamoKeyNames").
+		Id(fmt.Sprintf("%sKeyNames", m.GoIdent.GoName)).
 		Params().
 		Params(Id("v").Index().String()).
 		Block(append(body, Return())...)
