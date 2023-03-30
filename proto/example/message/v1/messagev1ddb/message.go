@@ -55,7 +55,17 @@ func (p Car) Name() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 
-// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+// CarPartitionKey returns a key builder for the partition key
+func CarPartitionKey() (v expression.KeyBuilder) {
+	return expression.Key("ws")
+}
+
+// CarPartitionKeyName returns a name builder for the partition key
+func CarPartitionKeyName() (v expression.NameBuilder) {
+	return expression.Name("ws")
+}
+
+// CarKeyNames returns the attribute names of the partition and sort keys respectively
 func CarKeyNames() (v []string) {
 	v = append(v, "ws")
 	return
@@ -254,7 +264,27 @@ func (p Kitchen) BytesSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("30"))}
 }
 
-// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+// KitchenPartitionKey returns a key builder for the partition key
+func KitchenPartitionKey() (v expression.KeyBuilder) {
+	return expression.Key("1")
+}
+
+// KitchenPartitionKeyName returns a name builder for the partition key
+func KitchenPartitionKeyName() (v expression.NameBuilder) {
+	return expression.Name("1")
+}
+
+// KitchenSortKey returns a key builder for the sort key
+func KitchenSortKey() (v expression.KeyBuilder) {
+	return expression.Key("3")
+}
+
+// KitchenSortKeyName returns a name builder for the sort key
+func KitchenSortKeyName() (v expression.NameBuilder) {
+	return expression.Name("3")
+}
+
+// KitchenKeyNames returns the attribute names of the partition and sort keys respectively
 func KitchenKeyNames() (v []string) {
 	v = append(v, "1")
 	v = append(v, "3")

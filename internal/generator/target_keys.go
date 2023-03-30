@@ -56,9 +56,24 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 			return fmt.Errorf("field '%s' must be a basic type that marshals to Number,String or Bytes to be a PK", pkf.GoName)
 		}
 
-		body = append(body,
-			Id("v").Op("=").Append(Id("v"), Lit(tg.attrName(pkf))),
-		)
+		// append to names slice
+		body = append(body, Id("v").Op("=").Append(Id("v"), Lit(tg.attrName(pkf))))
+
+		// generate function that returns they partition key as a KeyBuilder
+		f.Commentf("%sPartitionKey returns a key builder for the partition key", m.GoIdent.GoName)
+		f.Func().
+			Id(fmt.Sprintf("%sPartitionKey", m.GoIdent.GoName)).
+			Params().
+			Params(Id("v").Qual(expression, "KeyBuilder")).
+			Block(Return(Qual(expression, "Key").Call(Lit(tg.attrName(pkf)))))
+
+		// generate function that returns they partition key as a NameGuilder
+		f.Commentf("%sPartitionKeyName returns a name builder for the partition key", m.GoIdent.GoName)
+		f.Func().
+			Id(fmt.Sprintf("%sPartitionKeyName", m.GoIdent.GoName)).
+			Params().
+			Params(Id("v").Qual(expression, "NameBuilder")).
+			Block(Return(Qual(expression, "Name").Call(Lit(tg.attrName(pkf)))))
 	}
 
 	if skf != nil {
@@ -66,12 +81,28 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 			return fmt.Errorf("field '%s' must be a basic type that marshals to Number,String or Bytes to be a SK", skf.GoName)
 		}
 
-		body = append(body,
-			Id("v").Op("=").Append(Id("v"), Lit(tg.attrName(skf))),
-		)
+		// append to names slice
+		body = append(body, Id("v").Op("=").Append(Id("v"), Lit(tg.attrName(skf))))
+
+		// generate function that returns they sort key as a KeyBuilder
+		f.Commentf("%sSortKey returns a key builder for the sort key", m.GoIdent.GoName)
+		f.Func().
+			Id(fmt.Sprintf("%sSortKey", m.GoIdent.GoName)).
+			Params().
+			Params(Id("v").Qual(expression, "KeyBuilder")).
+			Block(Return(Qual(expression, "Key").Call(Lit(tg.attrName(skf)))))
+
+		// generate function that returns they sort key as a NameBuilder
+		f.Commentf("%sSortKeyName returns a name builder for the sort key", m.GoIdent.GoName)
+		f.Func().
+			Id(fmt.Sprintf("%sSortKeyName", m.GoIdent.GoName)).
+			Params().
+			Params(Id("v").Qual(expression, "NameBuilder")).
+			Block(Return(Qual(expression, "Name").Call(Lit(tg.attrName(skf)))))
 	}
 
-	f.Comment("DynamoKeyNames returns the attribute names of the partition and sort keys respectively")
+	// static function that returns the key names for a certain message
+	f.Commentf("%sKeyNames returns the attribute names of the partition and sort keys respectively", m.GoIdent.GoName)
 	f.Func().
 		Id(fmt.Sprintf("%sKeyNames", m.GoIdent.GoName)).
 		Params().
