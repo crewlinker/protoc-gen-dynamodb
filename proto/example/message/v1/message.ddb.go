@@ -46,12 +46,6 @@ func (x *Engine) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err err
 	return nil
 }
 
-// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
-func (x *Car) DynamoKeyNames() (v []string) {
-	v = append(v, "ws")
-	return
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Car) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -137,13 +131,6 @@ func (x *Ignored) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		return fmt.Errorf("failed to unmarshal field 'Visible': %w", err)
 	}
 	return nil
-}
-
-// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
-func (x *Kitchen) DynamoKeyNames() (v []string) {
-	v = append(v, "1")
-	v = append(v, "3")
-	return
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map

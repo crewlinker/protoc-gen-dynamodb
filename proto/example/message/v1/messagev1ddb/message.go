@@ -55,6 +55,12 @@ func (p Car) Name() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (p Car) DynamoKeyNames() (v []string) {
+	v = append(v, "ws")
+	return
+}
+
 // Appliance allows for constructing type-safe expression names
 type Appliance struct {
 	expression.NameBuilder
@@ -246,6 +252,13 @@ func (p Kitchen) NumberSet() ddbpath.List {
 // BytesSet returns 'p' appended with the attribute name and allow indexing
 func (p Kitchen) BytesSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("30"))}
+}
+
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (p Kitchen) DynamoKeyNames() (v []string) {
+	v = append(v, "1")
+	v = append(v, "3")
+	return
 }
 
 // Empty allows for constructing type-safe expression names

@@ -50,7 +50,6 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 		return nil
 	}
 
-	// body := []Code{Id("m").Op("=").Make(Map(String()).Qual(types, "AttributeValue"))}
 	var body []Code
 	if pkf != nil {
 		if !tg.isValidKeyField(pkf) {
@@ -74,7 +73,7 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 
 	f.Comment("DynamoKeyNames returns the attribute names of the partition and sort keys respectively")
 	f.Func().
-		Params(Id("x").Op("*").Id(m.GoIdent.GoName)).Id("DynamoKeyNames").
+		Params(Id("p").Id(m.GoIdent.GoName)).Id("DynamoKeyNames").
 		Params().
 		Params(Id("v").Index().String()).
 		Block(append(body, Return())...)
