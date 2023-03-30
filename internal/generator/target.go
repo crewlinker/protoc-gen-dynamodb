@@ -158,6 +158,11 @@ func (tg *Target) GeneratePathBuilding(w io.Writer) error {
 		if err := tg.genMessagePaths(f, m); err != nil {
 			return fmt.Errorf("failed to generate message path building: %w", err)
 		}
+
+		// generate pk/sk methods
+		if err := tg.genMessageKeying(f, m); err != nil {
+			return fmt.Errorf("failed to generate keying: %w", err)
+		}
 	}
 
 	return f.Render(w)
@@ -170,11 +175,6 @@ func (tg *Target) GenerateMessageLogic(w io.Writer) error {
 
 	// generate per message marshal/unmarshal code
 	for _, m := range tg.src.Messages {
-
-		// generate pk/sk methods
-		if err := tg.genMessageKeying(f, m); err != nil {
-			return fmt.Errorf("failed to generate keying: %w", err)
-		}
 
 		// generate the marshal method
 		if err := tg.genMessageMarshal(f, m); err != nil {

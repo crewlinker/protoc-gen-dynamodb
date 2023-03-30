@@ -59,9 +59,9 @@ var _ = Describe("handling example messages", func() {
 	})
 
 	It("should have key method", func() {
-		keys := (&messagev1.Car{}).DynamoKeyNames()
+		keys := (messagev1ddb.Car{}).DynamoKeyNames()
 		Expect(keys).To(Equal([]string{"ws"}))
-		keys = (&messagev1.Kitchen{}).DynamoKeyNames()
+		keys = (messagev1ddb.Kitchen{}).DynamoKeyNames()
 		Expect(keys).To(Equal([]string{"1", "3"}))
 	})
 
