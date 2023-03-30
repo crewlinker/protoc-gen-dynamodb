@@ -1,4 +1,3 @@
-// Package ddbpath parses Dynamo paths efficiently
 package ddbpath
 
 import (

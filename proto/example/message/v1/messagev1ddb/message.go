@@ -5,7 +5,7 @@ package messagev1ddb
 
 import (
 	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
-	ddbattr "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbattr"
+	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
 )
 
 // Engine allows for constructing type-safe expression names
@@ -159,13 +159,13 @@ func (p Kitchen) Dirtyness() expression.NameBuilder {
 }
 
 // Furniture returns 'p' appended with the attribute while allow map keys on a nested message
-func (p Kitchen) Furniture() ddbattr.ItemMap[Appliance] {
-	return ddbattr.ItemMap[Appliance]{NameBuilder: p.AppendName(expression.Name("13"))}
+func (p Kitchen) Furniture() ddbpath.ItemMap[Appliance] {
+	return ddbpath.ItemMap[Appliance]{NameBuilder: p.AppendName(expression.Name("13"))}
 }
 
 // Calendar returns 'p' appended with the attribute name and allow map keys to be specified
-func (p Kitchen) Calendar() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("14"))}
+func (p Kitchen) Calendar() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("14"))}
 }
 
 // WasherEngine returns 'p' with the attribute name appended and allow subselecting nested message
@@ -189,13 +189,13 @@ func (p Kitchen) WallTime() expression.NameBuilder {
 }
 
 // ApplianceEngines returns 'p' appended with the attribute while allow indexing a nested message
-func (p Kitchen) ApplianceEngines() ddbattr.ItemList[Engine] {
-	return ddbattr.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("19"))}
+func (p Kitchen) ApplianceEngines() ddbpath.ItemList[Engine] {
+	return ddbpath.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("19"))}
 }
 
 // OtherBrands returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) OtherBrands() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("20"))}
+func (p Kitchen) OtherBrands() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("20"))}
 }
 
 // SomeAny appends the path being build
@@ -229,23 +229,23 @@ func (p Kitchen) ValBytes() expression.NameBuilder {
 }
 
 // ListOfTs returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) ListOfTs() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("27"))}
+func (p Kitchen) ListOfTs() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("27"))}
 }
 
 // StringSet returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) StringSet() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("28"))}
+func (p Kitchen) StringSet() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("28"))}
 }
 
 // NumberSet returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) NumberSet() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("29"))}
+func (p Kitchen) NumberSet() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("29"))}
 }
 
 // BytesSet returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) BytesSet() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("30"))}
+func (p Kitchen) BytesSet() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("30"))}
 }
 
 // Empty allows for constructing type-safe expression names
@@ -271,98 +271,98 @@ func (p MapGalore) WithDynamoNameBuilder(n expression.NameBuilder) MapGalore {
 }
 
 // Int64Int64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Int64Int64() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("1"))}
+func (p MapGalore) Int64Int64() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 
 // Uint64Uint64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Uint64Uint64() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("2"))}
+func (p MapGalore) Uint64Uint64() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("2"))}
 }
 
 // Fixed64Fixed64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Fixed64Fixed64() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("3"))}
+func (p MapGalore) Fixed64Fixed64() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("3"))}
 }
 
 // Sint64Sint64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sint64Sint64() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("4"))}
+func (p MapGalore) Sint64Sint64() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("4"))}
 }
 
 // Sfixed64Sfixed64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sfixed64Sfixed64() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("5"))}
+func (p MapGalore) Sfixed64Sfixed64() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("5"))}
 }
 
 // Int32Int32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Int32Int32() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("6"))}
+func (p MapGalore) Int32Int32() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("6"))}
 }
 
 // Uint32Uint32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Uint32Uint32() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("7"))}
+func (p MapGalore) Uint32Uint32() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("7"))}
 }
 
 // Fixed32Fixed32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Fixed32Fixed32() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("8"))}
+func (p MapGalore) Fixed32Fixed32() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("8"))}
 }
 
 // Sint32Sint32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sint32Sint32() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("9"))}
+func (p MapGalore) Sint32Sint32() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("9"))}
 }
 
 // Sfixed32Sfixed32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sfixed32Sfixed32() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("10"))}
+func (p MapGalore) Sfixed32Sfixed32() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("10"))}
 }
 
 // Stringstring returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringstring() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("11"))}
+func (p MapGalore) Stringstring() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("11"))}
 }
 
 // Boolbool returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Boolbool() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("12"))}
+func (p MapGalore) Boolbool() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("12"))}
 }
 
 // Stringbytes returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringbytes() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("13"))}
+func (p MapGalore) Stringbytes() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("13"))}
 }
 
 // Stringdouble returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringdouble() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("14"))}
+func (p MapGalore) Stringdouble() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("14"))}
 }
 
 // Stringfloat returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringfloat() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("15"))}
+func (p MapGalore) Stringfloat() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("15"))}
 }
 
 // Stringduration returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringduration() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("16"))}
+func (p MapGalore) Stringduration() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("16"))}
 }
 
 // Stringtimestamp returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringtimestamp() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("17"))}
+func (p MapGalore) Stringtimestamp() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("17"))}
 }
 
 // Boolengine returns 'p' appended with the attribute while allow map keys on a nested message
-func (p MapGalore) Boolengine() ddbattr.ItemMap[Engine] {
-	return ddbattr.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("18"))}
+func (p MapGalore) Boolengine() ddbpath.ItemMap[Engine] {
+	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("18"))}
 }
 
 // Uintengine returns 'p' appended with the attribute while allow map keys on a nested message
-func (p MapGalore) Uintengine() ddbattr.ItemMap[Engine] {
-	return ddbattr.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("19"))}
+func (p MapGalore) Uintengine() ddbpath.ItemMap[Engine] {
+	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("19"))}
 }
 
 // ValueGalore allows for constructing type-safe expression names
@@ -413,23 +413,23 @@ func (p FieldPresence) OptMsg() Engine {
 }
 
 // StrList returns 'p' appended with the attribute name and allow indexing
-func (p FieldPresence) StrList() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("strList"))}
+func (p FieldPresence) StrList() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("strList"))}
 }
 
 // MsgList returns 'p' appended with the attribute while allow indexing a nested message
-func (p FieldPresence) MsgList() ddbattr.ItemList[Engine] {
-	return ddbattr.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("msgList"))}
+func (p FieldPresence) MsgList() ddbpath.ItemList[Engine] {
+	return ddbpath.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("msgList"))}
 }
 
 // StrMap returns 'p' appended with the attribute name and allow map keys to be specified
-func (p FieldPresence) StrMap() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("strMap"))}
+func (p FieldPresence) StrMap() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("strMap"))}
 }
 
 // MsgMap returns 'p' appended with the attribute while allow map keys on a nested message
-func (p FieldPresence) MsgMap() ddbattr.ItemMap[Engine] {
-	return ddbattr.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("msgMap"))}
+func (p FieldPresence) MsgMap() ddbpath.ItemMap[Engine] {
+	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("msgMap"))}
 }
 
 // Enum appends the path being build
@@ -509,8 +509,8 @@ func (p JsonFields) WithDynamoNameBuilder(n expression.NameBuilder) JsonFields {
 }
 
 // JsonStrList returns 'p' appended with the attribute name and allow indexing
-func (p JsonFields) JsonStrList() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("1"))}
+func (p JsonFields) JsonStrList() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 
 // JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
@@ -519,23 +519,23 @@ func (p JsonFields) JsonEngine() Engine {
 }
 
 // JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
-func (p JsonFields) JsonIntMap() ddbattr.Map {
-	return ddbattr.Map{NameBuilder: p.AppendName(expression.Name("4"))}
+func (p JsonFields) JsonIntMap() ddbpath.Map {
+	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("4"))}
 }
 
 // JsonEngineList returns 'p' appended with the attribute while allow indexing a nested message
-func (p JsonFields) JsonEngineList() ddbattr.ItemList[Engine] {
-	return ddbattr.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("2"))}
+func (p JsonFields) JsonEngineList() ddbpath.ItemList[Engine] {
+	return ddbpath.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("2"))}
 }
 
 // JsonEngineMap returns 'p' appended with the attribute while allow map keys on a nested message
-func (p JsonFields) JsonEngineMap() ddbattr.ItemMap[Engine] {
-	return ddbattr.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("5"))}
+func (p JsonFields) JsonEngineMap() ddbpath.ItemMap[Engine] {
+	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("5"))}
 }
 
 // JsonNrSet returns 'p' appended with the attribute name and allow indexing
-func (p JsonFields) JsonNrSet() ddbattr.List {
-	return ddbattr.List{NameBuilder: p.AppendName(expression.Name("6"))}
+func (p JsonFields) JsonNrSet() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("6"))}
 }
 
 // JsonOneofs allows for constructing type-safe expression names
