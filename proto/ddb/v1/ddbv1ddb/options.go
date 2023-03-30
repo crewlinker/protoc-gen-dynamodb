@@ -5,43 +5,43 @@ package ddbv1ddb
 
 import expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 
-// FieldOptions allows for constructing type-safe expression names
-type FieldOptions struct {
+// FieldOptionsPath allows for constructing type-safe expression names
+type FieldOptionsPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p FieldOptions) WithDynamoNameBuilder(n expression.NameBuilder) FieldOptions {
+func (p FieldOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) FieldOptionsPath {
 	p.NameBuilder = n
 	return p
 }
 
 // Name appends the path being build
-func (p FieldOptions) Name() expression.NameBuilder {
+func (p FieldOptionsPath) Name() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 
 // Pk appends the path being build
-func (p FieldOptions) Pk() expression.NameBuilder {
+func (p FieldOptionsPath) Pk() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 
 // Sk appends the path being build
-func (p FieldOptions) Sk() expression.NameBuilder {
+func (p FieldOptionsPath) Sk() expression.NameBuilder {
 	return p.AppendName(expression.Name("3"))
 }
 
 // Omit appends the path being build
-func (p FieldOptions) Omit() expression.NameBuilder {
+func (p FieldOptionsPath) Omit() expression.NameBuilder {
 	return p.AppendName(expression.Name("4"))
 }
 
 // Set appends the path being build
-func (p FieldOptions) Set() expression.NameBuilder {
+func (p FieldOptionsPath) Set() expression.NameBuilder {
 	return p.AppendName(expression.Name("5"))
 }
 
 // Embed appends the path being build
-func (p FieldOptions) Embed() expression.NameBuilder {
+func (p FieldOptionsPath) Embed() expression.NameBuilder {
 	return p.AppendName(expression.Name("6"))
 }

@@ -8,50 +8,50 @@ import (
 	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
 )
 
-// Engine allows for constructing type-safe expression names
-type Engine struct {
+// EnginePath allows for constructing type-safe expression names
+type EnginePath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p Engine) WithDynamoNameBuilder(n expression.NameBuilder) Engine {
+func (p EnginePath) WithDynamoNameBuilder(n expression.NameBuilder) EnginePath {
 	p.NameBuilder = n
 	return p
 }
 
 // Brand appends the path being build
-func (p Engine) Brand() expression.NameBuilder {
+func (p EnginePath) Brand() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 
 // Dirtyness appends the path being build
-func (p Engine) Dirtyness() expression.NameBuilder {
+func (p EnginePath) Dirtyness() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 
-// Car allows for constructing type-safe expression names
-type Car struct {
+// CarPath allows for constructing type-safe expression names
+type CarPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p Car) WithDynamoNameBuilder(n expression.NameBuilder) Car {
+func (p CarPath) WithDynamoNameBuilder(n expression.NameBuilder) CarPath {
 	p.NameBuilder = n
 	return p
 }
 
 // Engine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p Car) Engine() Engine {
-	return Engine{p.AppendName(expression.Name("1"))}
+func (p CarPath) Engine() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("1"))}
 }
 
 // NrOfWheels appends the path being build
-func (p Car) NrOfWheels() expression.NameBuilder {
+func (p CarPath) NrOfWheels() expression.NameBuilder {
 	return p.AppendName(expression.Name("ws"))
 }
 
 // Name appends the path being build
-func (p Car) Name() expression.NameBuilder {
+func (p CarPath) Name() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 
@@ -65,202 +65,207 @@ func CarPartitionKeyName() (v expression.NameBuilder) {
 	return expression.Name("ws")
 }
 
+// Car returns a key builder for the partition key
+func Car() CarPath {
+	return CarPath{}
+}
+
 // CarKeyNames returns the attribute names of the partition and sort keys respectively
 func CarKeyNames() (v []string) {
 	v = append(v, "ws")
 	return
 }
 
-// Appliance allows for constructing type-safe expression names
-type Appliance struct {
+// AppliancePath allows for constructing type-safe expression names
+type AppliancePath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p Appliance) WithDynamoNameBuilder(n expression.NameBuilder) Appliance {
+func (p AppliancePath) WithDynamoNameBuilder(n expression.NameBuilder) AppliancePath {
 	p.NameBuilder = n
 	return p
 }
 
 // Brand appends the path being build
-func (p Appliance) Brand() expression.NameBuilder {
+func (p AppliancePath) Brand() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 
-// Ignored allows for constructing type-safe expression names
-type Ignored struct {
+// IgnoredPath allows for constructing type-safe expression names
+type IgnoredPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p Ignored) WithDynamoNameBuilder(n expression.NameBuilder) Ignored {
+func (p IgnoredPath) WithDynamoNameBuilder(n expression.NameBuilder) IgnoredPath {
 	p.NameBuilder = n
 	return p
 }
 
 // Visible appends the path being build
-func (p Ignored) Visible() expression.NameBuilder {
+func (p IgnoredPath) Visible() expression.NameBuilder {
 	return p.AppendName(expression.Name("4"))
 }
 
-// Kitchen allows for constructing type-safe expression names
-type Kitchen struct {
+// KitchenPath allows for constructing type-safe expression names
+type KitchenPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p Kitchen) WithDynamoNameBuilder(n expression.NameBuilder) Kitchen {
+func (p KitchenPath) WithDynamoNameBuilder(n expression.NameBuilder) KitchenPath {
 	p.NameBuilder = n
 	return p
 }
 
 // Brand appends the path being build
-func (p Kitchen) Brand() expression.NameBuilder {
+func (p KitchenPath) Brand() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 
 // IsRenovated appends the path being build
-func (p Kitchen) IsRenovated() expression.NameBuilder {
+func (p KitchenPath) IsRenovated() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 
 // QrCode appends the path being build
-func (p Kitchen) QrCode() expression.NameBuilder {
+func (p KitchenPath) QrCode() expression.NameBuilder {
 	return p.AppendName(expression.Name("3"))
 }
 
 // NumSmallKnifes appends the path being build
-func (p Kitchen) NumSmallKnifes() expression.NameBuilder {
+func (p KitchenPath) NumSmallKnifes() expression.NameBuilder {
 	return p.AppendName(expression.Name("4"))
 }
 
 // NumSharpKnifes appends the path being build
-func (p Kitchen) NumSharpKnifes() expression.NameBuilder {
+func (p KitchenPath) NumSharpKnifes() expression.NameBuilder {
 	return p.AppendName(expression.Name("5"))
 }
 
 // NumBluntKnifes appends the path being build
-func (p Kitchen) NumBluntKnifes() expression.NameBuilder {
+func (p KitchenPath) NumBluntKnifes() expression.NameBuilder {
 	return p.AppendName(expression.Name("6"))
 }
 
 // NumSmallForks appends the path being build
-func (p Kitchen) NumSmallForks() expression.NameBuilder {
+func (p KitchenPath) NumSmallForks() expression.NameBuilder {
 	return p.AppendName(expression.Name("7"))
 }
 
 // NumMediumForks appends the path being build
-func (p Kitchen) NumMediumForks() expression.NameBuilder {
+func (p KitchenPath) NumMediumForks() expression.NameBuilder {
 	return p.AppendName(expression.Name("8"))
 }
 
 // NumLargeForks appends the path being build
-func (p Kitchen) NumLargeForks() expression.NameBuilder {
+func (p KitchenPath) NumLargeForks() expression.NameBuilder {
 	return p.AppendName(expression.Name("9"))
 }
 
 // PercentBlackTiles appends the path being build
-func (p Kitchen) PercentBlackTiles() expression.NameBuilder {
+func (p KitchenPath) PercentBlackTiles() expression.NameBuilder {
 	return p.AppendName(expression.Name("10"))
 }
 
 // PercentWhiteTiles appends the path being build
-func (p Kitchen) PercentWhiteTiles() expression.NameBuilder {
+func (p KitchenPath) PercentWhiteTiles() expression.NameBuilder {
 	return p.AppendName(expression.Name("11"))
 }
 
 // Dirtyness appends the path being build
-func (p Kitchen) Dirtyness() expression.NameBuilder {
+func (p KitchenPath) Dirtyness() expression.NameBuilder {
 	return p.AppendName(expression.Name("12"))
 }
 
 // Furniture returns 'p' appended with the attribute while allow map keys on a nested message
-func (p Kitchen) Furniture() ddbpath.ItemMap[Appliance] {
-	return ddbpath.ItemMap[Appliance]{NameBuilder: p.AppendName(expression.Name("13"))}
+func (p KitchenPath) Furniture() ddbpath.ItemMap[AppliancePath] {
+	return ddbpath.ItemMap[AppliancePath]{NameBuilder: p.AppendName(expression.Name("13"))}
 }
 
 // Calendar returns 'p' appended with the attribute name and allow map keys to be specified
-func (p Kitchen) Calendar() ddbpath.Map {
+func (p KitchenPath) Calendar() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("14"))}
 }
 
 // WasherEngine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p Kitchen) WasherEngine() Engine {
-	return Engine{p.AppendName(expression.Name("15"))}
+func (p KitchenPath) WasherEngine() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("15"))}
 }
 
 // ExtraKitchen returns 'p' with the attribute name appended and allow subselecting nested message
-func (p Kitchen) ExtraKitchen() Kitchen {
-	return Kitchen{p.AppendName(expression.Name("16"))}
+func (p KitchenPath) ExtraKitchen() KitchenPath {
+	return KitchenPath{p.AppendName(expression.Name("16"))}
 }
 
 // Timer appends the path being build
-func (p Kitchen) Timer() expression.NameBuilder {
+func (p KitchenPath) Timer() expression.NameBuilder {
 	return p.AppendName(expression.Name("17"))
 }
 
 // WallTime appends the path being build
-func (p Kitchen) WallTime() expression.NameBuilder {
+func (p KitchenPath) WallTime() expression.NameBuilder {
 	return p.AppendName(expression.Name("18"))
 }
 
 // ApplianceEngines returns 'p' appended with the attribute while allow indexing a nested message
-func (p Kitchen) ApplianceEngines() ddbpath.ItemList[Engine] {
-	return ddbpath.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("19"))}
+func (p KitchenPath) ApplianceEngines() ddbpath.ItemList[EnginePath] {
+	return ddbpath.ItemList[EnginePath]{NameBuilder: p.AppendName(expression.Name("19"))}
 }
 
 // OtherBrands returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) OtherBrands() ddbpath.List {
+func (p KitchenPath) OtherBrands() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("20"))}
 }
 
 // SomeAny appends the path being build
-func (p Kitchen) SomeAny() expression.NameBuilder {
+func (p KitchenPath) SomeAny() expression.NameBuilder {
 	return p.AppendName(expression.Name("21"))
 }
 
 // SomeMask appends the path being build
-func (p Kitchen) SomeMask() expression.NameBuilder {
+func (p KitchenPath) SomeMask() expression.NameBuilder {
 	return p.AppendName(expression.Name("22"))
 }
 
 // SomeValue appends the path being build
-func (p Kitchen) SomeValue() expression.NameBuilder {
+func (p KitchenPath) SomeValue() expression.NameBuilder {
 	return p.AppendName(expression.Name("23"))
 }
 
 // OptString appends the path being build
-func (p Kitchen) OptString() expression.NameBuilder {
+func (p KitchenPath) OptString() expression.NameBuilder {
 	return p.AppendName(expression.Name("24"))
 }
 
 // ValStr appends the path being build
-func (p Kitchen) ValStr() expression.NameBuilder {
+func (p KitchenPath) ValStr() expression.NameBuilder {
 	return p.AppendName(expression.Name("25"))
 }
 
 // ValBytes appends the path being build
-func (p Kitchen) ValBytes() expression.NameBuilder {
+func (p KitchenPath) ValBytes() expression.NameBuilder {
 	return p.AppendName(expression.Name("26"))
 }
 
 // ListOfTs returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) ListOfTs() ddbpath.List {
+func (p KitchenPath) ListOfTs() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("27"))}
 }
 
 // StringSet returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) StringSet() ddbpath.List {
+func (p KitchenPath) StringSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("28"))}
 }
 
 // NumberSet returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) NumberSet() ddbpath.List {
+func (p KitchenPath) NumberSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("29"))}
 }
 
 // BytesSet returns 'p' appended with the attribute name and allow indexing
-func (p Kitchen) BytesSet() ddbpath.List {
+func (p KitchenPath) BytesSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("30"))}
 }
 
@@ -272,6 +277,11 @@ func KitchenPartitionKey() (v expression.KeyBuilder) {
 // KitchenPartitionKeyName returns a name builder for the partition key
 func KitchenPartitionKeyName() (v expression.NameBuilder) {
 	return expression.Name("1")
+}
+
+// Kitchen returns a key builder for the partition key
+func Kitchen() KitchenPath {
+	return KitchenPath{}
 }
 
 // KitchenSortKey returns a key builder for the sort key
@@ -291,313 +301,313 @@ func KitchenKeyNames() (v []string) {
 	return
 }
 
-// Empty allows for constructing type-safe expression names
-type Empty struct {
+// EmptyPath allows for constructing type-safe expression names
+type EmptyPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p Empty) WithDynamoNameBuilder(n expression.NameBuilder) Empty {
+func (p EmptyPath) WithDynamoNameBuilder(n expression.NameBuilder) EmptyPath {
 	p.NameBuilder = n
 	return p
 }
 
-// MapGalore allows for constructing type-safe expression names
-type MapGalore struct {
+// MapGalorePath allows for constructing type-safe expression names
+type MapGalorePath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p MapGalore) WithDynamoNameBuilder(n expression.NameBuilder) MapGalore {
+func (p MapGalorePath) WithDynamoNameBuilder(n expression.NameBuilder) MapGalorePath {
 	p.NameBuilder = n
 	return p
 }
 
 // Int64Int64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Int64Int64() ddbpath.Map {
+func (p MapGalorePath) Int64Int64() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 
 // Uint64Uint64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Uint64Uint64() ddbpath.Map {
+func (p MapGalorePath) Uint64Uint64() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("2"))}
 }
 
 // Fixed64Fixed64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Fixed64Fixed64() ddbpath.Map {
+func (p MapGalorePath) Fixed64Fixed64() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("3"))}
 }
 
 // Sint64Sint64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sint64Sint64() ddbpath.Map {
+func (p MapGalorePath) Sint64Sint64() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("4"))}
 }
 
 // Sfixed64Sfixed64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sfixed64Sfixed64() ddbpath.Map {
+func (p MapGalorePath) Sfixed64Sfixed64() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("5"))}
 }
 
 // Int32Int32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Int32Int32() ddbpath.Map {
+func (p MapGalorePath) Int32Int32() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("6"))}
 }
 
 // Uint32Uint32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Uint32Uint32() ddbpath.Map {
+func (p MapGalorePath) Uint32Uint32() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("7"))}
 }
 
 // Fixed32Fixed32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Fixed32Fixed32() ddbpath.Map {
+func (p MapGalorePath) Fixed32Fixed32() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("8"))}
 }
 
 // Sint32Sint32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sint32Sint32() ddbpath.Map {
+func (p MapGalorePath) Sint32Sint32() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("9"))}
 }
 
 // Sfixed32Sfixed32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Sfixed32Sfixed32() ddbpath.Map {
+func (p MapGalorePath) Sfixed32Sfixed32() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("10"))}
 }
 
 // Stringstring returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringstring() ddbpath.Map {
+func (p MapGalorePath) Stringstring() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("11"))}
 }
 
 // Boolbool returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Boolbool() ddbpath.Map {
+func (p MapGalorePath) Boolbool() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("12"))}
 }
 
 // Stringbytes returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringbytes() ddbpath.Map {
+func (p MapGalorePath) Stringbytes() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("13"))}
 }
 
 // Stringdouble returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringdouble() ddbpath.Map {
+func (p MapGalorePath) Stringdouble() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("14"))}
 }
 
 // Stringfloat returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringfloat() ddbpath.Map {
+func (p MapGalorePath) Stringfloat() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("15"))}
 }
 
 // Stringduration returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringduration() ddbpath.Map {
+func (p MapGalorePath) Stringduration() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("16"))}
 }
 
 // Stringtimestamp returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGalore) Stringtimestamp() ddbpath.Map {
+func (p MapGalorePath) Stringtimestamp() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("17"))}
 }
 
 // Boolengine returns 'p' appended with the attribute while allow map keys on a nested message
-func (p MapGalore) Boolengine() ddbpath.ItemMap[Engine] {
-	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("18"))}
+func (p MapGalorePath) Boolengine() ddbpath.ItemMap[EnginePath] {
+	return ddbpath.ItemMap[EnginePath]{NameBuilder: p.AppendName(expression.Name("18"))}
 }
 
 // Uintengine returns 'p' appended with the attribute while allow map keys on a nested message
-func (p MapGalore) Uintengine() ddbpath.ItemMap[Engine] {
-	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("19"))}
+func (p MapGalorePath) Uintengine() ddbpath.ItemMap[EnginePath] {
+	return ddbpath.ItemMap[EnginePath]{NameBuilder: p.AppendName(expression.Name("19"))}
 }
 
-// ValueGalore allows for constructing type-safe expression names
-type ValueGalore struct {
+// ValueGalorePath allows for constructing type-safe expression names
+type ValueGalorePath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p ValueGalore) WithDynamoNameBuilder(n expression.NameBuilder) ValueGalore {
+func (p ValueGalorePath) WithDynamoNameBuilder(n expression.NameBuilder) ValueGalorePath {
 	p.NameBuilder = n
 	return p
 }
 
 // SomeValue appends the path being build
-func (p ValueGalore) SomeValue() expression.NameBuilder {
+func (p ValueGalorePath) SomeValue() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 
-// FieldPresence allows for constructing type-safe expression names
-type FieldPresence struct {
+// FieldPresencePath allows for constructing type-safe expression names
+type FieldPresencePath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p FieldPresence) WithDynamoNameBuilder(n expression.NameBuilder) FieldPresence {
+func (p FieldPresencePath) WithDynamoNameBuilder(n expression.NameBuilder) FieldPresencePath {
 	p.NameBuilder = n
 	return p
 }
 
 // Str appends the path being build
-func (p FieldPresence) Str() expression.NameBuilder {
+func (p FieldPresencePath) Str() expression.NameBuilder {
 	return p.AppendName(expression.Name("str"))
 }
 
 // OptStr appends the path being build
-func (p FieldPresence) OptStr() expression.NameBuilder {
+func (p FieldPresencePath) OptStr() expression.NameBuilder {
 	return p.AppendName(expression.Name("optStr"))
 }
 
 // Msg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p FieldPresence) Msg() Engine {
-	return Engine{p.AppendName(expression.Name("msg"))}
+func (p FieldPresencePath) Msg() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("msg"))}
 }
 
 // OptMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p FieldPresence) OptMsg() Engine {
-	return Engine{p.AppendName(expression.Name("optMsg"))}
+func (p FieldPresencePath) OptMsg() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("optMsg"))}
 }
 
 // StrList returns 'p' appended with the attribute name and allow indexing
-func (p FieldPresence) StrList() ddbpath.List {
+func (p FieldPresencePath) StrList() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("strList"))}
 }
 
 // MsgList returns 'p' appended with the attribute while allow indexing a nested message
-func (p FieldPresence) MsgList() ddbpath.ItemList[Engine] {
-	return ddbpath.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("msgList"))}
+func (p FieldPresencePath) MsgList() ddbpath.ItemList[EnginePath] {
+	return ddbpath.ItemList[EnginePath]{NameBuilder: p.AppendName(expression.Name("msgList"))}
 }
 
 // StrMap returns 'p' appended with the attribute name and allow map keys to be specified
-func (p FieldPresence) StrMap() ddbpath.Map {
+func (p FieldPresencePath) StrMap() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("strMap"))}
 }
 
 // MsgMap returns 'p' appended with the attribute while allow map keys on a nested message
-func (p FieldPresence) MsgMap() ddbpath.ItemMap[Engine] {
-	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("msgMap"))}
+func (p FieldPresencePath) MsgMap() ddbpath.ItemMap[EnginePath] {
+	return ddbpath.ItemMap[EnginePath]{NameBuilder: p.AppendName(expression.Name("msgMap"))}
 }
 
 // Enum appends the path being build
-func (p FieldPresence) Enum() expression.NameBuilder {
+func (p FieldPresencePath) Enum() expression.NameBuilder {
 	return p.AppendName(expression.Name("enum"))
 }
 
 // OptEnum appends the path being build
-func (p FieldPresence) OptEnum() expression.NameBuilder {
+func (p FieldPresencePath) OptEnum() expression.NameBuilder {
 	return p.AppendName(expression.Name("optEnum"))
 }
 
 // OneofStr appends the path being build
-func (p FieldPresence) OneofStr() expression.NameBuilder {
+func (p FieldPresencePath) OneofStr() expression.NameBuilder {
 	return p.AppendName(expression.Name("oneofStr"))
 }
 
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p FieldPresence) OneofMsg() Engine {
-	return Engine{p.AppendName(expression.Name("oneofMsg"))}
+func (p FieldPresencePath) OneofMsg() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("oneofMsg"))}
 }
 
 // StrVal appends the path being build
-func (p FieldPresence) StrVal() expression.NameBuilder {
+func (p FieldPresencePath) StrVal() expression.NameBuilder {
 	return p.AppendName(expression.Name("strVal"))
 }
 
 // BoolVal appends the path being build
-func (p FieldPresence) BoolVal() expression.NameBuilder {
+func (p FieldPresencePath) BoolVal() expression.NameBuilder {
 	return p.AppendName(expression.Name("boolVal"))
 }
 
 // BytesVal appends the path being build
-func (p FieldPresence) BytesVal() expression.NameBuilder {
+func (p FieldPresencePath) BytesVal() expression.NameBuilder {
 	return p.AppendName(expression.Name("bytesVal"))
 }
 
 // DoubleVal appends the path being build
-func (p FieldPresence) DoubleVal() expression.NameBuilder {
+func (p FieldPresencePath) DoubleVal() expression.NameBuilder {
 	return p.AppendName(expression.Name("doubleVal"))
 }
 
 // FloatVal appends the path being build
-func (p FieldPresence) FloatVal() expression.NameBuilder {
+func (p FieldPresencePath) FloatVal() expression.NameBuilder {
 	return p.AppendName(expression.Name("floatVal"))
 }
 
 // Int32Val appends the path being build
-func (p FieldPresence) Int32Val() expression.NameBuilder {
+func (p FieldPresencePath) Int32Val() expression.NameBuilder {
 	return p.AppendName(expression.Name("int32Val"))
 }
 
 // Int64Val appends the path being build
-func (p FieldPresence) Int64Val() expression.NameBuilder {
+func (p FieldPresencePath) Int64Val() expression.NameBuilder {
 	return p.AppendName(expression.Name("int64Val"))
 }
 
 // Uint32Val appends the path being build
-func (p FieldPresence) Uint32Val() expression.NameBuilder {
+func (p FieldPresencePath) Uint32Val() expression.NameBuilder {
 	return p.AppendName(expression.Name("uint32Val"))
 }
 
 // Uint64Val appends the path being build
-func (p FieldPresence) Uint64Val() expression.NameBuilder {
+func (p FieldPresencePath) Uint64Val() expression.NameBuilder {
 	return p.AppendName(expression.Name("uint64Val"))
 }
 
-// JsonFields allows for constructing type-safe expression names
-type JsonFields struct {
+// JsonFieldsPath allows for constructing type-safe expression names
+type JsonFieldsPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p JsonFields) WithDynamoNameBuilder(n expression.NameBuilder) JsonFields {
+func (p JsonFieldsPath) WithDynamoNameBuilder(n expression.NameBuilder) JsonFieldsPath {
 	p.NameBuilder = n
 	return p
 }
 
 // JsonStrList returns 'p' appended with the attribute name and allow indexing
-func (p JsonFields) JsonStrList() ddbpath.List {
+func (p JsonFieldsPath) JsonStrList() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 
 // JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p JsonFields) JsonEngine() Engine {
-	return Engine{p.AppendName(expression.Name("json_engine"))}
+func (p JsonFieldsPath) JsonEngine() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("json_engine"))}
 }
 
 // JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
-func (p JsonFields) JsonIntMap() ddbpath.Map {
+func (p JsonFieldsPath) JsonIntMap() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("4"))}
 }
 
 // JsonEngineList returns 'p' appended with the attribute while allow indexing a nested message
-func (p JsonFields) JsonEngineList() ddbpath.ItemList[Engine] {
-	return ddbpath.ItemList[Engine]{NameBuilder: p.AppendName(expression.Name("2"))}
+func (p JsonFieldsPath) JsonEngineList() ddbpath.ItemList[EnginePath] {
+	return ddbpath.ItemList[EnginePath]{NameBuilder: p.AppendName(expression.Name("2"))}
 }
 
 // JsonEngineMap returns 'p' appended with the attribute while allow map keys on a nested message
-func (p JsonFields) JsonEngineMap() ddbpath.ItemMap[Engine] {
-	return ddbpath.ItemMap[Engine]{NameBuilder: p.AppendName(expression.Name("5"))}
+func (p JsonFieldsPath) JsonEngineMap() ddbpath.ItemMap[EnginePath] {
+	return ddbpath.ItemMap[EnginePath]{NameBuilder: p.AppendName(expression.Name("5"))}
 }
 
 // JsonNrSet returns 'p' appended with the attribute name and allow indexing
-func (p JsonFields) JsonNrSet() ddbpath.List {
+func (p JsonFieldsPath) JsonNrSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("6"))}
 }
 
-// JsonOneofs allows for constructing type-safe expression names
-type JsonOneofs struct {
+// JsonOneofsPath allows for constructing type-safe expression names
+type JsonOneofsPath struct {
 	expression.NameBuilder
 }
 
 // WithDynamoNameBuilder allows generic types to overwrite the path
-func (p JsonOneofs) WithDynamoNameBuilder(n expression.NameBuilder) JsonOneofs {
+func (p JsonOneofsPath) WithDynamoNameBuilder(n expression.NameBuilder) JsonOneofsPath {
 	p.NameBuilder = n
 	return p
 }
 
 // OneofStr appends the path being build
-func (p JsonOneofs) OneofStr() expression.NameBuilder {
+func (p JsonOneofsPath) OneofStr() expression.NameBuilder {
 	return p.AppendName(expression.Name("7"))
 }
 
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p JsonOneofs) OneofMsg() Engine {
-	return Engine{p.AppendName(expression.Name("8"))}
+func (p JsonOneofsPath) OneofMsg() EnginePath {
+	return EnginePath{p.AppendName(expression.Name("8"))}
 }
