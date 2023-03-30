@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
-	"github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/messagev1ddb"
+	messagev1ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/ddbpath"
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega/format"
 	"github.com/samber/lo"
@@ -61,17 +61,17 @@ var _ = Describe("handling example messages", func() {
 	It("should have generated key functions", func() {
 
 		Expect((&messagev1.Car{}).DynamoKeyNames()).To(Equal([]string{"ws"}))
-		Expect(messagev1ddb.CarKeyNames()).To(Equal([]string{"ws"}))
-		Expect(messagev1ddb.CarPartitionKey()).To(Equal(expression.Key("ws")))
+		Expect(messagev1ddbpath.CarKeyNames()).To(Equal([]string{"ws"}))
+		Expect(messagev1ddbpath.CarPartitionKey()).To(Equal(expression.Key("ws")))
 		Expect((&messagev1.Car{}).DynamoPartitionKey()).To(Equal(expression.Key("ws")))
-		Expect(messagev1ddb.CarPartitionKeyName()).To(Equal(expression.Name("ws")))
+		Expect(messagev1ddbpath.CarPartitionKeyName()).To(Equal(expression.Name("ws")))
 		Expect((&messagev1.Car{}).DynamoPartitionKeyName()).To(Equal(expression.Name("ws")))
 
 		Expect((&messagev1.Kitchen{}).DynamoKeyNames()).To(Equal([]string{"1", "3"}))
-		Expect(messagev1ddb.KitchenKeyNames()).To(Equal([]string{"1", "3"}))
-		Expect(messagev1ddb.KitchenSortKey()).To(Equal(expression.Key("3")))
+		Expect(messagev1ddbpath.KitchenKeyNames()).To(Equal([]string{"1", "3"}))
+		Expect(messagev1ddbpath.KitchenSortKey()).To(Equal(expression.Key("3")))
 		Expect((&messagev1.Kitchen{}).DynamoSortKey()).To(Equal(expression.Key("3")))
-		Expect(messagev1ddb.KitchenSortKeyName()).To(Equal(expression.Name("3")))
+		Expect(messagev1ddbpath.KitchenSortKeyName()).To(Equal(expression.Name("3")))
 		Expect((&messagev1.Kitchen{}).DynamoSortKeyName()).To(Equal(expression.Name("3")))
 	})
 
@@ -82,7 +82,7 @@ var _ = Describe("handling example messages", func() {
 		_, ok = msgt.MethodByName("PartitionKey")
 		Expect(ok).To(Equal(false))
 
-		pt := reflect.TypeOf(&messagev1ddb.IgnoredPath{})
+		pt := reflect.TypeOf(&messagev1ddbpath.IgnoredPath{})
 		_, ok = pt.MethodByName("Pk")
 		Expect(ok).To(Equal(false))
 		_, ok = pt.MethodByName("Sk")
@@ -123,33 +123,33 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 
 },
 	Entry("basic type field",
-		messagev1ddb.Kitchen().Brand(),
+		messagev1ddbpath.Kitchen().Brand(),
 		"#0",
 		map[string]string{"#0": "1"}),
 	Entry("nested field",
-		messagev1ddb.Kitchen().ExtraKitchen().Brand(),
+		messagev1ddbpath.Kitchen().ExtraKitchen().Brand(),
 		"#0.#1",
 		map[string]string{"#0": "16", "#1": "1"}),
 	Entry("extra nested field",
-		messagev1ddb.Kitchen().ExtraKitchen().ExtraKitchen().Brand(),
+		messagev1ddbpath.Kitchen().ExtraKitchen().ExtraKitchen().Brand(),
 		"#0.#0.#1",
 		map[string]string{"#0": "16", "#1": "1"}),
 
 	Entry("basic type list",
-		messagev1ddb.Kitchen().OtherBrands().Index(10),
+		messagev1ddbpath.Kitchen().OtherBrands().Index(10),
 		"#0[10]",
 		map[string]string{"#0": "20"}),
 	Entry("message list",
-		messagev1ddb.Kitchen().ApplianceEngines().Index(3).Brand(),
+		messagev1ddbpath.Kitchen().ApplianceEngines().Index(3).Brand(),
 		"#0[3].#1",
 		map[string]string{"#0": "19", "#1": "1"}),
 
 	Entry("basic type map",
-		messagev1ddb.Kitchen().Calendar().Key("bar"),
+		messagev1ddbpath.Kitchen().Calendar().Key("bar"),
 		"#0.#1",
 		map[string]string{"#0": "14", "#1": "bar"}),
 	Entry("message map",
-		messagev1ddb.Kitchen().Furniture().Key("dar").Brand(),
+		messagev1ddbpath.Kitchen().Furniture().Key("dar").Brand(),
 		"#0.#1.#2",
 		map[string]string{"#0": "13", "#1": "dar", "#2": "1"}),
 )
