@@ -82,7 +82,7 @@ var _ = Describe("handling example messages", func() {
 		_, ok = msgt.MethodByName("PartitionKey")
 		Expect(ok).To(Equal(false))
 
-		pt := reflect.TypeOf(&messagev1ddb.Ignored{})
+		pt := reflect.TypeOf(&messagev1ddb.IgnoredPath{})
 		_, ok = pt.MethodByName("Pk")
 		Expect(ok).To(Equal(false))
 		_, ok = pt.MethodByName("Sk")
@@ -123,33 +123,33 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 
 },
 	Entry("basic type field",
-		(messagev1ddb.Kitchen{}).Brand(),
+		messagev1ddb.Kitchen().Brand(),
 		"#0",
 		map[string]string{"#0": "1"}),
 	Entry("nested field",
-		(messagev1ddb.Kitchen{}).ExtraKitchen().Brand(),
+		messagev1ddb.Kitchen().ExtraKitchen().Brand(),
 		"#0.#1",
 		map[string]string{"#0": "16", "#1": "1"}),
 	Entry("extra nested field",
-		(messagev1ddb.Kitchen{}).ExtraKitchen().ExtraKitchen().Brand(),
+		messagev1ddb.Kitchen().ExtraKitchen().ExtraKitchen().Brand(),
 		"#0.#0.#1",
 		map[string]string{"#0": "16", "#1": "1"}),
 
 	Entry("basic type list",
-		(messagev1ddb.Kitchen{}).OtherBrands().Index(10),
+		messagev1ddb.Kitchen().OtherBrands().Index(10),
 		"#0[10]",
 		map[string]string{"#0": "20"}),
 	Entry("message list",
-		(messagev1ddb.Kitchen{}).ApplianceEngines().Index(3).Brand(),
+		messagev1ddb.Kitchen().ApplianceEngines().Index(3).Brand(),
 		"#0[3].#1",
 		map[string]string{"#0": "19", "#1": "1"}),
 
 	Entry("basic type map",
-		(messagev1ddb.Kitchen{}).Calendar().Key("bar"),
+		messagev1ddb.Kitchen().Calendar().Key("bar"),
 		"#0.#1",
 		map[string]string{"#0": "14", "#1": "bar"}),
 	Entry("message map",
-		(messagev1ddb.Kitchen{}).Furniture().Key("dar").Brand(),
+		messagev1ddb.Kitchen().Furniture().Key("dar").Brand(),
 		"#0.#1.#2",
 		map[string]string{"#0": "13", "#1": "dar", "#2": "1"}),
 )

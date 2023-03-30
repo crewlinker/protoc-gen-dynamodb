@@ -111,6 +111,15 @@ func (tg *Target) genDdbKeying(f *File, m *protogen.Message) (err error) {
 			Params().
 			Params(Id("v").Qual(expression, "NameBuilder")).
 			Block(Return(Qual(expression, "Name").Call(Lit(tg.attrName(pkf)))))
+
+		// if a message has a primar key, it will serve as the "entrypoint"/"root" for building type
+		// safe document paths. As such we generate a function to easily start such a path.
+		f.Commentf("%s returns a key builder for the partition key", m.GoIdent.GoName)
+		f.Func().
+			Id(m.GoIdent.GoName).
+			Params().
+			Params(Id(tg.pathIdentName(m))).
+			Block(Return(Id(tg.pathIdentName(m)).Values()))
 	}
 
 	if skf != nil {
