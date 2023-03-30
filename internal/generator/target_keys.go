@@ -5,44 +5,84 @@ import (
 
 	. "github.com/dave/jennifer/jen"
 	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// genMessageKeying generates partition/sort key methods
+// genMessageKeying generates partition/sort key methods on the messages itself
 func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
-	var pkf, skf *protogen.Field
-	for _, field := range m.Fields {
-		if tg.isOmitted(field) {
-			continue // omitted, don't try to turn it into a key
-		}
-
-		isPk, isSk := tg.isKey(field)
-		if isPk && isSk {
-			// check that field cannot be marked as both sk and pk
-			return fmt.Errorf("field '%s' is both marked as PK and as SK", field.GoName)
-		}
-
-		if isPk {
-			if pkf != nil { // only one field can be marked as PK
-				return fmt.Errorf("field '%s' is already marked as PK", pkf.GoName)
-			}
-
-			pkf = field
-		}
-
-		if isSk {
-			if skf != nil { // only one field can be marked as SK
-				return fmt.Errorf("field '%s' is already marked as SK", skf.GoName)
-			}
-
-			skf = field
-		}
+	pkf, skf, err := tg.keyFields(m)
+	if err != nil {
+		return fmt.Errorf("failed to determine key fields: %w", err)
 	}
 
-	// if the message has a sort key, but not a partition key that doesn't make sense. The other
-	// way around is ok.
-	if pkf == nil && skf != nil {
-		return fmt.Errorf("message '%s' has a sort key, but not a partition key", m.GoIdent.GoName)
+	// if no key fields are configured, so we don't generate a MarshalDynamoKey at all
+	if pkf == nil && skf == nil {
+		return nil
+	}
+
+	if pkf != nil {
+		// generate function that returns they partition key as a KeyBuilder for easy key conditions
+		f.Commentf("DynamoPartitionKey returns a key builder for the partition key")
+		f.Func().
+			Params(Id("x").Op("*").Id(m.GoIdent.GoName)).
+			Id("DynamoPartitionKey").
+			Params().
+			Params(Id("v").Qual(expression, "KeyBuilder")).
+			Block(Return(Qual(tg.idents.ddbimp, m.GoIdent.GoName+"PartitionKey").Call()))
+
+		// generate function that returns they partition key as a NameBuilder for easy conditions
+		f.Commentf("DynamoPartitionKeyName returns a key builder for the partition key")
+		f.Func().
+			Params(Id("x").Op("*").Id(m.GoIdent.GoName)).
+			Id("DynamoPartitionKeyName").
+			Params().
+			Params(Id("v").Qual(expression, "NameBuilder")).
+			Block(Return(Qual(tg.idents.ddbimp, m.GoIdent.GoName+"PartitionKeyName").Call()))
+	}
+
+	if skf != nil {
+		// generate function that returns they sort key as a KeyBuilder for easy key conditions
+		f.Commentf("DynamoSortKey returns a key builder for the sort key")
+		f.Func().
+			Params(Id("x").Op("*").Id(m.GoIdent.GoName)).
+			Id("DynamoSortKey").
+			Params().
+			Params(Id("v").Qual(expression, "KeyBuilder")).
+			Block(Return(Qual(tg.idents.ddbimp, m.GoIdent.GoName+"SortKey").Call()))
+
+		// generate function that returns they sort key as a NameBuilder for easy conditions
+		f.Commentf("DynamoSortKeyName returns a key builder for the sort key")
+		f.Func().
+			Params(Id("x").Op("*").Id(m.GoIdent.GoName)).
+			Id("DynamoSortKeyName").
+			Params().
+			Params(Id("v").Qual(expression, "NameBuilder")).
+			Block(Return(Qual(tg.idents.ddbimp, m.GoIdent.GoName+"SortKeyName").Call()))
+	}
+
+	// Generate method that returns the key names as a string slice, usefull for masking attribute value maps
+	f.Commentf("DynamoKeyNames returns the attribute names of the partition and sort keys respectively")
+	f.Func().
+		Params(Id("x").Op("*").Id(m.GoIdent.GoName)).
+		Id("DynamoKeyNames").
+		Params().
+		Params(Id("v").Index().String()).
+		Block(Return(
+			Qual(tg.idents.ddbimp, m.GoIdent.GoName+"KeyNames").Call(),
+		))
+
+	// @TODO .DynamoPartitionKey()
+	// @TODO .DynamoSortKey()
+	// @TODO .DynamoPartitionKeyName()
+	// @TODO .DynamoSortKeyName()
+
+	return nil
+}
+
+// genDdbKeying generates static partition/sort key functions in the ddb package
+func (tg *Target) genDdbKeying(f *File, m *protogen.Message) (err error) {
+	pkf, skf, err := tg.keyFields(m)
+	if err != nil {
+		return fmt.Errorf("failed to determine key fields: %w", err)
 	}
 
 	// if no key fields are configured, so we don't generate a MarshalDynamoKey at all
@@ -52,9 +92,6 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 
 	var body []Code
 	if pkf != nil {
-		if !tg.isValidKeyField(pkf) {
-			return fmt.Errorf("field '%s' must be a basic type that marshals to Number,String or Bytes to be a PK", pkf.GoName)
-		}
 
 		// append to names slice
 		body = append(body, Id("v").Op("=").Append(Id("v"), Lit(tg.attrName(pkf))))
@@ -77,9 +114,6 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 	}
 
 	if skf != nil {
-		if !tg.isValidKeyField(skf) {
-			return fmt.Errorf("field '%s' must be a basic type that marshals to Number,String or Bytes to be a SK", skf.GoName)
-		}
 
 		// append to names slice
 		body = append(body, Id("v").Op("=").Append(Id("v"), Lit(tg.attrName(skf))))
@@ -110,31 +144,4 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 		Block(append(body, Return())...)
 
 	return nil
-}
-
-// isValidKeyField returns whether a protobuf field can be a valid key
-func (tg *Target) isValidKeyField(f *protogen.Field) bool {
-	if f.Message != nil {
-		return false // only basic types can be keys
-	}
-
-	switch f.Desc.Kind() {
-	case protoreflect.StringKind,
-		protoreflect.Int64Kind,
-		protoreflect.Uint64Kind,
-		protoreflect.BytesKind,
-		protoreflect.Fixed64Kind,
-		protoreflect.Sint64Kind,
-		protoreflect.Sfixed64Kind,
-		protoreflect.Int32Kind,
-		protoreflect.Uint32Kind,
-		protoreflect.Fixed32Kind,
-		protoreflect.Sint32Kind,
-		protoreflect.Sfixed32Kind,
-		protoreflect.DoubleKind,
-		protoreflect.FloatKind:
-		return true // what encodes to dynamo Number, String or Bytes
-	default:
-		return false
-	}
 }

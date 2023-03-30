@@ -30,7 +30,7 @@ func NewGenerator(logs *zap.Logger, opts Config) (g *Generator, err error) {
 }
 
 // CreateTarget inits a target for a generator
-func (g Generator) CreateTarget(pf *protogen.File) *Target {
+func (g Generator) CreateTarget(pf *protogen.File, ddbimport string) *Target {
 	tg := &Target{
 		src:  pf,
 		logs: g.logs.Named(fmt.Sprintf("target[%s]", *pf.Proto.Name)),
@@ -45,5 +45,6 @@ func (g Generator) CreateTarget(pf *protogen.File) *Target {
 	tg.idents.ddb = path.Join(bi.Path, "ddb")
 	tg.idents.ddbpath = path.Join(bi.Path, "ddb", "ddbpath")
 	tg.idents.ddbv1 = path.Join(bi.Path, "proto", "ddb", "v1")
+	tg.idents.ddbimp = ddbimport
 	return tg
 }

@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 
 	"github.com/crewlinker/protoc-gen-dynamodb/internal/generator"
 	"go.uber.org/zap"
@@ -42,32 +43,22 @@ func main() {
 			ddbf := gp.NewGeneratedFile(fmt.Sprintf("%s.ddb.go", pf.GeneratedFilenamePrefix), pf.GoImportPath)
 
 			// generated file for typed document path in a sub directory for more expressiveness
-			pathfp := filepath.Join(
+			ddbPkgName := fmt.Sprintf("%sddb", string(pf.GoPackageName))
+			ddbFp := filepath.Join(
 				filepath.Dir(pf.GeneratedFilenamePrefix),
-				fmt.Sprintf("%sddb", string(pf.GoPackageName)),
+				ddbPkgName,
 				fmt.Sprintf("%s.go", filepath.Base(pf.GeneratedFilenamePrefix)),
 			)
-			pathf := gp.NewGeneratedFile(pathfp, pf.GoImportPath)
 
-			// pathf := gp.NewGeneratedFile(
-			// 	filepath.Join(
-			// 		filepath.Dir(pf.GeneratedFilenamePrefix),
-			// 		fmt.Sprintf("%sattr", string(pf.GoPackageName)),
-			// 		fmt.Sprintf("%s.go", filepath.Base(pf.GeneratedFilenamePrefix)),
-			// 	),
-			// 	pf.GoImportPath,
-			// )
+			ddbImpName, _ := strconv.Unquote(pf.GoImportPath.String())
+			ddbImpName = path.Join(ddbImpName, ddbPkgName)
 
-			fmt.Fprintf(os.Stderr, "%v %v\n", pathfp, pf.GoImportPath)
-
-			// attrf := gp.NewGeneratedFile(fmt.Sprintf("%s/.ddb.go", pf.GeneratedFilenamePrefix))
-
-			tg := gen.CreateTarget(pf)
+			tg := gen.CreateTarget(pf, ddbImpName)
 			if err := tg.GenerateMessageLogic(ddbf); err != nil {
 				return fmt.Errorf("failed to generate message logic for '%s': %w", *pf.Proto.Name, err)
 			}
 
-			if err := tg.GeneratePathBuilding(pathf); err != nil {
+			if err := tg.GeneratePathBuilding(gp.NewGeneratedFile(ddbFp, pf.GoImportPath)); err != nil {
 				return fmt.Errorf("failed to generate path building code for '%s': %w", *pf.Proto.Name, err)
 			}
 
