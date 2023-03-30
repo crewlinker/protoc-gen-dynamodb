@@ -46,32 +46,6 @@ func (x *Engine) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err err
 	return nil
 }
 
-// EngineP allows for constructing type-safe expression names
-type EngineP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p EngineP) Set(v string) EngineP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// EnginePath starts the building of an expression path into Engine
-func EnginePath() EngineP {
-	return EngineP{}
-}
-
-// Brand returns 'p' with the attribute name appended
-func (p EngineP) Brand() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".1")
-}
-
-// Dirtyness returns 'p' with the attribute name appended
-func (p EngineP) Dirtyness() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".2")
-}
-
 // DynamoKeyNames returns the attribute names of the partition and sort keys respectively
 func (x *Car) DynamoKeyNames() (v []string) {
 	v = append(v, "ws")
@@ -123,37 +97,6 @@ func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error)
 	return nil
 }
 
-// CarP allows for constructing type-safe expression names
-type CarP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p CarP) Set(v string) CarP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// CarPath starts the building of an expression path into Car
-func CarPath() CarP {
-	return CarP{}
-}
-
-// Engine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p CarP) Engine() EngineP {
-	return EngineP{}.Set(p.Val() + ".1")
-}
-
-// NrOfWheels returns 'p' with the attribute name appended
-func (p CarP) NrOfWheels() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".ws")
-}
-
-// Name returns 'p' with the attribute name appended
-func (p CarP) Name() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".2")
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Appliance) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -175,27 +118,6 @@ func (x *Appliance) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 	return nil
 }
 
-// ApplianceP allows for constructing type-safe expression names
-type ApplianceP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p ApplianceP) Set(v string) ApplianceP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// AppliancePath starts the building of an expression path into Appliance
-func AppliancePath() ApplianceP {
-	return ApplianceP{}
-}
-
-// Brand returns 'p' with the attribute name appended
-func (p ApplianceP) Brand() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".1")
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Ignored) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -215,27 +137,6 @@ func (x *Ignored) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		return fmt.Errorf("failed to unmarshal field 'Visible': %w", err)
 	}
 	return nil
-}
-
-// IgnoredP allows for constructing type-safe expression names
-type IgnoredP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p IgnoredP) Set(v string) IgnoredP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// IgnoredPath starts the building of an expression path into Ignored
-func IgnoredPath() IgnoredP {
-	return IgnoredP{}
-}
-
-// Visible returns 'p' with the attribute name appended
-func (p IgnoredP) Visible() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".4")
 }
 
 // DynamoKeyNames returns the attribute names of the partition and sort keys respectively
@@ -598,172 +499,6 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 	return nil
 }
 
-// KitchenP allows for constructing type-safe expression names
-type KitchenP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p KitchenP) Set(v string) KitchenP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// KitchenPath starts the building of an expression path into Kitchen
-func KitchenPath() KitchenP {
-	return KitchenP{}
-}
-
-// Brand returns 'p' with the attribute name appended
-func (p KitchenP) Brand() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".1")
-}
-
-// IsRenovated returns 'p' with the attribute name appended
-func (p KitchenP) IsRenovated() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".2")
-}
-
-// QrCode returns 'p' with the attribute name appended
-func (p KitchenP) QrCode() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".3")
-}
-
-// NumSmallKnifes returns 'p' with the attribute name appended
-func (p KitchenP) NumSmallKnifes() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".4")
-}
-
-// NumSharpKnifes returns 'p' with the attribute name appended
-func (p KitchenP) NumSharpKnifes() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".5")
-}
-
-// NumBluntKnifes returns 'p' with the attribute name appended
-func (p KitchenP) NumBluntKnifes() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".6")
-}
-
-// NumSmallForks returns 'p' with the attribute name appended
-func (p KitchenP) NumSmallForks() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".7")
-}
-
-// NumMediumForks returns 'p' with the attribute name appended
-func (p KitchenP) NumMediumForks() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".8")
-}
-
-// NumLargeForks returns 'p' with the attribute name appended
-func (p KitchenP) NumLargeForks() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".9")
-}
-
-// PercentBlackTiles returns 'p' with the attribute name appended
-func (p KitchenP) PercentBlackTiles() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".10")
-}
-
-// PercentWhiteTiles returns 'p' with the attribute name appended
-func (p KitchenP) PercentWhiteTiles() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".11")
-}
-
-// Dirtyness returns 'p' with the attribute name appended
-func (p KitchenP) Dirtyness() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".12")
-}
-
-// Furniture returns 'p' appended with the attribute while allow map keys on a nested message
-func (p KitchenP) Furniture() ddb.MapP[ApplianceP] {
-	return (ddb.MapP[ApplianceP]{}).Set(p.Val() + ".13")
-}
-
-// Calendar returns 'p' appended with the attribute name and allow map keys to be specified
-func (p KitchenP) Calendar() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".14")
-}
-
-// WasherEngine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p KitchenP) WasherEngine() EngineP {
-	return EngineP{}.Set(p.Val() + ".15")
-}
-
-// ExtraKitchen returns 'p' with the attribute name appended and allow subselecting nested message
-func (p KitchenP) ExtraKitchen() KitchenP {
-	return KitchenP{}.Set(p.Val() + ".16")
-}
-
-// Timer returns 'p' with the attribute name appended
-func (p KitchenP) Timer() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".17")
-}
-
-// WallTime returns 'p' with the attribute name appended
-func (p KitchenP) WallTime() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".18")
-}
-
-// ApplianceEngines returns 'p' appended with the attribute while allow indexing a nested message
-func (p KitchenP) ApplianceEngines() ddb.ListP[EngineP] {
-	return (ddb.ListP[EngineP]{}).Set(p.Val() + ".19")
-}
-
-// OtherBrands returns 'p' appended with the attribute name and allow indexing
-func (p KitchenP) OtherBrands() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".20")
-}
-
-// SomeAny returns 'p' with the attribute name appended
-func (p KitchenP) SomeAny() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".21")
-}
-
-// SomeMask returns 'p' with the attribute name appended
-func (p KitchenP) SomeMask() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".22")
-}
-
-// SomeValue returns 'p' with the attribute name appended
-func (p KitchenP) SomeValue() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".23")
-}
-
-// OptString returns 'p' with the attribute name appended
-func (p KitchenP) OptString() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".24")
-}
-
-// ValStr returns 'p' with the attribute name appended
-func (p KitchenP) ValStr() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".25")
-}
-
-// ValBytes returns 'p' with the attribute name appended
-func (p KitchenP) ValBytes() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".26")
-}
-
-// ListOfTs returns 'p' appended with the attribute name and allow indexing
-func (p KitchenP) ListOfTs() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".27")
-}
-
-// StringSet returns 'p' appended with the attribute name and allow indexing
-func (p KitchenP) StringSet() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".28")
-}
-
-// NumberSet returns 'p' appended with the attribute name and allow indexing
-func (p KitchenP) NumberSet() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".29")
-}
-
-// BytesSet returns 'p' appended with the attribute name and allow indexing
-func (p KitchenP) BytesSet() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".30")
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *Empty) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -773,22 +508,6 @@ func (x *Empty) MarshalDynamoItem() (m map[string]types.AttributeValue, err erro
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *Empty) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
 	return nil
-}
-
-// EmptyP allows for constructing type-safe expression names
-type EmptyP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p EmptyP) Set(v string) EmptyP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// EmptyPath starts the building of an expression path into Empty
-func EmptyPath() EmptyP {
-	return EmptyP{}
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map
@@ -1000,117 +719,6 @@ func (x *MapGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err 
 	return nil
 }
 
-// MapGaloreP allows for constructing type-safe expression names
-type MapGaloreP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p MapGaloreP) Set(v string) MapGaloreP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// MapGalorePath starts the building of an expression path into MapGalore
-func MapGalorePath() MapGaloreP {
-	return MapGaloreP{}
-}
-
-// Int64Int64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Int64Int64() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".1")
-}
-
-// Uint64Uint64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Uint64Uint64() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".2")
-}
-
-// Fixed64Fixed64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Fixed64Fixed64() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".3")
-}
-
-// Sint64Sint64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Sint64Sint64() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".4")
-}
-
-// Sfixed64Sfixed64 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Sfixed64Sfixed64() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".5")
-}
-
-// Int32Int32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Int32Int32() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".6")
-}
-
-// Uint32Uint32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Uint32Uint32() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".7")
-}
-
-// Fixed32Fixed32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Fixed32Fixed32() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".8")
-}
-
-// Sint32Sint32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Sint32Sint32() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".9")
-}
-
-// Sfixed32Sfixed32 returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Sfixed32Sfixed32() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".10")
-}
-
-// Stringstring returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Stringstring() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".11")
-}
-
-// Boolbool returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Boolbool() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".12")
-}
-
-// Stringbytes returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Stringbytes() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".13")
-}
-
-// Stringdouble returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Stringdouble() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".14")
-}
-
-// Stringfloat returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Stringfloat() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".15")
-}
-
-// Stringduration returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Stringduration() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".16")
-}
-
-// Stringtimestamp returns 'p' appended with the attribute name and allow map keys to be specified
-func (p MapGaloreP) Stringtimestamp() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".17")
-}
-
-// Boolengine returns 'p' appended with the attribute while allow map keys on a nested message
-func (p MapGaloreP) Boolengine() ddb.MapP[EngineP] {
-	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".18")
-}
-
-// Uintengine returns 'p' appended with the attribute while allow map keys on a nested message
-func (p MapGaloreP) Uintengine() ddb.MapP[EngineP] {
-	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".19")
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *ValueGalore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -1134,27 +742,6 @@ func (x *ValueGalore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (er
 		}
 	}
 	return nil
-}
-
-// ValueGaloreP allows for constructing type-safe expression names
-type ValueGaloreP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p ValueGaloreP) Set(v string) ValueGaloreP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// ValueGalorePath starts the building of an expression path into ValueGalore
-func ValueGalorePath() ValueGaloreP {
-	return ValueGaloreP{}
-}
-
-// SomeValue returns 'p' with the attribute name appended
-func (p ValueGaloreP) SomeValue() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".1")
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map
@@ -1436,127 +1023,6 @@ func (x *FieldPresence) UnmarshalDynamoItem(m map[string]types.AttributeValue) (
 	return nil
 }
 
-// FieldPresenceP allows for constructing type-safe expression names
-type FieldPresenceP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p FieldPresenceP) Set(v string) FieldPresenceP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// FieldPresencePath starts the building of an expression path into FieldPresence
-func FieldPresencePath() FieldPresenceP {
-	return FieldPresenceP{}
-}
-
-// Str returns 'p' with the attribute name appended
-func (p FieldPresenceP) Str() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".str")
-}
-
-// OptStr returns 'p' with the attribute name appended
-func (p FieldPresenceP) OptStr() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".optStr")
-}
-
-// Msg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p FieldPresenceP) Msg() EngineP {
-	return EngineP{}.Set(p.Val() + ".msg")
-}
-
-// OptMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p FieldPresenceP) OptMsg() EngineP {
-	return EngineP{}.Set(p.Val() + ".optMsg")
-}
-
-// StrList returns 'p' appended with the attribute name and allow indexing
-func (p FieldPresenceP) StrList() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".strList")
-}
-
-// MsgList returns 'p' appended with the attribute while allow indexing a nested message
-func (p FieldPresenceP) MsgList() ddb.ListP[EngineP] {
-	return (ddb.ListP[EngineP]{}).Set(p.Val() + ".msgList")
-}
-
-// StrMap returns 'p' appended with the attribute name and allow map keys to be specified
-func (p FieldPresenceP) StrMap() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".strMap")
-}
-
-// MsgMap returns 'p' appended with the attribute while allow map keys on a nested message
-func (p FieldPresenceP) MsgMap() ddb.MapP[EngineP] {
-	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".msgMap")
-}
-
-// Enum returns 'p' with the attribute name appended
-func (p FieldPresenceP) Enum() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".enum")
-}
-
-// OptEnum returns 'p' with the attribute name appended
-func (p FieldPresenceP) OptEnum() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".optEnum")
-}
-
-// OneofStr returns 'p' with the attribute name appended
-func (p FieldPresenceP) OneofStr() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".oneofStr")
-}
-
-// OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p FieldPresenceP) OneofMsg() EngineP {
-	return EngineP{}.Set(p.Val() + ".oneofMsg")
-}
-
-// StrVal returns 'p' with the attribute name appended
-func (p FieldPresenceP) StrVal() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".strVal")
-}
-
-// BoolVal returns 'p' with the attribute name appended
-func (p FieldPresenceP) BoolVal() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".boolVal")
-}
-
-// BytesVal returns 'p' with the attribute name appended
-func (p FieldPresenceP) BytesVal() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".bytesVal")
-}
-
-// DoubleVal returns 'p' with the attribute name appended
-func (p FieldPresenceP) DoubleVal() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".doubleVal")
-}
-
-// FloatVal returns 'p' with the attribute name appended
-func (p FieldPresenceP) FloatVal() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".floatVal")
-}
-
-// Int32Val returns 'p' with the attribute name appended
-func (p FieldPresenceP) Int32Val() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".int32Val")
-}
-
-// Int64Val returns 'p' with the attribute name appended
-func (p FieldPresenceP) Int64Val() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".int64Val")
-}
-
-// Uint32Val returns 'p' with the attribute name appended
-func (p FieldPresenceP) Uint32Val() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".uint32Val")
-}
-
-// Uint64Val returns 'p' with the attribute name appended
-func (p FieldPresenceP) Uint64Val() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".uint64Val")
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *JsonFields) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -1636,52 +1102,6 @@ func (x *JsonFields) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err
 	return nil
 }
 
-// JsonFieldsP allows for constructing type-safe expression names
-type JsonFieldsP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p JsonFieldsP) Set(v string) JsonFieldsP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// JsonFieldsPath starts the building of an expression path into JsonFields
-func JsonFieldsPath() JsonFieldsP {
-	return JsonFieldsP{}
-}
-
-// JsonStrList returns 'p' appended with the attribute name and allow indexing
-func (p JsonFieldsP) JsonStrList() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".1")
-}
-
-// JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p JsonFieldsP) JsonEngine() EngineP {
-	return EngineP{}.Set(p.Val() + ".json_engine")
-}
-
-// JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
-func (p JsonFieldsP) JsonIntMap() ddb.BasicMapP {
-	return (ddb.BasicMapP{}).Set(p.Val() + ".4")
-}
-
-// JsonEngineList returns 'p' appended with the attribute while allow indexing a nested message
-func (p JsonFieldsP) JsonEngineList() ddb.ListP[EngineP] {
-	return (ddb.ListP[EngineP]{}).Set(p.Val() + ".2")
-}
-
-// JsonEngineMap returns 'p' appended with the attribute while allow map keys on a nested message
-func (p JsonFieldsP) JsonEngineMap() ddb.MapP[EngineP] {
-	return (ddb.MapP[EngineP]{}).Set(p.Val() + ".5")
-}
-
-// JsonNrSet returns 'p' appended with the attribute name and allow indexing
-func (p JsonFieldsP) JsonNrSet() ddb.BasicListP {
-	return (ddb.BasicListP{}).Set(p.Val() + ".6")
-}
-
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *JsonOneofs) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
@@ -1721,30 +1141,4 @@ func (x *JsonOneofs) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err
 		x.JsonOo = &mo
 	}
 	return nil
-}
-
-// JsonOneofsP allows for constructing type-safe expression names
-type JsonOneofsP struct {
-	ddb.P
-}
-
-// Set allows generic list builder to replace the path value
-func (p JsonOneofsP) Set(v string) JsonOneofsP {
-	p.P = p.P.Set(v)
-	return p
-}
-
-// JsonOneofsPath starts the building of an expression path into JsonOneofs
-func JsonOneofsPath() JsonOneofsP {
-	return JsonOneofsP{}
-}
-
-// OneofStr returns 'p' with the attribute name appended
-func (p JsonOneofsP) OneofStr() ddb.P {
-	return (ddb.P{}).Set(p.Val() + ".7")
-}
-
-// OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p JsonOneofsP) OneofMsg() EngineP {
-	return EngineP{}.Set(p.Val() + ".8")
 }

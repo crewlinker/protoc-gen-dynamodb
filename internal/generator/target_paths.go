@@ -1,32 +1,32 @@
 package generator
 
 import (
-	"fmt"
-
 	. "github.com/dave/jennifer/jen"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
 // genBasicFieldPath implements the generation of method for building baths for basic type fields
 func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
-	f.Commentf("%s returns 'p' with the attribute name appended", field.GoName)
+	// func (p Kitchen) Brand() expression.NameBuilder {
+	// 	return p.AppendName(expression.Name("1"))
+	// }
+	f.Commentf("%s appends the path being build", field.GoName)
 	f.Func().
-		Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+		Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 		Params().
-		Params(Qual(tg.idents.ddb, "P")).
+		Params(Qual(expression, "NameBuilder")).
 		Block(
-			Return(
-				Call(Qual(tg.idents.ddb, "P").Values()).Dot("Set").Call(Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field)))),
-			),
+			Return(Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field))))),
 		)
+
 	return nil
 }
 
 // genMessageFieldPath implements the generation of method for building baths for message type fields
 func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 
-	// repeated message field in a different package we don't support any special type-safe path construciton
-	// and instead return a basic path.
+	// (repeated) message field in a different package we don't support any special type-safe path construciton
+	// and instead return a basic path that the user can build on further by themselves.
 	if !tg.isSamePkgIdent(field.Message.GoIdent) {
 		return tg.genBasicFieldPath(f, m, field) // NOTE: may support traversing of this in the future
 	}
@@ -34,12 +34,12 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 	// generate the method that append the path element
 	f.Commentf("%s returns 'p' with the attribute name appended and allow subselecting nested message", field.GoName)
 	f.Func().
-		Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+		Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 		Params().
-		Params(Id(field.Message.GoIdent.GoName + "P")).
+		Params(Id(field.Message.GoIdent.GoName)).
 		Block(
-			Return(Id(field.Message.GoIdent.GoName + "P").Values().Dot("Set").Call(
-				Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
+			Return(Id(field.Message.GoIdent.GoName).Values(
+				Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
 			)),
 		)
 
@@ -50,31 +50,34 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 
 	// if it's a list of basic types, or the repeated message is not in the same package we return a
-	// a basic list accessor. NOTE: we maybe support external messages in the future
+	// a generic basic list type. NOTE: we maybe support external messages in the future
 	if field.Message == nil || !tg.isSamePkgIdent(field.Message.GoIdent) {
 		// If its not a list of messages, the path will always end and the generated method will return
 		// basic path builder that always returns a string with the final path
 		f.Commentf("%s returns 'p' appended with the attribute name and allow indexing", field.GoName)
-		f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+		f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 			Params().
-			Params(Qual(tg.idents.ddb, "BasicListP")).
+			Params(Qual(tg.idents.ddbattr, "List")).
 			Block(
-				Return(Call(Qual(tg.idents.ddb, "BasicListP").Values()).
-					Dot("Set").Call(Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
+				Return(Qual(tg.idents.ddbattr, "List").Values(
+					Dict{
+						Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
+					},
+				)),
 			)
 		return nil
 	}
 
 	// else, we assume its a message in the same package
-	got := tg.fieldGoType(field, "P")
+	got := tg.fieldGoType(field)
 	f.Commentf("%s returns 'p' appended with the attribute while allow indexing a nested message", field.GoName)
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 		Params().
-		Params(Qual(tg.idents.ddb, "ListP").Types(got)).
+		Params(Qual(tg.idents.ddbattr, "ItemList").Types(got)).
 		Block(
-			Return(Call(Qual(tg.idents.ddb, "ListP").Types(got).Values()).Dot("Set").Call(
-				Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
-			)),
+			Return(Qual(tg.idents.ddbattr, "ItemList").Types(got).Values(Dict{
+				Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
+			})),
 		)
 
 	return nil
@@ -84,57 +87,51 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 	val := field.Message.Fields[1] // value type of the message
 
-	// if it's a list of basic types, or the repeated message is not in the same package we return a
+	// if it's a map of basic types, or the repeated message is not in the same package we return a
 	// a basic list accessor. NOTE: we maybe support external messages in the future
 	if val.Message == nil || !tg.isSamePkgIdent(val.Message.GoIdent) {
 		f.Commentf("%s returns 'p' appended with the attribute name and allow map keys to be specified", field.GoName)
-		f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+		f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 			Params().
-			Params(Qual(tg.idents.ddb, "BasicMapP")).
+			Params(Qual(tg.idents.ddbattr, "Map")).
 			Block(
-				Return(Call(Qual(tg.idents.ddb, "BasicMapP").Values()).
-					Dot("Set").Call(Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))))),
+				Return(Qual(tg.idents.ddbattr, "Map").Values(
+					Dict{
+						Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
+					},
+				)),
 			)
 		return nil
 	}
 
 	// else, we assume its a message in the same package
-	got := tg.fieldGoType(val, "P")
+	got := tg.fieldGoType(val)
 	f.Commentf("%s returns 'p' appended with the attribute while allow map keys on a nested message", field.GoName)
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName + "P")).Id(field.GoName).
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 		Params().
-		Params(Qual(tg.idents.ddb, "MapP").Types(got)).
+		Params(Qual(tg.idents.ddbattr, "ItemMap").Types(got)).
 		Block(
-			Return(Call(Qual(tg.idents.ddb, "MapP").Types(got).Values()).Dot("Set").Call(
-				Id("p").Dot("Val").Call().Op("+").Lit(fmt.Sprintf(".%s", tg.attrName(field))),
-			)),
+			Return(Qual(tg.idents.ddbattr, "ItemMap").Types(got).Values(Dict{
+				Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
+			})),
 		)
 
 	return nil
 }
 
-// genMessagePaths k
+// genMessagePaths generates path building types
 func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
-	f.Commentf("%sP allows for constructing type-safe expression names", m.GoIdent.GoName)
-	f.Type().Id(m.GoIdent.GoName + "P").Struct(Qual(tg.idents.ddb, "P"))
+	f.Commentf("%s allows for constructing type-safe expression names", m.GoIdent.GoName)
+	f.Type().Id(m.GoIdent.GoName).Struct(Qual(expression, "NameBuilder"))
 
-	// generate the "Set" method for the path struct, required to make generic list builder work
-	f.Commentf("Set allows generic list builder to replace the path value")
-	f.Func().Params(Id("p").Id(m.GoIdent.GoName+"P")).Id("Set").
-		Params(Id("v").String()).
-		Params(Id(m.GoIdent.GoName+"P")).
+	// generate the "WithDynamoNameBuilder" to allow generic types to set the namebuilder is its decending
+	f.Commentf("WithDynamoNameBuilder allows generic types to overwrite the path")
+	f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id("WithDynamoNameBuilder").
+		Params(Id("n").Qual(expression, "NameBuilder")).
+		Params(Id(m.GoIdent.GoName)).
 		Block(
-			Id("p").Dot("P").Op("=").Id("p").Dot("P").Dot("Set").Call(Id("v")),
+			Id("p").Dot("NameBuilder").Op("=").Id("n"),
 			Return(Id("p")),
-		)
-
-	// Generate path function to make it more ergonomic to start a path
-	f.Commentf("%sPath starts the building of an expression path into %s", m.GoIdent.GoName, m.GoIdent.GoName)
-	f.Func().Id(m.GoIdent.GoName + "Path").
-		Params().
-		Params(Id(m.GoIdent.GoName + "P")).
-		Block(
-			Return(Id(m.GoIdent.GoName + "P").Values()),
 		)
 
 	// generate path building methods for each field
