@@ -4,9 +4,11 @@ package messagev1
 
 import (
 	"fmt"
+	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
 	v1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
+	messagev1ddb "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/messagev1ddb"
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -89,6 +91,21 @@ func (x *Car) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error)
 		return fmt.Errorf("failed to unmarshal field 'Name': %w", err)
 	}
 	return nil
+}
+
+// DynamoPartitionKey returns a key builder for the partition key
+func (x *Car) DynamoPartitionKey() (v expression.KeyBuilder) {
+	return messagev1ddb.CarPartitionKey()
+}
+
+// DynamoPartitionKeyName returns a key builder for the partition key
+func (x *Car) DynamoPartitionKeyName() (v expression.NameBuilder) {
+	return messagev1ddb.CarPartitionKeyName()
+}
+
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (x *Car) DynamoKeyNames() (v []string) {
+	return messagev1ddb.CarKeyNames()
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map
@@ -484,6 +501,31 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		return fmt.Errorf("failed to unmarshal field 'BytesSet': %w", err)
 	}
 	return nil
+}
+
+// DynamoPartitionKey returns a key builder for the partition key
+func (x *Kitchen) DynamoPartitionKey() (v expression.KeyBuilder) {
+	return messagev1ddb.KitchenPartitionKey()
+}
+
+// DynamoPartitionKeyName returns a key builder for the partition key
+func (x *Kitchen) DynamoPartitionKeyName() (v expression.NameBuilder) {
+	return messagev1ddb.KitchenPartitionKeyName()
+}
+
+// DynamoSortKey returns a key builder for the sort key
+func (x *Kitchen) DynamoSortKey() (v expression.KeyBuilder) {
+	return messagev1ddb.KitchenSortKey()
+}
+
+// DynamoSortKeyName returns a key builder for the sort key
+func (x *Kitchen) DynamoSortKeyName() (v expression.NameBuilder) {
+	return messagev1ddb.KitchenSortKeyName()
+}
+
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (x *Kitchen) DynamoKeyNames() (v []string) {
+	return messagev1ddb.KitchenKeyNames()
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map

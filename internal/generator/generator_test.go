@@ -59,17 +59,20 @@ var _ = Describe("handling example messages", func() {
 	})
 
 	It("should have generated key functions", func() {
-		keys := messagev1ddb.CarKeyNames()
-		Expect(keys).To(Equal([]string{"ws"}))
 
+		Expect((&messagev1.Car{}).DynamoKeyNames()).To(Equal([]string{"ws"}))
+		Expect(messagev1ddb.CarKeyNames()).To(Equal([]string{"ws"}))
 		Expect(messagev1ddb.CarPartitionKey()).To(Equal(expression.Key("ws")))
+		Expect((&messagev1.Car{}).DynamoPartitionKey()).To(Equal(expression.Key("ws")))
 		Expect(messagev1ddb.CarPartitionKeyName()).To(Equal(expression.Name("ws")))
+		Expect((&messagev1.Car{}).DynamoPartitionKeyName()).To(Equal(expression.Name("ws")))
 
-		keys = messagev1ddb.KitchenKeyNames()
-		Expect(keys).To(Equal([]string{"1", "3"}))
-
+		Expect((&messagev1.Kitchen{}).DynamoKeyNames()).To(Equal([]string{"1", "3"}))
+		Expect(messagev1ddb.KitchenKeyNames()).To(Equal([]string{"1", "3"}))
 		Expect(messagev1ddb.KitchenSortKey()).To(Equal(expression.Key("3")))
+		Expect((&messagev1.Kitchen{}).DynamoSortKey()).To(Equal(expression.Key("3")))
 		Expect(messagev1ddb.KitchenSortKeyName()).To(Equal(expression.Name("3")))
+		Expect((&messagev1.Kitchen{}).DynamoSortKeyName()).To(Equal(expression.Name("3")))
 	})
 
 	It("should handle omit tags correctly", func() {
