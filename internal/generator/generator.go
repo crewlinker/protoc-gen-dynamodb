@@ -43,7 +43,7 @@ func (g Generator) CreateTarget(pf *protogen.File) *Target {
 
 	// tg idents provides various identifiers
 	tg.idents.ddb = path.Join(bi.Path, "ddb")
-	tg.idents.ddbattr = path.Join(bi.Path, "ddb", "ddbattr")
+	tg.idents.ddbpath = path.Join(bi.Path, "ddb", "ddbpath")
 	tg.idents.ddbv1 = path.Join(bi.Path, "proto", "ddb", "v1")
 	return tg
 }

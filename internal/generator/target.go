@@ -25,7 +25,7 @@ type Target struct {
 	idents struct {
 		ddb     string
 		ddbv1   string
-		ddbattr string
+		ddbpath string
 	}
 }
 

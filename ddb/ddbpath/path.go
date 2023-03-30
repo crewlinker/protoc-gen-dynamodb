@@ -1,5 +1,5 @@
-// Package ddbattr provides helper code for building type-safe Dynamo paths
-package ddbattr
+// Package ddbpath provides logic for building and parsing Dynamo document paths
+package ddbpath
 
 import (
 	"fmt"

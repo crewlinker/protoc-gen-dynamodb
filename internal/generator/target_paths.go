@@ -7,9 +7,6 @@ import (
 
 // genBasicFieldPath implements the generation of method for building baths for basic type fields
 func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
-	// func (p Kitchen) Brand() expression.NameBuilder {
-	// 	return p.AppendName(expression.Name("1"))
-	// }
 	f.Commentf("%s appends the path being build", field.GoName)
 	f.Func().
 		Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
@@ -57,9 +54,9 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 		f.Commentf("%s returns 'p' appended with the attribute name and allow indexing", field.GoName)
 		f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 			Params().
-			Params(Qual(tg.idents.ddbattr, "List")).
+			Params(Qual(tg.idents.ddbpath, "List")).
 			Block(
-				Return(Qual(tg.idents.ddbattr, "List").Values(
+				Return(Qual(tg.idents.ddbpath, "List").Values(
 					Dict{
 						Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
 					},
@@ -73,9 +70,9 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 	f.Commentf("%s returns 'p' appended with the attribute while allow indexing a nested message", field.GoName)
 	f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 		Params().
-		Params(Qual(tg.idents.ddbattr, "ItemList").Types(got)).
+		Params(Qual(tg.idents.ddbpath, "ItemList").Types(got)).
 		Block(
-			Return(Qual(tg.idents.ddbattr, "ItemList").Types(got).Values(Dict{
+			Return(Qual(tg.idents.ddbpath, "ItemList").Types(got).Values(Dict{
 				Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
 			})),
 		)
@@ -93,9 +90,9 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 		f.Commentf("%s returns 'p' appended with the attribute name and allow map keys to be specified", field.GoName)
 		f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 			Params().
-			Params(Qual(tg.idents.ddbattr, "Map")).
+			Params(Qual(tg.idents.ddbpath, "Map")).
 			Block(
-				Return(Qual(tg.idents.ddbattr, "Map").Values(
+				Return(Qual(tg.idents.ddbpath, "Map").Values(
 					Dict{
 						Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
 					},
@@ -109,9 +106,9 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 	f.Commentf("%s returns 'p' appended with the attribute while allow map keys on a nested message", field.GoName)
 	f.Func().Params(Id("p").Id(m.GoIdent.GoName)).Id(field.GoName).
 		Params().
-		Params(Qual(tg.idents.ddbattr, "ItemMap").Types(got)).
+		Params(Qual(tg.idents.ddbpath, "ItemMap").Types(got)).
 		Block(
-			Return(Qual(tg.idents.ddbattr, "ItemMap").Types(got).Values(Dict{
+			Return(Qual(tg.idents.ddbpath, "ItemMap").Types(got).Values(Dict{
 				Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
 			})),
 		)
