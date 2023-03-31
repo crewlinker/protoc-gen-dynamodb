@@ -6,7 +6,6 @@ package ddbv1ddbpath
 import (
 	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
-	"reflect"
 )
 
 // FieldOptionsPath allows for constructing type-safe expression names
@@ -50,7 +49,7 @@ func (p FieldOptionsPath) Embed() expression.NameBuilder {
 	return p.AppendName(expression.Name("6"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(FieldOptionsPath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(FieldOptionsPath{}, map[string]ddbpath.FieldInfo{
 		"1": {Kind: ddbpath.BasicKind},
 		"2": {Kind: ddbpath.BasicKind},
 		"3": {Kind: ddbpath.BasicKind},

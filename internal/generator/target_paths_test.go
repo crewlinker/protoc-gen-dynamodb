@@ -21,7 +21,6 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 	// check that the resulting expression(names) are as expected
 	Expect(*expr.Condition()).To(Equal(fmt.Sprintf(`attribute_exists (%s)`, expCondition)))
 	Expect(expr.Names()).To(Equal(expNames))
-
 },
 	Entry("basic type field",
 		messagev1ddbpath.Kitchen().Brand(),
@@ -73,7 +72,6 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		map[string]string{"#0": "32", "#1": "koo", "#2": "1"}),
 
 	// well-known paths
-	// Entry("durationpb", messagev1ddbpath.Kitchen().Timer())
 	// case *durationpb.Duration, *timestamppb.Timestamp: AttributeValueMemberS
 	// case *fieldmaskpb.FieldMask: AttributeValueMemberSS
 	// case *structpb.Value: <anything>
@@ -97,7 +95,7 @@ var _ = DescribeTable("path validation", func(nb interface {
 	// well-known: anypb
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.1"}, ``),
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.2"}, ``),
+	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.2.x.y[100]"}, ``), // deep into field that may hold anything
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"31[999].1"}, ``),
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"32.foo.1"}, ``),
-	// @TODO test path into 21.1
 )

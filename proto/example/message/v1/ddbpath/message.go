@@ -30,7 +30,7 @@ func (p EnginePath) Dirtyness() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(EnginePath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(EnginePath{}, map[string]ddbpath.FieldInfo{
 		"1": {Kind: ddbpath.BasicKind},
 		"2": {Kind: ddbpath.BasicKind},
 	})
@@ -62,7 +62,7 @@ func (p CarPath) Name() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(CarPath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(CarPath{}, map[string]ddbpath.FieldInfo{
 		"1": {
 			Kind: ddbpath.BasicKind,
 			Ref:  reflect.TypeOf(EnginePath{}),
@@ -109,7 +109,7 @@ func (p AppliancePath) Brand() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(AppliancePath{}), map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
+	ddbpath.RegisterMessage(AppliancePath{}, map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
 }
 
 // IgnoredPath allows for constructing type-safe expression names
@@ -128,7 +128,7 @@ func (p IgnoredPath) Visible() expression.NameBuilder {
 	return p.AppendName(expression.Name("4"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(IgnoredPath{}), map[string]ddbpath.FieldInfo{"4": {Kind: ddbpath.BasicKind}})
+	ddbpath.RegisterMessage(IgnoredPath{}, map[string]ddbpath.FieldInfo{"4": {Kind: ddbpath.BasicKind}})
 }
 
 // KitchenPath allows for constructing type-safe expression names
@@ -302,7 +302,7 @@ func (p KitchenPath) MappedAny() ddbpath.ItemMap[ddbpath.AnyPath] {
 	return ddbpath.ItemMap[ddbpath.AnyPath]{NameBuilder: p.AppendName(expression.Name("32"))}
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(KitchenPath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(KitchenPath{}, map[string]ddbpath.FieldInfo{
 		"1":  {Kind: ddbpath.BasicKind},
 		"10": {Kind: ddbpath.BasicKind},
 		"11": {Kind: ddbpath.BasicKind},
@@ -402,7 +402,7 @@ func (p EmptyPath) WithDynamoNameBuilder(n expression.NameBuilder) EmptyPath {
 	return p
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(EmptyPath{}), map[string]ddbpath.FieldInfo{})
+	ddbpath.RegisterMessage(EmptyPath{}, map[string]ddbpath.FieldInfo{})
 }
 
 // MapGalorePath allows for constructing type-safe expression names
@@ -511,7 +511,7 @@ func (p MapGalorePath) Uintengine() ddbpath.ItemMap[EnginePath] {
 	return ddbpath.ItemMap[EnginePath]{NameBuilder: p.AppendName(expression.Name("19"))}
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(MapGalorePath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(MapGalorePath{}, map[string]ddbpath.FieldInfo{
 		"1":  {Kind: ddbpath.MapKind},
 		"10": {Kind: ddbpath.MapKind},
 		"11": {Kind: ddbpath.MapKind},
@@ -556,7 +556,7 @@ func (p ValueGalorePath) SomeValue() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(ValueGalorePath{}), map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
+	ddbpath.RegisterMessage(ValueGalorePath{}, map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
 }
 
 // FieldPresencePath allows for constructing type-safe expression names
@@ -675,7 +675,7 @@ func (p FieldPresencePath) Uint64Val() expression.NameBuilder {
 	return p.AppendName(expression.Name("uint64Val"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(FieldPresencePath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(FieldPresencePath{}, map[string]ddbpath.FieldInfo{
 		"boolVal":   {Kind: ddbpath.BasicKind},
 		"bytesVal":  {Kind: ddbpath.BasicKind},
 		"doubleVal": {Kind: ddbpath.BasicKind},
@@ -756,7 +756,7 @@ func (p JsonFieldsPath) JsonNrSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("6"))}
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(JsonFieldsPath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(JsonFieldsPath{}, map[string]ddbpath.FieldInfo{
 		"1": {Kind: ddbpath.ListKind},
 		"2": {
 			Kind: ddbpath.ListKind,
@@ -796,7 +796,7 @@ func (p JsonOneofsPath) OneofMsg() EnginePath {
 	return EnginePath{NameBuilder: p.AppendName(expression.Name("8"))}
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(JsonOneofsPath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(JsonOneofsPath{}, map[string]ddbpath.FieldInfo{
 		"7": {Kind: ddbpath.BasicKind},
 		"8": {
 			Kind: ddbpath.BasicKind,

@@ -131,6 +131,7 @@ func (tg *Target) isWellKnownPathSupported(m *protogen.Message) bool {
 	case `"\"google.golang.org/protobuf/types/known/anypb\"".Any`:
 		return true
 	}
+
 	return false
 }
 
@@ -223,7 +224,7 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) (err error) {
 	// generate init functions that will register the types for path validation
 	f.Func().Id("init").Params().Block(
 		Qual(tg.idents.ddbpath, "RegisterMessage").Call(
-			Qual("reflect", "TypeOf").Call(Add(tg.pathStructType(m)).Values()),
+			tg.pathStructType(m).Values(),
 			Map(String()).Qual(tg.idents.ddbpath, "FieldInfo").Values(regFields),
 		),
 	)
