@@ -193,7 +193,7 @@ func selectValue(in types.AttributeValue, els []PathElement) (out types.Attribut
 // when only the keys need to be selected, or a partial update is performed using a mask.
 func SelectValues(v types.AttributeValue, paths ...string) (res map[string]types.AttributeValue, err error) {
 	res = make(map[string]types.AttributeValue, len(paths))
-	els := make([]PathElement, 10) // allocate space for upto 10 element deep paths
+	els := make([]PathElement, 32) // allocate space for upto 32 element deep paths, this Dynamo's max
 	for _, p := range paths {
 		if els, err = AppendParsePath(p, els[:0]); err != nil {
 			return nil, fmt.Errorf("failed to parse plath '%s': %w", p, err)
