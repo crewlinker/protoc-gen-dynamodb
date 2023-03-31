@@ -49,7 +49,7 @@ func (p CarPath) WithDynamoNameBuilder(n expression.NameBuilder) CarPath {
 
 // Engine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p CarPath) Engine() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("1"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 
 // NrOfWheels appends the path being build
@@ -214,12 +214,12 @@ func (p KitchenPath) Calendar() ddbpath.Map {
 
 // WasherEngine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p KitchenPath) WasherEngine() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("15"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("15"))}
 }
 
 // ExtraKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p KitchenPath) ExtraKitchen() KitchenPath {
-	return KitchenPath{p.AppendName(expression.Name("16"))}
+	return KitchenPath{NameBuilder: p.AppendName(expression.Name("16"))}
 }
 
 // Timer appends the path being build
@@ -242,9 +242,9 @@ func (p KitchenPath) OtherBrands() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("20"))}
 }
 
-// SomeAny appends the path being build
-func (p KitchenPath) SomeAny() expression.NameBuilder {
-	return p.AppendName(expression.Name("21"))
+// SomeAny returns 'p' with the attribute name appended and allow subselecting nested message
+func (p KitchenPath) SomeAny() ddbpath.AnyPath {
+	return ddbpath.AnyPath{NameBuilder: p.AppendName(expression.Name("21"))}
 }
 
 // SomeMask appends the path being build
@@ -291,6 +291,16 @@ func (p KitchenPath) NumberSet() ddbpath.List {
 func (p KitchenPath) BytesSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("30"))}
 }
+
+// RepeatedAny returns 'p' appended with the attribute while allow indexing a nested message
+func (p KitchenPath) RepeatedAny() ddbpath.ItemList[ddbpath.AnyPath] {
+	return ddbpath.ItemList[ddbpath.AnyPath]{NameBuilder: p.AppendName(expression.Name("31"))}
+}
+
+// MappedAny returns 'p' appended with the attribute while allow map keys on a nested message
+func (p KitchenPath) MappedAny() ddbpath.ItemMap[ddbpath.AnyPath] {
+	return ddbpath.ItemMap[ddbpath.AnyPath]{NameBuilder: p.AppendName(expression.Name("32"))}
+}
 func init() {
 	ddbpath.RegisterMessage(reflect.TypeOf(KitchenPath{}), map[string]ddbpath.FieldInfo{
 		"1":  {Kind: ddbpath.BasicKind},
@@ -318,7 +328,10 @@ func init() {
 		},
 		"2":  {Kind: ddbpath.BasicKind},
 		"20": {Kind: ddbpath.ListKind},
-		"21": {Kind: ddbpath.BasicKind},
+		"21": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(ddbpath.AnyPath{}),
+		},
 		"22": {Kind: ddbpath.BasicKind},
 		"23": {Kind: ddbpath.BasicKind},
 		"24": {Kind: ddbpath.BasicKind},
@@ -329,12 +342,20 @@ func init() {
 		"29": {Kind: ddbpath.ListKind},
 		"3":  {Kind: ddbpath.BasicKind},
 		"30": {Kind: ddbpath.ListKind},
-		"4":  {Kind: ddbpath.BasicKind},
-		"5":  {Kind: ddbpath.BasicKind},
-		"6":  {Kind: ddbpath.BasicKind},
-		"7":  {Kind: ddbpath.BasicKind},
-		"8":  {Kind: ddbpath.BasicKind},
-		"9":  {Kind: ddbpath.BasicKind},
+		"31": {
+			Kind: ddbpath.ListKind,
+			Ref:  reflect.TypeOf(ddbpath.AnyPath{}),
+		},
+		"32": {
+			Kind: ddbpath.MapKind,
+			Ref:  reflect.TypeOf(ddbpath.AnyPath{}),
+		},
+		"4": {Kind: ddbpath.BasicKind},
+		"5": {Kind: ddbpath.BasicKind},
+		"6": {Kind: ddbpath.BasicKind},
+		"7": {Kind: ddbpath.BasicKind},
+		"8": {Kind: ddbpath.BasicKind},
+		"9": {Kind: ddbpath.BasicKind},
 	})
 }
 
@@ -561,12 +582,12 @@ func (p FieldPresencePath) OptStr() expression.NameBuilder {
 
 // Msg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresencePath) Msg() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("msg"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("msg"))}
 }
 
 // OptMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresencePath) OptMsg() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("optMsg"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("optMsg"))}
 }
 
 // StrList returns 'p' appended with the attribute name and allow indexing
@@ -606,7 +627,7 @@ func (p FieldPresencePath) OneofStr() expression.NameBuilder {
 
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p FieldPresencePath) OneofMsg() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("oneofMsg"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("oneofMsg"))}
 }
 
 // StrVal appends the path being build
@@ -712,7 +733,7 @@ func (p JsonFieldsPath) JsonStrList() ddbpath.List {
 
 // JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
 func (p JsonFieldsPath) JsonEngine() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("json_engine"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("json_engine"))}
 }
 
 // JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
@@ -772,7 +793,7 @@ func (p JsonOneofsPath) OneofStr() expression.NameBuilder {
 
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p JsonOneofsPath) OneofMsg() EnginePath {
-	return EnginePath{p.AppendName(expression.Name("8"))}
+	return EnginePath{NameBuilder: p.AppendName(expression.Name("8"))}
 }
 func init() {
 	ddbpath.RegisterMessage(reflect.TypeOf(JsonOneofsPath{}), map[string]ddbpath.FieldInfo{

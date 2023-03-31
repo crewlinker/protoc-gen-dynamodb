@@ -70,11 +70,6 @@ func (tg *Target) genMessageKeying(f *File, m *protogen.Message) (err error) {
 			Qual(tg.idents.ddbimp, m.GoIdent.GoName+"KeyNames").Call(),
 		))
 
-	// @TODO .DynamoPartitionKey()
-	// @TODO .DynamoSortKey()
-	// @TODO .DynamoPartitionKeyName()
-	// @TODO .DynamoSortKeyName()
-
 	return nil
 }
 
@@ -118,8 +113,8 @@ func (tg *Target) genDdbKeying(f *File, m *protogen.Message) (err error) {
 		f.Func().
 			Id(m.GoIdent.GoName).
 			Params().
-			Params(Id(tg.pathIdentName(m))).
-			Block(Return(Id(tg.pathIdentName(m)).Values()))
+			Params(tg.pathStructType(m)).
+			Block(Return(tg.pathStructType(m)).Values())
 	}
 
 	if skf != nil {

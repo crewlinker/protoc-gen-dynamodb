@@ -22,7 +22,7 @@ func (p OtherKitchenPath) WithDynamoNameBuilder(n expression.NameBuilder) OtherK
 
 // AnotherKitchen returns 'p' with the attribute name appended and allow subselecting nested message
 func (p OtherKitchenPath) AnotherKitchen() KitchenPath {
-	return KitchenPath{p.AppendName(expression.Name("16"))}
+	return KitchenPath{NameBuilder: p.AppendName(expression.Name("16"))}
 }
 
 // OtherTimer appends the path being build
