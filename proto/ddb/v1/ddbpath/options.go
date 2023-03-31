@@ -3,7 +3,11 @@
 // Package ddbv1ddbpath holds generated code for working with Dynamo document paths
 package ddbv1ddbpath
 
-import expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+import (
+	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
+	"reflect"
+)
 
 // FieldOptionsPath allows for constructing type-safe expression names
 type FieldOptionsPath struct {
@@ -44,4 +48,14 @@ func (p FieldOptionsPath) Set() expression.NameBuilder {
 // Embed appends the path being build
 func (p FieldOptionsPath) Embed() expression.NameBuilder {
 	return p.AppendName(expression.Name("6"))
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(FieldOptionsPath{}), map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.BasicKind},
+		"2": {Kind: ddbpath.BasicKind},
+		"3": {Kind: ddbpath.BasicKind},
+		"4": {Kind: ddbpath.BasicKind},
+		"5": {Kind: ddbpath.BasicKind},
+		"6": {Kind: ddbpath.BasicKind},
+	})
 }

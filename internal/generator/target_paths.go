@@ -1,6 +1,8 @@
 package generator
 
 import (
+	"fmt"
+
 	. "github.com/dave/jennifer/jen"
 	"google.golang.org/protobuf/compiler/protogen"
 )
@@ -120,8 +122,41 @@ func (tg *Target) pathIdentName(m *protogen.Message) string {
 	return m.GoIdent.GoName + "Path"
 }
 
+// genFieldRegistration generatiosn the registration code for a field
+func (tg *Target) genFieldRegistration(field *protogen.Field) (Code, error) {
+
+	// reflect on fields message for registration
+	genFieldMsgReflect := func(m *protogen.Message) *Statement {
+		return Qual("reflect", "TypeOf").Call(Id(tg.pathIdentName(m)).Values())
+	}
+
+	d := Dict{}
+	switch {
+	case field.Desc.IsList():
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "ListKind")
+		if field.Message != nil && tg.isSamePkgIdent(field.Message.GoIdent) {
+			d[Id("Ref")] = genFieldMsgReflect(field.Message)
+		}
+	case field.Desc.IsMap():
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "MapKind")
+		val := field.Message.Fields[1] // value type of the message
+		if val.Message != nil && tg.isSamePkgIdent(val.Message.GoIdent) {
+			d[Id("Ref")] = genFieldMsgReflect(val.Message)
+		}
+	case field.Message != nil:
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "BasicKind")
+		if field.Message != nil && tg.isSamePkgIdent(field.Message.GoIdent) {
+			d[Id("Ref")] = genFieldMsgReflect(field.Message)
+		}
+	default:
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "BasicKind")
+	}
+
+	return Values(d), nil
+}
+
 // genMessagePaths generates path building types
-func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
+func (tg *Target) genMessagePaths(f *File, m *protogen.Message) (err error) {
 	f.Commentf("%s allows for constructing type-safe expression names", tg.pathIdentName(m))
 	f.Type().Id(tg.pathIdentName(m)).Struct(Qual(expression, "NameBuilder"))
 
@@ -135,27 +170,17 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 			Return(Id("p")),
 		)
 
-	/* @TODO: generate code like this for registering paths for efficient validation
-	func init(){
-		ddbpath.RegisterMessage(reflect.TypeOf(KitchenPath{}), map[string]ddbpath.FieldInfo{
-			"1": {},
-			"16": {Ref: reflect.TypeOf(KitchenPath{})},
-			"13": {Kind: ddbpath.MapKind, Ref: reflect.TypeOf(AppliancePath{})},
-			"19": {Kind: ddbpath.ListKind, Ref: reflect.TypeOf(EnginePath{})},
-		})
-		ddbpath.RegisterMessage(reflect.TypeOf(EnginePath{}), map[string]ddbpath.FieldInfo{
-			"1": {},
-		})
-		ddbpath.RegisterMessage(reflect.TypeOf(AppliancePath{}), map[string]ddbpath.FieldInfo{
-			"1": {},
-		})
-	}
-	*/
-
-	// generate path building methods for each field
+	// generate path building and field registration
+	regFields := Dict{}
 	for _, field := range m.Fields {
 		if tg.isOmitted(field) {
 			continue // no path building for ignored fields
+		}
+
+		// add each field to the register call in the generated init
+		regFields[Lit(tg.attrName(field))], err = tg.genFieldRegistration(field)
+		if err != nil {
+			return fmt.Errorf("failed to generate field registration: %w", err)
 		}
 
 		switch {
@@ -169,6 +194,14 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 			tg.genBasicFieldPath(f, m, field)
 		}
 	}
+
+	// generate init functions that will register the types for path validation
+	f.Func().Id("init").Params().Block(
+		Qual(tg.idents.ddbpath, "RegisterMessage").Call(
+			Qual("reflect", "TypeOf").Call(Id(tg.pathIdentName(m)).Values()),
+			Map(String()).Qual(tg.idents.ddbpath, "FieldInfo").Values(regFields),
+		),
+	)
 
 	return nil
 }
