@@ -126,6 +126,11 @@ message Kitchen {
     repeated int64 number_set = 29 [(ddb.v1.field).set=true];
     // set of bytes
     repeated bytes bytes_set = 30 [(ddb.v1.field).set=true];
+
+    // list of any
+    repeated google.protobuf.Any repeated_any = 31;
+    // map of any
+    map<string,google.protobuf.Any> mapped_any = 32;
 }
 
 // Empty message

@@ -18,6 +18,7 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 	expr, err := expression.NewBuilder().WithCondition(s.AttributeExists()).Build()
 	Expect(err).ToNot(HaveOccurred())
 
+	// check that the resulting expression(names) are as expected
 	Expect(*expr.Condition()).To(Equal(fmt.Sprintf(`attribute_exists (%s)`, expCondition)))
 	Expect(expr.Names()).To(Equal(expNames))
 
@@ -52,6 +53,31 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		messagev1ddbpath.Kitchen().Furniture().Key("dar").Brand(),
 		"#0.#1.#2",
 		map[string]string{"#0": "13", "#1": "dar", "#2": "1"}),
+
+	// well-known: anypb
+	Entry("any field",
+		messagev1ddbpath.Kitchen().SomeAny().TypeURL(),
+		"#0.#1",
+		map[string]string{"#0": "21", "#1": "1"}),
+	Entry("any field",
+		messagev1ddbpath.Kitchen().SomeAny().Value(),
+		"#0.#1",
+		map[string]string{"#0": "21", "#1": "2"}),
+	Entry("list of anypb",
+		messagev1ddbpath.Kitchen().RepeatedAny().Index(13).TypeURL(),
+		"#0[13].#1",
+		map[string]string{"#0": "31", "#1": "1"}),
+	Entry("map of anypb",
+		messagev1ddbpath.Kitchen().MappedAny().Key("koo").TypeURL(),
+		"#0.#1.#2",
+		map[string]string{"#0": "32", "#1": "koo", "#2": "1"}),
+
+	// well-known paths
+	// Entry("durationpb", messagev1ddbpath.Kitchen().Timer())
+	// case *durationpb.Duration, *timestamppb.Timestamp: AttributeValueMemberS
+	// case *fieldmaskpb.FieldMask: AttributeValueMemberSS
+	// case *structpb.Value: <anything>
+	// case *wrapperpb.<Kind>Value: just the basic path
 )
 
 // test path validation with generated logic
@@ -67,4 +93,11 @@ var _ = DescribeTable("path validation", func(nb interface {
 },
 	Entry("should validate named attr", messagev1ddbpath.FieldPresencePath{}, []string{"msg.1"}, ``),
 	Entry("omitted field should be invalid", messagev1ddbpath.IgnoredPath{}, []string{"1"}, ` non-existing field '1' on: messagev1ddbpath.IgnoredPath`),
+
+	// well-known: anypb
+	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.1"}, ``),
+	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.2"}, ``),
+	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"31[999].1"}, ``),
+	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"32.foo.1"}, ``),
+	// @TODO test path into 21.1
 )

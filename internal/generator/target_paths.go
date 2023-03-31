@@ -11,7 +11,7 @@ import (
 func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 	f.Commentf("%s appends the path being build", field.GoName)
 	f.Func().
-		Params(Id("p").Id(tg.pathIdentName(m))).Id(field.GoName).
+		Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 		Params().
 		Params(Qual(expression, "NameBuilder")).
 		Block(
@@ -26,20 +26,20 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 
 	// (repeated) message field in a different package we don't support any special type-safe path construciton
 	// and instead return a basic path that the user can build on further by themselves.
-	if !tg.isSamePkgIdent(field.Message.GoIdent) {
+	if !tg.isSamePkgIdent(field.Message.GoIdent) && !tg.isWellKnownPathSupported(field.Message) {
 		return tg.genBasicFieldPath(f, m, field) // NOTE: may support traversing of this in the future
 	}
 
 	// generate the method that append the path element
 	f.Commentf("%s returns 'p' with the attribute name appended and allow subselecting nested message", field.GoName)
 	f.Func().
-		Params(Id("p").Id(tg.pathIdentName(m))).Id(field.GoName).
+		Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 		Params().
-		Params(Id(tg.pathIdentName(field.Message))).
+		Params(tg.pathStructType(field.Message)).
 		Block(
-			Return(Id(tg.pathIdentName(field.Message)).Values(
-				Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
-			)),
+			Return(tg.pathStructType(field.Message).Values(Dict{
+				Id("NameBuilder"): Id("p").Dot("AppendName").Call(Qual(expression, "Name").Call(Lit(tg.attrName(field)))),
+			})),
 		)
 
 	return nil
@@ -50,11 +50,12 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 
 	// if it's a list of basic types, or the repeated message is not in the same package we return a
 	// a generic basic list type. NOTE: we maybe support external messages in the future
-	if field.Message == nil || !tg.isSamePkgIdent(field.Message.GoIdent) {
+	if field.Message == nil || (!tg.isSamePkgIdent(field.Message.GoIdent) && !tg.isWellKnownPathSupported(field.Message)) {
+
 		// If its not a list of messages, the path will always end and the generated method will return
 		// basic path builder that always returns a string with the final path
 		f.Commentf("%s returns 'p' appended with the attribute name and allow indexing", field.GoName)
-		f.Func().Params(Id("p").Id(tg.pathIdentName(m))).Id(field.GoName).
+		f.Func().Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 			Params().
 			Params(Qual(tg.idents.ddbpath, "List")).
 			Block(
@@ -68,9 +69,9 @@ func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen
 	}
 
 	// else, we assume its a message in the same package
-	got := Id(tg.pathIdentName(field.Message))
+	got := tg.pathStructType(field.Message)
 	f.Commentf("%s returns 'p' appended with the attribute while allow indexing a nested message", field.GoName)
-	f.Func().Params(Id("p").Id(tg.pathIdentName(m))).Id(field.GoName).
+	f.Func().Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 		Params().
 		Params(Qual(tg.idents.ddbpath, "ItemList").Types(got)).
 		Block(
@@ -88,9 +89,9 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 
 	// if it's a map of basic types, or the repeated message is not in the same package we return a
 	// a basic list accessor. NOTE: we maybe support external messages in the future
-	if val.Message == nil || !tg.isSamePkgIdent(val.Message.GoIdent) {
+	if val.Message == nil || (!tg.isSamePkgIdent(val.Message.GoIdent) && !tg.isWellKnownPathSupported(val.Message)) {
 		f.Commentf("%s returns 'p' appended with the attribute name and allow map keys to be specified", field.GoName)
-		f.Func().Params(Id("p").Id(tg.pathIdentName(m))).Id(field.GoName).
+		f.Func().Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 			Params().
 			Params(Qual(tg.idents.ddbpath, "Map")).
 			Block(
@@ -104,9 +105,9 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 	}
 
 	// else, we assume its a message in the same package
-	got := Id(tg.pathIdentName(val.Message))
+	got := tg.pathStructType(val.Message)
 	f.Commentf("%s returns 'p' appended with the attribute while allow map keys on a nested message", field.GoName)
-	f.Func().Params(Id("p").Id(tg.pathIdentName(m))).Id(field.GoName).
+	f.Func().Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 		Params().
 		Params(Qual(tg.idents.ddbpath, "ItemMap").Types(got)).
 		Block(
@@ -118,8 +119,29 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 	return nil
 }
 
-func (tg *Target) pathIdentName(m *protogen.Message) string {
+// path struct type name
+func (tg *Target) pathStructIdentName(m *protogen.Message) string {
 	return m.GoIdent.GoName + "Path"
+}
+
+// isWellKnownPathSupported returns true if a message is a well-known message and we support
+// generating type-safe path accessors for it
+func (tg *Target) isWellKnownPathSupported(m *protogen.Message) bool {
+	switch m.GoIdent.String() {
+	case `"\"google.golang.org/protobuf/types/known/anypb\"".Any`:
+		return true
+	}
+	return false
+}
+
+// pathStructType returns an identifier or qualifier statement for a path struct.
+func (tg *Target) pathStructType(m *protogen.Message) *Statement {
+	switch m.GoIdent.String() {
+	case `"\"google.golang.org/protobuf/types/known/anypb\"".Any`:
+		return Qual(tg.idents.ddbpath, "AnyPath")
+	}
+
+	return Id(tg.pathStructIdentName(m))
 }
 
 // genFieldRegistration generatiosn the registration code for a field
@@ -127,25 +149,28 @@ func (tg *Target) genFieldRegistration(field *protogen.Field) (Code, error) {
 
 	// reflect on fields message for registration
 	genFieldMsgReflect := func(m *protogen.Message) *Statement {
-		return Qual("reflect", "TypeOf").Call(Id(tg.pathIdentName(m)).Values())
+		return Qual("reflect", "TypeOf").Call(Add(tg.pathStructType(m)).Values())
 	}
 
 	d := Dict{}
 	switch {
 	case field.Desc.IsList():
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "ListKind")
-		if field.Message != nil && tg.isSamePkgIdent(field.Message.GoIdent) {
+		if field.Message != nil &&
+			(tg.isSamePkgIdent(field.Message.GoIdent) || tg.isWellKnownPathSupported(field.Message)) {
 			d[Id("Ref")] = genFieldMsgReflect(field.Message)
 		}
 	case field.Desc.IsMap():
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "MapKind")
 		val := field.Message.Fields[1] // value type of the message
-		if val.Message != nil && tg.isSamePkgIdent(val.Message.GoIdent) {
+		if val.Message != nil &&
+			(tg.isSamePkgIdent(val.Message.GoIdent) || tg.isWellKnownPathSupported(val.Message)) {
 			d[Id("Ref")] = genFieldMsgReflect(val.Message)
 		}
 	case field.Message != nil:
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "BasicKind")
-		if field.Message != nil && tg.isSamePkgIdent(field.Message.GoIdent) {
+		if field.Message != nil &&
+			(tg.isSamePkgIdent(field.Message.GoIdent) || tg.isWellKnownPathSupported(field.Message)) {
 			d[Id("Ref")] = genFieldMsgReflect(field.Message)
 		}
 	default:
@@ -157,14 +182,14 @@ func (tg *Target) genFieldRegistration(field *protogen.Field) (Code, error) {
 
 // genMessagePaths generates path building types
 func (tg *Target) genMessagePaths(f *File, m *protogen.Message) (err error) {
-	f.Commentf("%s allows for constructing type-safe expression names", tg.pathIdentName(m))
-	f.Type().Id(tg.pathIdentName(m)).Struct(Qual(expression, "NameBuilder"))
+	f.Commentf("%s allows for constructing type-safe expression names", tg.pathStructIdentName(m))
+	f.Type().Add(tg.pathStructType(m)).Struct(Qual(expression, "NameBuilder"))
 
 	// generate the "WithDynamoNameBuilder" to allow generic types to set the namebuilder is its decending
 	f.Commentf("WithDynamoNameBuilder allows generic types to overwrite the path")
-	f.Func().Params(Id("p").Id(tg.pathIdentName(m))).Id("WithDynamoNameBuilder").
+	f.Func().Params(Id("p").Add(tg.pathStructType(m))).Id("WithDynamoNameBuilder").
 		Params(Id("n").Qual(expression, "NameBuilder")).
-		Params(Id(tg.pathIdentName(m))).
+		Params(Add(tg.pathStructType(m))).
 		Block(
 			Id("p").Dot("NameBuilder").Op("=").Id("n"),
 			Return(Id("p")),
@@ -198,7 +223,7 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) (err error) {
 	// generate init functions that will register the types for path validation
 	f.Func().Id("init").Params().Block(
 		Qual(tg.idents.ddbpath, "RegisterMessage").Call(
-			Qual("reflect", "TypeOf").Call(Id(tg.pathIdentName(m)).Values()),
+			Qual("reflect", "TypeOf").Call(Add(tg.pathStructType(m)).Values()),
 			Map(String()).Qual(tg.idents.ddbpath, "FieldInfo").Values(regFields),
 		),
 	)
