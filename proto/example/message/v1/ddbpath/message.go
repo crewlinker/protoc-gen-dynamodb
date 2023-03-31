@@ -6,6 +6,7 @@ package messagev1ddbpath
 import (
 	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
+	"reflect"
 )
 
 // EnginePath allows for constructing type-safe expression names
@@ -27,6 +28,12 @@ func (p EnginePath) Brand() expression.NameBuilder {
 // Dirtyness appends the path being build
 func (p EnginePath) Dirtyness() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(EnginePath{}), map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.BasicKind},
+		"2": {Kind: ddbpath.BasicKind},
+	})
 }
 
 // CarPath allows for constructing type-safe expression names
@@ -53,6 +60,16 @@ func (p CarPath) NrOfWheels() expression.NameBuilder {
 // Name appends the path being build
 func (p CarPath) Name() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(CarPath{}), map[string]ddbpath.FieldInfo{
+		"1": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"2":  {Kind: ddbpath.BasicKind},
+		"ws": {Kind: ddbpath.BasicKind},
+	})
 }
 
 // CarPartitionKey returns a key builder for the partition key
@@ -91,6 +108,9 @@ func (p AppliancePath) WithDynamoNameBuilder(n expression.NameBuilder) Appliance
 func (p AppliancePath) Brand() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
 }
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(AppliancePath{}), map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
+}
 
 // IgnoredPath allows for constructing type-safe expression names
 type IgnoredPath struct {
@@ -106,6 +126,9 @@ func (p IgnoredPath) WithDynamoNameBuilder(n expression.NameBuilder) IgnoredPath
 // Visible appends the path being build
 func (p IgnoredPath) Visible() expression.NameBuilder {
 	return p.AppendName(expression.Name("4"))
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(IgnoredPath{}), map[string]ddbpath.FieldInfo{"4": {Kind: ddbpath.BasicKind}})
 }
 
 // KitchenPath allows for constructing type-safe expression names
@@ -268,6 +291,52 @@ func (p KitchenPath) NumberSet() ddbpath.List {
 func (p KitchenPath) BytesSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("30"))}
 }
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(KitchenPath{}), map[string]ddbpath.FieldInfo{
+		"1":  {Kind: ddbpath.BasicKind},
+		"10": {Kind: ddbpath.BasicKind},
+		"11": {Kind: ddbpath.BasicKind},
+		"12": {Kind: ddbpath.BasicKind},
+		"13": {
+			Kind: ddbpath.MapKind,
+			Ref:  reflect.TypeOf(AppliancePath{}),
+		},
+		"14": {Kind: ddbpath.MapKind},
+		"15": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"16": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(KitchenPath{}),
+		},
+		"17": {Kind: ddbpath.BasicKind},
+		"18": {Kind: ddbpath.BasicKind},
+		"19": {
+			Kind: ddbpath.ListKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"2":  {Kind: ddbpath.BasicKind},
+		"20": {Kind: ddbpath.ListKind},
+		"21": {Kind: ddbpath.BasicKind},
+		"22": {Kind: ddbpath.BasicKind},
+		"23": {Kind: ddbpath.BasicKind},
+		"24": {Kind: ddbpath.BasicKind},
+		"25": {Kind: ddbpath.BasicKind},
+		"26": {Kind: ddbpath.BasicKind},
+		"27": {Kind: ddbpath.ListKind},
+		"28": {Kind: ddbpath.ListKind},
+		"29": {Kind: ddbpath.ListKind},
+		"3":  {Kind: ddbpath.BasicKind},
+		"30": {Kind: ddbpath.ListKind},
+		"4":  {Kind: ddbpath.BasicKind},
+		"5":  {Kind: ddbpath.BasicKind},
+		"6":  {Kind: ddbpath.BasicKind},
+		"7":  {Kind: ddbpath.BasicKind},
+		"8":  {Kind: ddbpath.BasicKind},
+		"9":  {Kind: ddbpath.BasicKind},
+	})
+}
 
 // KitchenPartitionKey returns a key builder for the partition key
 func KitchenPartitionKey() (v expression.KeyBuilder) {
@@ -310,6 +379,9 @@ type EmptyPath struct {
 func (p EmptyPath) WithDynamoNameBuilder(n expression.NameBuilder) EmptyPath {
 	p.NameBuilder = n
 	return p
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(EmptyPath{}), map[string]ddbpath.FieldInfo{})
 }
 
 // MapGalorePath allows for constructing type-safe expression names
@@ -417,6 +489,35 @@ func (p MapGalorePath) Boolengine() ddbpath.ItemMap[EnginePath] {
 func (p MapGalorePath) Uintengine() ddbpath.ItemMap[EnginePath] {
 	return ddbpath.ItemMap[EnginePath]{NameBuilder: p.AppendName(expression.Name("19"))}
 }
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(MapGalorePath{}), map[string]ddbpath.FieldInfo{
+		"1":  {Kind: ddbpath.MapKind},
+		"10": {Kind: ddbpath.MapKind},
+		"11": {Kind: ddbpath.MapKind},
+		"12": {Kind: ddbpath.MapKind},
+		"13": {Kind: ddbpath.MapKind},
+		"14": {Kind: ddbpath.MapKind},
+		"15": {Kind: ddbpath.MapKind},
+		"16": {Kind: ddbpath.MapKind},
+		"17": {Kind: ddbpath.MapKind},
+		"18": {
+			Kind: ddbpath.MapKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"19": {
+			Kind: ddbpath.MapKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"2": {Kind: ddbpath.MapKind},
+		"3": {Kind: ddbpath.MapKind},
+		"4": {Kind: ddbpath.MapKind},
+		"5": {Kind: ddbpath.MapKind},
+		"6": {Kind: ddbpath.MapKind},
+		"7": {Kind: ddbpath.MapKind},
+		"8": {Kind: ddbpath.MapKind},
+		"9": {Kind: ddbpath.MapKind},
+	})
+}
 
 // ValueGalorePath allows for constructing type-safe expression names
 type ValueGalorePath struct {
@@ -432,6 +533,9 @@ func (p ValueGalorePath) WithDynamoNameBuilder(n expression.NameBuilder) ValueGa
 // SomeValue appends the path being build
 func (p ValueGalorePath) SomeValue() expression.NameBuilder {
 	return p.AppendName(expression.Name("1"))
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(ValueGalorePath{}), map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
 }
 
 // FieldPresencePath allows for constructing type-safe expression names
@@ -549,6 +653,46 @@ func (p FieldPresencePath) Uint32Val() expression.NameBuilder {
 func (p FieldPresencePath) Uint64Val() expression.NameBuilder {
 	return p.AppendName(expression.Name("uint64Val"))
 }
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(FieldPresencePath{}), map[string]ddbpath.FieldInfo{
+		"boolVal":   {Kind: ddbpath.BasicKind},
+		"bytesVal":  {Kind: ddbpath.BasicKind},
+		"doubleVal": {Kind: ddbpath.BasicKind},
+		"enum":      {Kind: ddbpath.BasicKind},
+		"floatVal":  {Kind: ddbpath.BasicKind},
+		"int32Val":  {Kind: ddbpath.BasicKind},
+		"int64Val":  {Kind: ddbpath.BasicKind},
+		"msg": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"msgList": {
+			Kind: ddbpath.ListKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"msgMap": {
+			Kind: ddbpath.MapKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"oneofMsg": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"oneofStr": {Kind: ddbpath.BasicKind},
+		"optEnum":  {Kind: ddbpath.BasicKind},
+		"optMsg": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"optStr":    {Kind: ddbpath.BasicKind},
+		"str":       {Kind: ddbpath.BasicKind},
+		"strList":   {Kind: ddbpath.ListKind},
+		"strMap":    {Kind: ddbpath.MapKind},
+		"strVal":    {Kind: ddbpath.BasicKind},
+		"uint32Val": {Kind: ddbpath.BasicKind},
+		"uint64Val": {Kind: ddbpath.BasicKind},
+	})
+}
 
 // JsonFieldsPath allows for constructing type-safe expression names
 type JsonFieldsPath struct {
@@ -590,6 +734,25 @@ func (p JsonFieldsPath) JsonEngineMap() ddbpath.ItemMap[EnginePath] {
 func (p JsonFieldsPath) JsonNrSet() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("6"))}
 }
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(JsonFieldsPath{}), map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.ListKind},
+		"2": {
+			Kind: ddbpath.ListKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"4": {Kind: ddbpath.MapKind},
+		"5": {
+			Kind: ddbpath.MapKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+		"6": {Kind: ddbpath.ListKind},
+		"json_engine": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+	})
+}
 
 // JsonOneofsPath allows for constructing type-safe expression names
 type JsonOneofsPath struct {
@@ -610,4 +773,13 @@ func (p JsonOneofsPath) OneofStr() expression.NameBuilder {
 // OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
 func (p JsonOneofsPath) OneofMsg() EnginePath {
 	return EnginePath{p.AppendName(expression.Name("8"))}
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(JsonOneofsPath{}), map[string]ddbpath.FieldInfo{
+		"7": {Kind: ddbpath.BasicKind},
+		"8": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(EnginePath{}),
+		},
+	})
 }

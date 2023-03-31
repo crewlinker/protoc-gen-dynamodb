@@ -16,6 +16,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
 	messagev1ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/ddbpath"
 	fuzz "github.com/google/gofuzz"
@@ -59,7 +60,6 @@ var _ = Describe("handling example messages", func() {
 	})
 
 	It("should have generated key functions", func() {
-
 		Expect((&messagev1.Car{}).DynamoKeyNames()).To(Equal([]string{"ws"}))
 		Expect(messagev1ddbpath.CarKeyNames()).To(Equal([]string{"ws"}))
 		Expect(messagev1ddbpath.CarPartitionKey()).To(Equal(expression.Key("ws")))
@@ -152,6 +152,21 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		messagev1ddbpath.Kitchen().Furniture().Key("dar").Brand(),
 		"#0.#1.#2",
 		map[string]string{"#0": "13", "#1": "dar", "#2": "1"}),
+)
+
+// test path validation with generated logic
+var _ = DescribeTable("path validation", func(nb interface {
+	AppendName(field expression.NameBuilder) expression.NameBuilder
+}, paths []string, expErr string) {
+	err := ddbpath.Validate(nb, paths...)
+	if expErr == "" {
+		Expect(err).To(BeNil())
+	} else {
+		Expect(err.Error()).To(MatchRegexp(expErr))
+	}
+},
+	Entry("should validate named attr", messagev1ddbpath.FieldPresencePath{}, []string{"msg.1"}, ``),
+	Entry("omitted field should be invalid", messagev1ddbpath.IgnoredPath{}, []string{"1"}, ` non-existing field '1' on: messagev1ddbpath.IgnoredPath`),
 )
 
 // assert unmarshalling of various attribute maps

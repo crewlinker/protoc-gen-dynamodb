@@ -3,7 +3,11 @@
 // Package messagev1ddbpath holds generated code for working with Dynamo document paths
 package messagev1ddbpath
 
-import expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+import (
+	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
+	"reflect"
+)
 
 // OtherKitchenPath allows for constructing type-safe expression names
 type OtherKitchenPath struct {
@@ -24,4 +28,13 @@ func (p OtherKitchenPath) AnotherKitchen() KitchenPath {
 // OtherTimer appends the path being build
 func (p OtherKitchenPath) OtherTimer() expression.NameBuilder {
 	return p.AppendName(expression.Name("17"))
+}
+func init() {
+	ddbpath.RegisterMessage(reflect.TypeOf(OtherKitchenPath{}), map[string]ddbpath.FieldInfo{
+		"16": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(KitchenPath{}),
+		},
+		"17": {Kind: ddbpath.BasicKind},
+	})
 }
