@@ -7,6 +7,49 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 )
 
+// Kind describes the registered message field for validation
+type Kind int
+
+// String returns a human readable version
+func (k Kind) String() string {
+	switch k {
+	case BasicKind:
+		return "Basic"
+	case MapKind:
+		return "Map"
+	case ListKind:
+		return "List"
+	default:
+		panic("unsupported")
+	}
+}
+
+const (
+	// BasicKind are non-composit fields
+	BasicKind Kind = 0
+	// MapKind describe map fields
+	MapKind Kind = 1
+	// ListKind describe list fields
+	ListKind Kind = 2
+	// AnyKind describes a field that may hold any value
+	AnyKind Kind = 3
+)
+
+// FieldInfo describes information about a message field for validation
+type FieldInfo struct {
+	Kind Kind
+	Ref  reflect.Type
+}
+
+var registry = map[reflect.Type]map[string]FieldInfo{}
+
+// RegisterMessage registers a message's path struct for validation
+func RegisterMessage(m interface {
+	AppendName(field expression.NameBuilder) expression.NameBuilder
+}, fields map[string]FieldInfo) {
+	registry[reflect.TypeOf(m)] = fields
+}
+
 // Validate paths agains a registered type that implements name builder. Types from the generated ddbpath
 // package will be automatically registered.
 func Validate(nb interface {
@@ -76,7 +119,7 @@ func validatePath(typ reflect.Type, els []PathElement) (err error) {
 
 	// if we did not iterate until the last element it means the path is "too deep"
 	// and this is also invalid.
-	if i < len(els) {
+	if i < len(els) && currField.Kind != AnyKind {
 		return fmt.Errorf("path (or index) '%s' on basic type", els[i].Field)
 	}
 

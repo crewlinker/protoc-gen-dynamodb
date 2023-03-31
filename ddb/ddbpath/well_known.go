@@ -1,16 +1,14 @@
 package ddbpath
 
 import (
-	"reflect"
-
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 )
 
 // register our well-known paths
 func init() {
-	RegisterMessage(reflect.TypeOf(AnyPath{}), map[string]FieldInfo{
+	RegisterMessage(AnyPath{}, map[string]FieldInfo{
 		"1": {Kind: BasicKind},
-		"2": {Kind: BasicKind}, // @TODO should be a maptype that allows for any json path
+		"2": {Kind: AnyKind},
 	})
 }
 

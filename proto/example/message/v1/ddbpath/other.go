@@ -30,7 +30,7 @@ func (p OtherKitchenPath) OtherTimer() expression.NameBuilder {
 	return p.AppendName(expression.Name("17"))
 }
 func init() {
-	ddbpath.RegisterMessage(reflect.TypeOf(OtherKitchenPath{}), map[string]ddbpath.FieldInfo{
+	ddbpath.RegisterMessage(OtherKitchenPath{}, map[string]ddbpath.FieldInfo{
 		"16": {
 			Kind: ddbpath.BasicKind,
 			Ref:  reflect.TypeOf(KitchenPath{}),
