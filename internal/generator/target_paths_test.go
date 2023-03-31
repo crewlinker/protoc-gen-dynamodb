@@ -72,10 +72,7 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		map[string]string{"#0": "32", "#1": "koo", "#2": "1"}),
 
 	// well-known paths
-	// case *durationpb.Duration, *timestamppb.Timestamp: AttributeValueMemberS
 	// case *fieldmaskpb.FieldMask: AttributeValueMemberSS
-	// case *structpb.Value: <anything>
-	// case *wrapperpb.<Kind>Value: just the basic path
 )
 
 // test path validation with generated logic
@@ -92,10 +89,12 @@ var _ = DescribeTable("path validation", func(nb interface {
 	Entry("should validate named attr", messagev1ddbpath.FieldPresencePath{}, []string{"msg.1"}, ``),
 	Entry("omitted field should be invalid", messagev1ddbpath.IgnoredPath{}, []string{"1"}, ` non-existing field '1' on: messagev1ddbpath.IgnoredPath`),
 
-	// well-known: anypb
+	// well-known: anypb.Any
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.1"}, ``),
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.2"}, ``),
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.2.x.y[100]"}, ``), // deep into field that may hold anything
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"31[999].1"}, ``),
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"32.foo.1"}, ``),
+	// well-known structpb.Value
+	Entry("structpb", messagev1ddbpath.Kitchen(), []string{"23.bar.dar.rab"}, ``),
 )
