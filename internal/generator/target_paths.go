@@ -135,6 +135,23 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) error {
 			Return(Id("p")),
 		)
 
+	/* @TODO: generate code like this for registering paths for efficient validation
+	func init(){
+		ddbpath.RegisterMessage(reflect.TypeOf(KitchenPath{}), map[string]ddbpath.FieldInfo{
+			"1": {},
+			"16": {Ref: reflect.TypeOf(KitchenPath{})},
+			"13": {Kind: ddbpath.MapKind, Ref: reflect.TypeOf(AppliancePath{})},
+			"19": {Kind: ddbpath.ListKind, Ref: reflect.TypeOf(EnginePath{})},
+		})
+		ddbpath.RegisterMessage(reflect.TypeOf(EnginePath{}), map[string]ddbpath.FieldInfo{
+			"1": {},
+		})
+		ddbpath.RegisterMessage(reflect.TypeOf(AppliancePath{}), map[string]ddbpath.FieldInfo{
+			"1": {},
+		})
+	}
+	*/
+
 	// generate path building methods for each field
 	for _, field := range m.Fields {
 		if tg.isOmitted(field) {
