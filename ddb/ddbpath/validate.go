@@ -83,6 +83,12 @@ func validatePath(typ reflect.Type, els []PathElement) (err error) {
 			return fmt.Errorf("type not registered: %v", typ)
 		}
 
+		// the ValuePath holds arbitrary json so it is the exception, any
+		// path into it is valid
+		if typ == reflect.TypeOf(ValuePath{}) {
+			return nil
+		}
+
 		if index >= 0 {
 
 			// either did not enter a "list" field, or it is not of the list kind

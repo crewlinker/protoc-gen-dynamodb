@@ -130,6 +130,8 @@ func (tg *Target) isWellKnownPathSupported(m *protogen.Message) bool {
 	switch m.GoIdent.String() {
 	case `"\"google.golang.org/protobuf/types/known/anypb\"".Any`:
 		return true
+	case `"\"google.golang.org/protobuf/types/known/structpb\"".Value`:
+		return true
 	}
 
 	return false
@@ -140,6 +142,8 @@ func (tg *Target) pathStructType(m *protogen.Message) *Statement {
 	switch m.GoIdent.String() {
 	case `"\"google.golang.org/protobuf/types/known/anypb\"".Any`:
 		return Qual(tg.idents.ddbpath, "AnyPath")
+	case `"\"google.golang.org/protobuf/types/known/structpb\"".Value`:
+		return Qual(tg.idents.ddbpath, "ValuePath")
 	}
 
 	return Id(tg.pathStructIdentName(m))

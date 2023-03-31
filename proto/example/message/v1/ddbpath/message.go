@@ -252,9 +252,9 @@ func (p KitchenPath) SomeMask() expression.NameBuilder {
 	return p.AppendName(expression.Name("22"))
 }
 
-// SomeValue appends the path being build
-func (p KitchenPath) SomeValue() expression.NameBuilder {
-	return p.AppendName(expression.Name("23"))
+// SomeValue returns 'p' with the attribute name appended and allow subselecting nested message
+func (p KitchenPath) SomeValue() ddbpath.ValuePath {
+	return ddbpath.ValuePath{NameBuilder: p.AppendName(expression.Name("23"))}
 }
 
 // OptString appends the path being build
@@ -333,7 +333,10 @@ func init() {
 			Ref:  reflect.TypeOf(ddbpath.AnyPath{}),
 		},
 		"22": {Kind: ddbpath.BasicKind},
-		"23": {Kind: ddbpath.BasicKind},
+		"23": {
+			Kind: ddbpath.BasicKind,
+			Ref:  reflect.TypeOf(ddbpath.ValuePath{}),
+		},
 		"24": {Kind: ddbpath.BasicKind},
 		"25": {Kind: ddbpath.BasicKind},
 		"26": {Kind: ddbpath.BasicKind},
@@ -551,12 +554,15 @@ func (p ValueGalorePath) WithDynamoNameBuilder(n expression.NameBuilder) ValueGa
 	return p
 }
 
-// SomeValue appends the path being build
-func (p ValueGalorePath) SomeValue() expression.NameBuilder {
-	return p.AppendName(expression.Name("1"))
+// SomeValue returns 'p' with the attribute name appended and allow subselecting nested message
+func (p ValueGalorePath) SomeValue() ddbpath.ValuePath {
+	return ddbpath.ValuePath{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 func init() {
-	ddbpath.RegisterMessage(ValueGalorePath{}, map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.BasicKind}})
+	ddbpath.RegisterMessage(ValueGalorePath{}, map[string]ddbpath.FieldInfo{"1": {
+		Kind: ddbpath.BasicKind,
+		Ref:  reflect.TypeOf(ddbpath.ValuePath{}),
+	}})
 }
 
 // FieldPresencePath allows for constructing type-safe expression names
