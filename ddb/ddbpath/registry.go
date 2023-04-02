@@ -48,6 +48,9 @@ type FieldInfo struct {
 	Message reflect.Type // field holds a non-basic type, or nil if its a basic type
 }
 
+// NoInfo is the FieldInfo zero value
+var NoInfo = FieldInfo{}
+
 // String returns a human readable form of the field info
 func (fi FieldInfo) String() string {
 	if fi.Message == nil {
@@ -93,6 +96,16 @@ func (r Registry) Register(nb NameBuilder, fields map[string]FieldInfo) {
 		panic(fmt.Sprintf("ddbpath: type '%s' is already registered for validation", typ))
 	}
 	r.infos[typ] = registryItem{fields: fields}
+}
+
+// Traverse a message name builder 'nb' via path 'p' and return field info and any fields.
+func (r Registry) Traverse(nb NameBuilder, p string) (fi FieldInfo, flds map[string]FieldInfo, err error) {
+	typ := reflect.TypeOf(nb)
+	els := make([]PathElement, 32)
+	if els, err = AppendParsePath(p, els[:0]); err != nil {
+		return fi, flds, fmt.Errorf("failed to parse path '%s': %w", p, err)
+	}
+	return r.traverse(typ, els)
 }
 
 // Validate given the types in the registry
