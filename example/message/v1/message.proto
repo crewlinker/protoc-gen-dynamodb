@@ -131,6 +131,11 @@ message Kitchen {
     repeated google.protobuf.Any repeated_any = 31;
     // map of any
     map<string,google.protobuf.Any> mapped_any = 32;
+
+    // list of fieldmask
+    repeated google.protobuf.FieldMask repeated_fmask = 33;
+    // map of fieldmask
+    map<int32,google.protobuf.FieldMask> mapped_fmask = 34;
 }
 
 // Empty message

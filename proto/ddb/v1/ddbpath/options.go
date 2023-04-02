@@ -49,12 +49,12 @@ func (p FieldOptionsPath) Embed() expression.NameBuilder {
 	return p.AppendName(expression.Name("6"))
 }
 func init() {
-	ddbpath.RegisterMessage(FieldOptionsPath{}, map[string]ddbpath.FieldInfo{
-		"1": {Kind: ddbpath.BasicKind},
-		"2": {Kind: ddbpath.BasicKind},
-		"3": {Kind: ddbpath.BasicKind},
-		"4": {Kind: ddbpath.BasicKind},
-		"5": {Kind: ddbpath.BasicKind},
-		"6": {Kind: ddbpath.BasicKind},
+	ddbpath.Register(FieldOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+		"4": {Kind: ddbpath.FieldKindSingle},
+		"5": {Kind: ddbpath.FieldKindSingle},
+		"6": {Kind: ddbpath.FieldKindSingle},
 	})
 }

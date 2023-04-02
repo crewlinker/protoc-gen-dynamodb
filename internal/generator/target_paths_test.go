@@ -12,7 +12,10 @@ import (
 )
 
 // test the building of paths
-var _ = DescribeTable("path building", func(s expression.NameBuilder, expCondition string, expNames map[string]string) {
+var _ = DescribeTable("path building", func(s interface {
+	AppendName(field expression.NameBuilder) expression.NameBuilder
+	AttributeExists() expression.ConditionBuilder
+}, expCondition string, expNames map[string]string) {
 
 	// check that expression builder accepts the paths
 	expr, err := expression.NewBuilder().WithCondition(s.AttributeExists()).Build()
@@ -34,7 +37,6 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		messagev1ddbpath.Kitchen().ExtraKitchen().ExtraKitchen().Brand(),
 		"#0.#0.#1",
 		map[string]string{"#0": "16", "#1": "1"}),
-
 	Entry("basic type list",
 		messagev1ddbpath.Kitchen().OtherBrands().Index(10),
 		"#0[10]",
@@ -43,7 +45,10 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		messagev1ddbpath.Kitchen().ApplianceEngines().Index(3).Brand(),
 		"#0[3].#1",
 		map[string]string{"#0": "19", "#1": "1"}),
-
+	Entry("to message list directly",
+		messagev1ddbpath.Kitchen().ApplianceEngines(),
+		"#0",
+		map[string]string{"#0": "19"}),
 	Entry("basic type map",
 		messagev1ddbpath.Kitchen().Calendar().Key("bar"),
 		"#0.#1",
@@ -70,9 +75,15 @@ var _ = DescribeTable("path building", func(s expression.NameBuilder, expConditi
 		messagev1ddbpath.Kitchen().MappedAny().Key("koo").TypeURL(),
 		"#0.#1.#2",
 		map[string]string{"#0": "32", "#1": "koo", "#2": "1"}),
-
-	// well-known paths
-	// case *fieldmaskpb.FieldMask: AttributeValueMemberSS
+	// well-known: field mask
+	Entry("fieldmask",
+		messagev1ddbpath.Kitchen().SomeMask().Masks().Index(4),
+		"#0.#1[4]",
+		map[string]string{"#0": "22", "#1": "1"}),
+	Entry("fieldmask list",
+		messagev1ddbpath.Kitchen().RepeatedFmask().Index(6).Masks().Index(3),
+		"#0[6].#1[3]",
+		map[string]string{"#0": "33", "#1": "1"}),
 )
 
 // test path validation with generated logic
@@ -87,7 +98,7 @@ var _ = DescribeTable("path validation", func(nb interface {
 	}
 },
 	Entry("should validate named attr", messagev1ddbpath.FieldPresencePath{}, []string{"msg.1"}, ``),
-	Entry("omitted field should be invalid", messagev1ddbpath.IgnoredPath{}, []string{"1"}, ` non-existing field '1' on: messagev1ddbpath.IgnoredPath`),
+	Entry("omitted field should be invalid", messagev1ddbpath.IgnoredPath{}, []string{"1"}, `unknown field '1' of Single<messagev1ddbpath.IgnoredPath>`),
 
 	// well-known: anypb.Any
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"21.1"}, ``),
@@ -97,4 +108,7 @@ var _ = DescribeTable("path validation", func(nb interface {
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"32.foo.1"}, ``),
 	// well-known structpb.Value
 	Entry("structpb", messagev1ddbpath.Kitchen(), []string{"23.bar.dar.rab"}, ``),
+
+	// well-known fieldmaskpb.FieldMask
+	Entry("fieldmask", messagev1ddbpath.Kitchen(), []string{"22.1[7]"}, ``),
 )

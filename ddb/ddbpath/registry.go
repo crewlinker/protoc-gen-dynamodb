@@ -1,12 +1,10 @@
-// Package ddbreg allows for efficient path validation for registered types
-package ddbreg
+package ddbpath
 
 import (
 	"fmt"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
-	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
 )
 
 // NameBuilder inteface is implemented by generated name building structs
@@ -26,8 +24,6 @@ const (
 	FieldKindList
 	// FieldKindMap means a map of something
 	FieldKindMap
-	// FieldKindAny means the field may hold anything
-	FieldKindAny
 )
 
 // String provides human readable form for the kind
@@ -41,8 +37,6 @@ func (fi FieldKind) String() string {
 		return "List"
 	case FieldKindMap:
 		return "Map"
-	case FieldKindAny:
-		return "Any"
 	default:
 		panic("unsupported")
 	}
@@ -104,9 +98,9 @@ func (r Registry) Register(nb NameBuilder, fields map[string]FieldInfo) {
 // Validate given the types in the registry
 func (r Registry) Validate(nb NameBuilder, paths ...string) (err error) {
 	typ := reflect.TypeOf(nb)
-	els := make([]ddbpath.PathElement, 32) // allocate space for upto 32 element deep paths, this Dynamo's max
+	els := make([]PathElement, 32) // allocate space for upto 32 element deep paths, this Dynamo's max
 	for _, p := range paths {
-		if els, err = ddbpath.AppendParsePath(p, els[:0]); err != nil {
+		if els, err = AppendParsePath(p, els[:0]); err != nil {
 			return fmt.Errorf("failed to parse path '%s': %w", p, err)
 		}
 

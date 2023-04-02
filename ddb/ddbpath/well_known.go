@@ -1,16 +1,21 @@
 package ddbpath
 
 import (
+	"reflect"
+
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 )
 
 // register our well-known paths
 func init() {
-	RegisterMessage(AnyPath{}, map[string]FieldInfo{
-		"1": {Kind: BasicKind},
-		"2": {Kind: AnyKind},
+	Register(ValuePath{}, map[string]FieldInfo{})
+	Register(AnyPath{}, map[string]FieldInfo{
+		"1": {Kind: FieldKindSingle},
+		"2": {Kind: FieldKindSingle, Message: reflect.TypeOf(ValuePath{})},
 	})
-	RegisterMessage(ValuePath{}, map[string]FieldInfo{})
+	Register(FieldMaskPath{}, map[string]FieldInfo{
+		"1": {Kind: FieldKindList},
+	})
 }
 
 // AnyPath is registered to support path validation into anypb structs
@@ -40,4 +45,18 @@ type ValuePath struct{ expression.NameBuilder }
 func (p ValuePath) WithDynamoNameBuilder(n expression.NameBuilder) ValuePath {
 	p.NameBuilder = n
 	return p
+}
+
+// FieldMaskPath is registered to support path validation of fieldmask
+type FieldMaskPath struct{ expression.NameBuilder }
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p FieldMaskPath) WithDynamoNameBuilder(n expression.NameBuilder) FieldMaskPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Masks appends the path of the value
+func (p FieldMaskPath) Masks() List {
+	return List{NameBuilder: p.AppendName(expression.Name("1"))}
 }

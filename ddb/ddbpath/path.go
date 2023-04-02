@@ -11,8 +11,8 @@ import (
 type List struct{ expression.NameBuilder }
 
 // Index into a list of basic types
-func (a List) Index(i int) expression.NameBuilder {
-	return a.AppendName(expression.Name(fmt.Sprintf(`[%d]`, i)))
+func (p List) Index(i int) expression.NameBuilder {
+	return p.AppendName(expression.Name(fmt.Sprintf(`[%d]`, i)))
 }
 
 // ItemList is a list of nested items
@@ -21,17 +21,17 @@ type ItemList[T interface {
 }] struct{ expression.NameBuilder }
 
 // Index into a list of items
-func (a ItemList[T]) Index(i int) T {
+func (p ItemList[T]) Index(i int) T {
 	var v T
-	return v.WithDynamoNameBuilder(a.AppendName(expression.Name(fmt.Sprintf(`[%d]`, i))))
+	return v.WithDynamoNameBuilder(p.AppendName(expression.Name(fmt.Sprintf(`[%d]`, i))))
 }
 
 // Map of basic type(s)
 type Map struct{ expression.NameBuilder }
 
 // Key into a map of basic types
-func (a Map) Key(k string) expression.NameBuilder {
-	return a.AppendName(expression.Name(k))
+func (p Map) Key(k string) expression.NameBuilder {
+	return p.AppendName(expression.Name(k))
 }
 
 // ItemMap is a list of nested items
@@ -40,7 +40,13 @@ type ItemMap[T interface {
 }] struct{ expression.NameBuilder }
 
 // Key into a list of items
-func (a ItemMap[T]) Key(k string) T {
+func (p ItemMap[T]) Key(k string) T {
 	var v T
-	return v.WithDynamoNameBuilder(a.AppendName(expression.Name(k)))
+	return v.WithDynamoNameBuilder(p.AppendName(expression.Name(k)))
+}
+
+// register list and map
+func init() {
+	Register(List{}, map[string]FieldInfo{})
+	Register(Map{}, map[string]FieldInfo{})
 }
