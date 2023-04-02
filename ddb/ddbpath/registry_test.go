@@ -74,6 +74,23 @@ var _ = Describe("validate", func() {
 			})
 		})
 
+		DescribeTable("traverse", func(nb ddbpath.NameBuilder, p string,
+			expError string, expFieldInfo ddbpath.FieldInfo) {
+			fi, _, err := reg.Traverse(nb, p)
+			if expError == `` {
+				Expect(err).To(BeNil())
+			} else {
+				Expect(err).ToNot(BeNil())
+				Expect(err.Error()).To(MatchRegexp(expError))
+			}
+			Expect(fi).To(Equal(expFieldInfo))
+		},
+			Entry("basic field", messagev1ddbpath.Kitchen(), "1", ``, ddbpath.FieldInfo{Kind: ddbpath.FieldKindSingle}),
+			Entry("message field", messagev1ddbpath.Kitchen(), "16", ``, ddbpath.FieldInfo{Kind: ddbpath.FieldKindSingle, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}),
+			Entry("list of messages", messagev1ddbpath.Kitchen(), "17", ``, ddbpath.FieldInfo{Kind: ddbpath.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}),
+			Entry("map of messages", messagev1ddbpath.Kitchen(), "16.16.19", ``, ddbpath.FieldInfo{Kind: ddbpath.FieldKindMap, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}),
+		)
+
 		DescribeTable("validation", func(nb ddbpath.NameBuilder, p string, expError string) {
 			err := reg.Validate(nb, p)
 			if expError == `` {
