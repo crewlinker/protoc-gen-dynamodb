@@ -89,6 +89,12 @@ var _ = DescribeTable("path building", func(s interface {
 		messagev1ddbpath.Kitchen().StringSet().Index(4),
 		"#0[4]",
 		map[string]string{"#0": "28"}),
+
+	// embeddings
+	Entry("embedded message",
+		(messagev1ddbpath.JsonFieldsPath{}).JsonEngine(),
+		"#0",
+		map[string]string{"#0": "json_engine"}),
 )
 
 // test path validation with generated logic
@@ -117,4 +123,6 @@ var _ = DescribeTable("path validation", func(nb interface {
 	Entry("fieldmask", messagev1ddbpath.Kitchen(), []string{"22.1[7]"}, ``),
 	// sets
 	Entry("string set", messagev1ddbpath.Kitchen(), []string{"28[1]"}, ``),
+	// travers embedding should fail
+	Entry("embedding", (messagev1ddbpath.JsonFieldsPath{}), []string{"json_engine.1"}, `field selecting '1' not allowed on Single`),
 )
