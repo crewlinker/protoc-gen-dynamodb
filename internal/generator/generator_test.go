@@ -259,7 +259,9 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 				"2": &types.AttributeValueMemberB{Value: []byte{10, 5, 75, 105, 107, 99, 104}},
 			}},
 			// fieldmask message
-			"22": &types.AttributeValueMemberSS{Value: []string{"extra_kitchen.extra_kitchen.brand", "brand"}},
+			"22": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+				"1": &types.AttributeValueMemberSS{Value: []string{"extra_kitchen.extra_kitchen.brand", "brand"}},
+			}},
 			// value field
 			"23": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
 				"dar": &types.AttributeValueMemberN{Value: "1"},

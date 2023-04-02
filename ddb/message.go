@@ -62,7 +62,12 @@ func MarshalMessage(x proto.Message, os ...Option) (a types.AttributeValue, err 
 		}
 		return mv, nil
 	case *fieldmaskpb.FieldMask:
-		return &types.AttributeValueMemberSS{Value: xt.Paths}, nil
+		// we encode the fieldmask as a map with a single key. Because if we encode it as a set directly
+		// it causes trouble when building paths. As repeated fieldmask fields would require list of list
+		// indexing. Which is blocked by: https://github.com/crewlinker/protoc-gen-dynamodb/issues/45
+		return &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+			"1": &types.AttributeValueMemberSS{Value: xt.Paths},
+		}}, nil
 	case *structpb.Value:
 		return attributevalue.Marshal(xt.AsInterface())
 	case *wrapperspb.StringValue:
@@ -133,7 +138,12 @@ func UnmarshalMessage(m types.AttributeValue, x proto.Message, os ...Option) (er
 		}
 		return nil
 	case *fieldmaskpb.FieldMask:
-		ss, ok := m.(*types.AttributeValueMemberSS)
+		fmm, ok := m.(*types.AttributeValueMemberM)
+		if !ok {
+			return fmt.Errorf("failed to unmarshal duration: no map attribute provided")
+		}
+
+		ss, ok := fmm.Value["1"].(*types.AttributeValueMemberSS)
 		if !ok {
 			return fmt.Errorf("failed to unmarshal duration: no string set attribute provided")
 		}
