@@ -24,9 +24,8 @@ func (tg *Target) genBasicFieldPath(f *File, m *protogen.Message, field *protoge
 // genMessageFieldPath implements the generation of method for building baths for message type fields
 func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 
-	// (repeated) message field in a different package we don't support any special type-safe path construciton
-	// and instead return a basic path that the user can build on further by themselves.
-	if !tg.isSamePkgIdent(field.Message.GoIdent) && !tg.isWellKnownPathSupported(field.Message) {
+	// don't generate recursive path methods if it is an external message, and not embedded
+	if tg.notSupportPathing(field) {
 		return tg.genBasicFieldPath(f, m, field) // NOTE: may support traversing of this in the future
 	}
 
@@ -48,9 +47,9 @@ func (tg *Target) genMessageFieldPath(f *File, m *protogen.Message, field *proto
 // genListFieldPath implements the generation of method for building baths for message type fields
 func (tg *Target) genListFieldPath(f *File, m *protogen.Message, field *protogen.Field) error {
 
-	// if it's a list of basic types, or the repeated message is not in the same package we return a
-	// a generic basic list type. NOTE: we maybe support external messages in the future
-	if field.Message == nil || (!tg.isSamePkgIdent(field.Message.GoIdent) && !tg.isWellKnownPathSupported(field.Message)) {
+	// if it's a list of basic types, or the repeated message is not in the same package and not well-known.
+	// Or if the message is a embedded, then it is also a basic path
+	if tg.notSupportPathing(field) {
 
 		// If its not a list of messages, the path will always end and the generated method will return
 		// basic path builder that always returns a string with the final path
@@ -89,7 +88,7 @@ func (tg *Target) genMapFieldPath(f *File, m *protogen.Message, field *protogen.
 
 	// if it's a map of basic types, or the repeated message is not in the same package we return a
 	// a basic list accessor. NOTE: we maybe support external messages in the future
-	if val.Message == nil || (!tg.isSamePkgIdent(val.Message.GoIdent) && !tg.isWellKnownPathSupported(val.Message)) {
+	if tg.notSupportPathing(val) {
 		f.Commentf("%s returns 'p' appended with the attribute name and allow map keys to be specified", field.GoName)
 		f.Func().Params(Id("p").Add(tg.pathStructType(m))).Id(field.GoName).
 			Params().
@@ -165,25 +164,20 @@ func (tg *Target) genFieldRegistration(field *protogen.Field) (Code, error) {
 	switch {
 	case field.Desc.IsList():
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindList")
-		if field.Message != nil &&
-			(tg.isSamePkgIdent(field.Message.GoIdent) || tg.isWellKnownPathSupported(field.Message)) {
+		if !tg.notSupportPathing(field) {
 			d[Id("Message")] = genFieldMsgReflect(field.Message)
 		}
 	case field.Desc.IsMap():
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindMap")
 		val := field.Message.Fields[1] // value type of the message
-		if val.Message != nil &&
-			(tg.isSamePkgIdent(val.Message.GoIdent) || tg.isWellKnownPathSupported(val.Message)) {
+		if !tg.notSupportPathing(val) {
 			d[Id("Message")] = genFieldMsgReflect(val.Message)
 		}
 	case field.Message != nil:
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindSingle")
-
-		if field.Message != nil &&
-			(tg.isSamePkgIdent(field.Message.GoIdent) || tg.isWellKnownPathSupported(field.Message)) {
+		if !tg.notSupportPathing(field) {
 			d[Id("Message")] = genFieldMsgReflect(field.Message)
 		}
-
 	default:
 		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindSingle")
 	}

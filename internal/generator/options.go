@@ -69,3 +69,11 @@ func (tg *Target) embedEncoding(f *protogen.Field) ddbv1.Encoding {
 	}
 	return ddbv1.Encoding_ENCODING_UNSPECIFIED
 }
+
+// notSupportPathing returns wether a field doesn't support deep pathing
+func (tg *Target) notSupportPathing(field *protogen.Field) bool {
+	return field.Message == nil || // if field is not a message, never support pathing
+		(!tg.isSamePkgIdent(field.Message.GoIdent) && !tg.isWellKnownPathSupported(field.Message)) ||
+		(tg.embedEncoding(field) != ddbv1.Encoding_ENCODING_DYNAMO &&
+			tg.embedEncoding(field) != ddbv1.Encoding_ENCODING_UNSPECIFIED)
+}

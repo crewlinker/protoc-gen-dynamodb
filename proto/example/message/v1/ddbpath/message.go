@@ -758,9 +758,9 @@ func (p JsonFieldsPath) JsonStrList() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("1"))}
 }
 
-// JsonEngine returns 'p' with the attribute name appended and allow subselecting nested message
-func (p JsonFieldsPath) JsonEngine() EnginePath {
-	return EnginePath{NameBuilder: p.AppendName(expression.Name("json_engine"))}
+// JsonEngine appends the path being build
+func (p JsonFieldsPath) JsonEngine() expression.NameBuilder {
+	return p.AppendName(expression.Name("json_engine"))
 }
 
 // JsonIntMap returns 'p' appended with the attribute name and allow map keys to be specified
@@ -768,9 +768,9 @@ func (p JsonFieldsPath) JsonIntMap() ddbpath.Map {
 	return ddbpath.Map{NameBuilder: p.AppendName(expression.Name("4"))}
 }
 
-// JsonEngineList returns 'p' appended with the attribute while allow indexing a nested message
-func (p JsonFieldsPath) JsonEngineList() ddbpath.ItemList[EnginePath] {
-	return ddbpath.ItemList[EnginePath]{NameBuilder: p.AppendName(expression.Name("2"))}
+// JsonEngineList returns 'p' appended with the attribute name and allow indexing
+func (p JsonFieldsPath) JsonEngineList() ddbpath.List {
+	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("2"))}
 }
 
 // JsonEngineMap returns 'p' appended with the attribute while allow map keys on a nested message
@@ -785,20 +785,14 @@ func (p JsonFieldsPath) JsonNrSet() ddbpath.List {
 func init() {
 	ddbpath.Register(JsonFieldsPath{}, map[string]ddbpath.FieldInfo{
 		"1": {Kind: ddbpath.FieldKindList},
-		"2": {
-			Kind:    ddbpath.FieldKindList,
-			Message: reflect.TypeOf(EnginePath{}),
-		},
+		"2": {Kind: ddbpath.FieldKindList},
 		"4": {Kind: ddbpath.FieldKindMap},
 		"5": {
 			Kind:    ddbpath.FieldKindMap,
 			Message: reflect.TypeOf(EnginePath{}),
 		},
-		"6": {Kind: ddbpath.FieldKindList},
-		"json_engine": {
-			Kind:    ddbpath.FieldKindSingle,
-			Message: reflect.TypeOf(EnginePath{}),
-		},
+		"6":           {Kind: ddbpath.FieldKindList},
+		"json_engine": {Kind: ddbpath.FieldKindSingle},
 	})
 }
 
@@ -818,16 +812,13 @@ func (p JsonOneofsPath) OneofStr() expression.NameBuilder {
 	return p.AppendName(expression.Name("7"))
 }
 
-// OneofMsg returns 'p' with the attribute name appended and allow subselecting nested message
-func (p JsonOneofsPath) OneofMsg() EnginePath {
-	return EnginePath{NameBuilder: p.AppendName(expression.Name("8"))}
+// OneofMsg appends the path being build
+func (p JsonOneofsPath) OneofMsg() expression.NameBuilder {
+	return p.AppendName(expression.Name("8"))
 }
 func init() {
 	ddbpath.Register(JsonOneofsPath{}, map[string]ddbpath.FieldInfo{
 		"7": {Kind: ddbpath.FieldKindSingle},
-		"8": {
-			Kind:    ddbpath.FieldKindSingle,
-			Message: reflect.TypeOf(EnginePath{}),
-		},
+		"8": {Kind: ddbpath.FieldKindSingle},
 	})
 }
