@@ -84,6 +84,11 @@ var _ = DescribeTable("path building", func(s interface {
 		messagev1ddbpath.Kitchen().RepeatedFmask().Index(6).Masks().Index(3),
 		"#0[6].#1[3]",
 		map[string]string{"#0": "33", "#1": "1"}),
+	// sets
+	Entry("string set",
+		messagev1ddbpath.Kitchen().StringSet().Index(4),
+		"#0[4]",
+		map[string]string{"#0": "28"}),
 )
 
 // test path validation with generated logic
@@ -108,7 +113,8 @@ var _ = DescribeTable("path validation", func(nb interface {
 	Entry("anypb", messagev1ddbpath.Kitchen(), []string{"32.foo.1"}, ``),
 	// well-known structpb.Value
 	Entry("structpb", messagev1ddbpath.Kitchen(), []string{"23.bar.dar.rab"}, ``),
-
 	// well-known fieldmaskpb.FieldMask
 	Entry("fieldmask", messagev1ddbpath.Kitchen(), []string{"22.1[7]"}, ``),
+	// sets
+	Entry("string set", messagev1ddbpath.Kitchen(), []string{"28[1]"}, ``),
 )
