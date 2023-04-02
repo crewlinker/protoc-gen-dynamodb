@@ -22,7 +22,6 @@ var _ = DescribeTable("parse path", func(s string, expParts []PathElement, expEr
 	}
 
 	Expect(parts).To(Equal(expParts))
-	// @TODO assert error
 },
 	Entry("1", ".foo.bar.dar", []PathElement{{"foo", -1}, {"bar", -1}, {"dar", -1}}, nil),
 	Entry("2", "[1][2][3]", []PathElement{{"1", 1}, {"2", 2}, {"3", 3}}, nil),

@@ -1,4 +1,4 @@
-package ddbreg
+package ddbpath
 
 import (
 	"fmt"

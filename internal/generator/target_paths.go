@@ -132,6 +132,8 @@ func (tg *Target) isWellKnownPathSupported(m *protogen.Message) bool {
 		return true
 	case `"\"google.golang.org/protobuf/types/known/structpb\"".Value`:
 		return true
+	case `"\"google.golang.org/protobuf/types/known/fieldmaskpb\"".FieldMask`:
+		return true
 	}
 
 	return false
@@ -144,6 +146,8 @@ func (tg *Target) pathStructType(m *protogen.Message) *Statement {
 		return Qual(tg.idents.ddbpath, "AnyPath")
 	case `"\"google.golang.org/protobuf/types/known/structpb\"".Value`:
 		return Qual(tg.idents.ddbpath, "ValuePath")
+	case `"\"google.golang.org/protobuf/types/known/fieldmaskpb\"".FieldMask`:
+		return Qual(tg.idents.ddbpath, "FieldMaskPath")
 	}
 
 	return Id(tg.pathStructIdentName(m))
@@ -160,26 +164,28 @@ func (tg *Target) genFieldRegistration(field *protogen.Field) (Code, error) {
 	d := Dict{}
 	switch {
 	case field.Desc.IsList():
-		d[Id("Kind")] = Qual(tg.idents.ddbpath, "ListKind")
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindList")
 		if field.Message != nil &&
 			(tg.isSamePkgIdent(field.Message.GoIdent) || tg.isWellKnownPathSupported(field.Message)) {
-			d[Id("Ref")] = genFieldMsgReflect(field.Message)
+			d[Id("Message")] = genFieldMsgReflect(field.Message)
 		}
 	case field.Desc.IsMap():
-		d[Id("Kind")] = Qual(tg.idents.ddbpath, "MapKind")
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindMap")
 		val := field.Message.Fields[1] // value type of the message
 		if val.Message != nil &&
 			(tg.isSamePkgIdent(val.Message.GoIdent) || tg.isWellKnownPathSupported(val.Message)) {
-			d[Id("Ref")] = genFieldMsgReflect(val.Message)
+			d[Id("Message")] = genFieldMsgReflect(val.Message)
 		}
 	case field.Message != nil:
-		d[Id("Kind")] = Qual(tg.idents.ddbpath, "BasicKind")
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindSingle")
+
 		if field.Message != nil &&
 			(tg.isSamePkgIdent(field.Message.GoIdent) || tg.isWellKnownPathSupported(field.Message)) {
-			d[Id("Ref")] = genFieldMsgReflect(field.Message)
+			d[Id("Message")] = genFieldMsgReflect(field.Message)
 		}
+
 	default:
-		d[Id("Kind")] = Qual(tg.idents.ddbpath, "BasicKind")
+		d[Id("Kind")] = Qual(tg.idents.ddbpath, "FieldKindSingle")
 	}
 
 	return Values(d), nil
@@ -227,7 +233,7 @@ func (tg *Target) genMessagePaths(f *File, m *protogen.Message) (err error) {
 
 	// generate init functions that will register the types for path validation
 	f.Func().Id("init").Params().Block(
-		Qual(tg.idents.ddbpath, "RegisterMessage").Call(
+		Qual(tg.idents.ddbpath, "Register").Call(
 			tg.pathStructType(m).Values(),
 			Map(String()).Qual(tg.idents.ddbpath, "FieldInfo").Values(regFields),
 		),

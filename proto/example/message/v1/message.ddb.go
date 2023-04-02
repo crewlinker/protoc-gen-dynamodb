@@ -354,6 +354,18 @@ func (x *Kitchen) MarshalDynamoItem() (m map[string]types.AttributeValue, err er
 			return nil, fmt.Errorf("failed to marshal mapped message field 'MappedAny': %w", err)
 		}
 	}
+	if len(x.RepeatedFmask) != 0 {
+		m["33"], err = ddb.MarshalRepeatedMessage(x.RepeatedFmask, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal repeated message field 'RepeatedFmask': %w", err)
+		}
+	}
+	if len(x.MappedFmask) != 0 {
+		m["34"], err = ddb.MarshalMappedMessage(x.MappedFmask, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal mapped message field 'MappedFmask': %w", err)
+		}
+	}
 	return m, nil
 }
 
@@ -522,6 +534,18 @@ func (x *Kitchen) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err er
 		x.MappedAny, err = ddb.UnmarshalMappedMessage[string, anypb.Any](m["32"], ddb.StringMapKey, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal repeated message field 'MappedAny': %w", err)
+		}
+	}
+	if m["33"] != nil {
+		x.RepeatedFmask, err = ddb.UnmarshalRepeatedMessage[fieldmaskpb.FieldMask](m["33"], ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'RepeatedFmask': %w", err)
+		}
+	}
+	if m["34"] != nil {
+		x.MappedFmask, err = ddb.UnmarshalMappedMessage[int32, fieldmaskpb.FieldMask](m["34"], ddb.IntMapKey[int32], ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'MappedFmask': %w", err)
 		}
 	}
 	return nil

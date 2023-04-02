@@ -1,53 +1,48 @@
-package ddbreg_test
+package ddbpath_test
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
-	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbreg"
+	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
 	messagev1ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/ddbpath"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-func TestDdbreg(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ddb/ddbreg")
-}
-
 var _ = Describe("strings", func() {
 	It("shoud panic unsupported", func() {
 		Expect(func() {
-			_ = ddbreg.FieldKind(999).String()
+			_ = ddbpath.FieldKind(999).String()
 		}).To(PanicWith(MatchRegexp(`unsupported`)))
 	})
 
-	DescribeTable("kinds", func(k ddbreg.FieldKind, exp string) {
+	DescribeTable("kinds", func(k ddbpath.FieldKind, exp string) {
 		Expect(k.String()).To(Equal(exp))
 	},
-		Entry("1", ddbreg.FieldKind(0), "_undefined"),
-		Entry("1", ddbreg.FieldKindSingle, "Single"),
-		Entry("1", ddbreg.FieldKindList, "List"),
-		Entry("1", ddbreg.FieldKindMap, "Map"),
-		Entry("1", ddbreg.FieldKindAny, "Any"))
+		Entry("1", ddbpath.FieldKind(0), "_undefined"),
+		Entry("1", ddbpath.FieldKindSingle, "Single"),
+		Entry("1", ddbpath.FieldKindList, "List"),
+		Entry("1", ddbpath.FieldKindMap, "Map"),
+	)
 
-	DescribeTable("field", func(k ddbreg.FieldInfo, exp string) {
+	DescribeTable("field", func(k ddbpath.FieldInfo, exp string) {
 		Expect(k.String()).To(Equal(exp))
 	},
-		Entry("1", ddbreg.FieldInfo{Kind: ddbreg.FieldKindList}, "List"),
-		Entry("1", ddbreg.FieldInfo{Kind: ddbreg.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, "List<messagev1ddbpath.KitchenPath>"))
+		Entry("1", ddbpath.FieldInfo{Kind: ddbpath.FieldKindList}, "List"),
+		Entry("1", ddbpath.FieldInfo{Kind: ddbpath.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, "List<messagev1ddbpath.KitchenPath>"))
 })
 
 var _ = Describe("validate", func() {
-	var reg ddbreg.Registry
-	BeforeEach(func() { reg = ddbreg.NewRegistry() })
+	var reg ddbpath.Registry
+	BeforeEach(func() { reg = ddbpath.NewRegistry() })
 
 	Describe("with kitchen registered", func() {
-		BeforeEach(func() { reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbreg.FieldInfo{}) })
+		BeforeEach(func() { reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbpath.FieldInfo{}) })
 		It("should panic on double registration", func() {
 			Expect(func() {
-				reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbreg.FieldInfo{})
+				reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbpath.FieldInfo{})
 			}).To(PanicWith(MatchRegexp(`is already registered for validation`)))
 		})
 
@@ -64,21 +59,22 @@ var _ = Describe("validate", func() {
 
 	Describe("with registered", func() {
 		BeforeEach(func() {
-			reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbreg.FieldInfo{
-				"1":  {Kind: ddbreg.FieldKindSingle},
-				"16": {Kind: ddbreg.FieldKindSingle, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, // single message
+			reg.Register(ddbpath.ValuePath{}, nil)
+			reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbpath.FieldInfo{
+				"1":  {Kind: ddbpath.FieldKindSingle},
+				"16": {Kind: ddbpath.FieldKindSingle, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, // single message
 				// lists
-				"17": {Kind: ddbreg.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, // list of messages
-				"18": {Kind: ddbreg.FieldKindList},                                                      // list of basic types
+				"17": {Kind: ddbpath.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, // list of messages
+				"18": {Kind: ddbpath.FieldKindList},                                                      // list of basic types
 				// maps
-				"19": {Kind: ddbreg.FieldKindMap, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())},
-				"20": {Kind: ddbreg.FieldKindMap},
-				// any field
-				"21": {Kind: ddbreg.FieldKindAny},
+				"19": {Kind: ddbpath.FieldKindMap, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())},
+				"20": {Kind: ddbpath.FieldKindMap},
+				// any message
+				"22": {Kind: ddbpath.FieldKindSingle, Message: reflect.TypeOf(ddbpath.ValuePath{})},
 			})
 		})
 
-		DescribeTable("validation", func(nb ddbreg.NameBuilder, p string, expError string) {
+		DescribeTable("validation", func(nb ddbpath.NameBuilder, p string, expError string) {
 			err := reg.Validate(nb, p)
 			if expError == `` {
 				Expect(err).To(BeNil())
@@ -102,23 +98,23 @@ var _ = Describe("validate", func() {
 			Entry("map of messages", messagev1ddbpath.Kitchen(), "19.foo.16.1", ``),
 			Entry("map of basic", messagev1ddbpath.Kitchen(), "20.foo", ``),
 			Entry("map of basic", messagev1ddbpath.Kitchen(), "20.foo.999", `field selecting '999' not allowed on Single`),
-			Entry("any field", messagev1ddbpath.Kitchen(), "21.foo.999.1", ``),
-			Entry("any field", messagev1ddbpath.Kitchen(), "21[999].1.1", ``),
+			// any message
+			Entry("any message", messagev1ddbpath.Kitchen(), "22[999].1.1", ``),
+			Entry("any message", messagev1ddbpath.Kitchen(), "22.999.a[1]", ``),
 		)
 	})
 
 })
 
 func BenchmarkValidate(b *testing.B) {
-	reg := ddbreg.NewRegistry()
-	reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbreg.FieldInfo{
-		"1":  {Kind: ddbreg.FieldKindSingle},
-		"16": {Kind: ddbreg.FieldKindSingle, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, // single message
-		"17": {Kind: ddbreg.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())},   // list of messages
-		"18": {Kind: ddbreg.FieldKindList},                                                        // list of basic types
-		"19": {Kind: ddbreg.FieldKindMap, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())},
-		"20": {Kind: ddbreg.FieldKindMap},
-		"21": {Kind: ddbreg.FieldKindAny},
+	reg := ddbpath.NewRegistry()
+	reg.Register(messagev1ddbpath.Kitchen(), map[string]ddbpath.FieldInfo{
+		"1":  {Kind: ddbpath.FieldKindSingle},
+		"16": {Kind: ddbpath.FieldKindSingle, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())}, // single message
+		"17": {Kind: ddbpath.FieldKindList, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())},   // list of messages
+		"18": {Kind: ddbpath.FieldKindList},                                                        // list of basic types
+		"19": {Kind: ddbpath.FieldKindMap, Message: reflect.TypeOf(messagev1ddbpath.Kitchen())},
+		"20": {Kind: ddbpath.FieldKindMap},
 	})
 
 	b.ResetTimer()
@@ -128,17 +124,14 @@ func BenchmarkValidate(b *testing.B) {
 			"1",
 			"16.16.16.1",
 			"17[1].16.16.16.1",
-			"21.foo.999.1",
 			"19.foo.16.1",
 			"1",
 			"16.16.16.1",
 			"17[1].16.16.16.1",
-			"21.foo.999.1",
 			"19.foo.16.1",
 			"1",
 			"16.16.16.1",
 			"17[1].16.16.16.1",
-			"21.foo.999.1",
 			"19.foo.16.1",
 		)
 		if err != nil {
