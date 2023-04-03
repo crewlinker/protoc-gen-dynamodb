@@ -90,6 +90,12 @@ func Release(version string) error {
 	return nil
 }
 
+// Dev sets up the dev environment using Docker compose
+func Dev() error {
+	return sh.Run("docker", "compose", "-f", "magefiles/docker-compose.dev.yml", "-p", "protocgenddb-dev", "up",
+		"-d", "--build", "--remove-orphans", "--force-recreate")
+}
+
 // init performs some sanity checks before running anything
 func init() {
 	mustBeInRoot()
