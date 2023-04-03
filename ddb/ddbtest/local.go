@@ -26,8 +26,8 @@ func NewLocalClient(epurl ...string) (*dynamodb.Client, error) {
 	defer cancel()
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithEndpointResolver(
-			aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) { return ep, nil })),
+		config.WithEndpointResolverWithOptions(
+			aws.EndpointResolverWithOptionsFunc(func(service, region string, opts ...any) (aws.Endpoint, error) { return ep, nil })),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider("local-test-key-id", "local-test-key-secret", "")),
 		config.WithRegion("localhost"))
