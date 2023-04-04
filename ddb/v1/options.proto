@@ -14,13 +14,31 @@ enum Encoding{
     ENCODING_DYNAMO = 2;
 }
 
-// FieldOptions presents options to configure fields to interact with protobuf powered rpc
+// Options for the local secondary index (lsi)
+message LsiOptions {
+    // name of the lsi the field is a part of
+    required string name = 1;
+    // indicate that the field is the sort key of the lsi, else it's part of the projection
+    optional bool sk = 3;
+}
+
+// Options for the global secondary index (lsi)
+message GsiOptions {
+    // name of the gsi the field is a part of
+    required string name = 1;
+    // indicate that the field is the partition key of the gsi
+    optional bool pk = 2;
+    // indicate that the field is the sort key of the gsi
+    optional bool sk = 3;
+}
+
+// FieldOptions presents options to configure fields for DynamoDB 
 message FieldOptions {
     // specify the name of the DynamoDB attribute
     optional string name = 1;
-    // indicate that the field represents the item's partition key
+    // indicate that the field represents the item's partition key in the table it is stored
     optional bool pk = 2;
-    // indicate that the field represents the item's sort key
+    // indicate that the field represents the item's sort key in the table it is stored
     optional bool sk = 3;
     // indicate that the field should be ignored by Dynamo code generation
     optional bool omit = 4;
@@ -28,8 +46,22 @@ message FieldOptions {
     optional bool set = 5;
     // allows for embedding the field's value as an encoded json or binary protobuf
     optional Encoding embed = 6; 
+    // configure the field as part of an lsi on the table it
+    repeated LsiOptions lsi = 8;
+    // configure the field as part of the gsi of a table
+    repeated GsiOptions gsi = 9;
+}
+
+// MessageOptions presents options to configure messages for DynamoDB 
+message MessageOptions {
+    // table name in which the message will be stored
+    repeated string table = 1;
+}
+
+extend google.protobuf.MessageOptions {
+    optional MessageOptions msg = 1099;
 }
 
 extend google.protobuf.FieldOptions {
-    optional FieldOptions field = 1098;
+    optional FieldOptions field = 1099;
 }

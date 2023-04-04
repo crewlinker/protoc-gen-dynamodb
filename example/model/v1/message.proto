@@ -272,3 +272,42 @@ message JsonOneofs {
         Engine oneof_msg = 8 [(ddb.v1.field).embed=ENCODING_JSON];
     }
 }
+
+// Thread uses a local secondary index as described in the scenario here: 
+// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LSI.html#LSI.Scenario
+message Thread {
+    // table in which the thread message is stored
+    option (ddb.v1.msg).table = "threads";
+    // name of the forum this thread is a part of
+    string forum_name = 1 [(ddb.v1.field).pk=true];
+    // subject of the forum thread, it is projected into the last post lsi
+    string subject = 2 [(ddb.v1.field).sk=true, (ddb.v1.field).lsi={name:"last_post_index"}];
+    // field is updated when a post is made so a lsi can be queried for finding recently active threads
+    // it is the sort key of the lsi
+    string last_post_date_time = 3 [(ddb.v1.field).lsi={name:"last_post_index", sk:true}];
+    // replies counts the number of replies in a thread, it is projected in the last_post_index
+    int64 replies = 4 [(ddb.v1.field).lsi={name:"last_post_index"}];
+}
+
+// GameScore stores the scores of a game, following the scenario for global secondary indexes:
+// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html#GSI.scenario
+message GameScore {
+    // table in which the game score is stored
+    option (ddb.v1.msg).table = "game_scores";
+    // user that owns the score
+    string user_id = 1 [(ddb.v1.field).pk=true];
+    // game for which the score was achieved. Pk of the game_title index to easily get highest score for
+    // each game.
+    string game_title = 2 [(ddb.v1.field).sk=true, (ddb.v1.field).gsi={name:"game_title_index",pk:true}];
+    // highest score of the user in the game. It is included a gsi to allow querying for highest scores in
+    // each game title.
+    int64 top_score = 3 [(ddb.v1.field).gsi={name:"game_title_index",sk:true}];
+    // date and time at which the score was achieved
+    string top_score_date_time = 4;
+    // total nr of wins of the user in the game, it's projected in to the gsi to allow to query wins/losses
+    // for each player that has the highest/lowest score
+    int64 wins = 5 [(ddb.v1.field).gsi={name:"game_title_index"}];
+    // total nr of losses of the user in the game, projected in the gsi as well
+    int64 losses = 6 [(ddb.v1.field).gsi={name:"game_title_index"}];
+}
+

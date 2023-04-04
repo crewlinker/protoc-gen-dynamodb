@@ -1219,3 +1219,175 @@ func (x *JsonOneofs) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err
 	}
 	return nil
 }
+
+// MarshalDynamoItem marshals data into a dynamodb attribute map
+func (x *Thread) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if x.ForumName != "" {
+		m["1"], err = ddb.Marshal(x.GetForumName(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'ForumName': %w", err)
+		}
+	}
+	if x.Subject != "" {
+		m["2"], err = ddb.Marshal(x.GetSubject(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Subject': %w", err)
+		}
+	}
+	if x.LastPostDateTime != "" {
+		m["3"], err = ddb.Marshal(x.GetLastPostDateTime(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'LastPostDateTime': %w", err)
+		}
+	}
+	if x.Replies != 0 {
+		m["4"], err = ddb.Marshal(x.GetReplies(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Replies': %w", err)
+		}
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *Thread) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	err = ddb.Unmarshal(m["1"], &x.ForumName, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'ForumName': %w", err)
+	}
+	err = ddb.Unmarshal(m["2"], &x.Subject, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Subject': %w", err)
+	}
+	err = ddb.Unmarshal(m["3"], &x.LastPostDateTime, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'LastPostDateTime': %w", err)
+	}
+	err = ddb.Unmarshal(m["4"], &x.Replies, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Replies': %w", err)
+	}
+	return nil
+}
+
+// DynamoPartitionKey returns a key builder for the partition key
+func (x *Thread) DynamoPartitionKey() (v expression.KeyBuilder) {
+	return ddbpath.ThreadPartitionKey()
+}
+
+// DynamoPartitionKeyName returns a key builder for the partition key
+func (x *Thread) DynamoPartitionKeyName() (v expression.NameBuilder) {
+	return ddbpath.ThreadPartitionKeyName()
+}
+
+// DynamoSortKey returns a key builder for the sort key
+func (x *Thread) DynamoSortKey() (v expression.KeyBuilder) {
+	return ddbpath.ThreadSortKey()
+}
+
+// DynamoSortKeyName returns a key builder for the sort key
+func (x *Thread) DynamoSortKeyName() (v expression.NameBuilder) {
+	return ddbpath.ThreadSortKeyName()
+}
+
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (x *Thread) DynamoKeyNames() (v []string) {
+	return ddbpath.ThreadKeyNames()
+}
+
+// MarshalDynamoItem marshals data into a dynamodb attribute map
+func (x *GameScore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if x.UserId != "" {
+		m["1"], err = ddb.Marshal(x.GetUserId(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'UserId': %w", err)
+		}
+	}
+	if x.GameTitle != "" {
+		m["2"], err = ddb.Marshal(x.GetGameTitle(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'GameTitle': %w", err)
+		}
+	}
+	if x.TopScore != 0 {
+		m["3"], err = ddb.Marshal(x.GetTopScore(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'TopScore': %w", err)
+		}
+	}
+	if x.TopScoreDateTime != "" {
+		m["4"], err = ddb.Marshal(x.GetTopScoreDateTime(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'TopScoreDateTime': %w", err)
+		}
+	}
+	if x.Wins != 0 {
+		m["5"], err = ddb.Marshal(x.GetWins(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Wins': %w", err)
+		}
+	}
+	if x.Losses != 0 {
+		m["6"], err = ddb.Marshal(x.GetLosses(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'Losses': %w", err)
+		}
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *GameScore) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	err = ddb.Unmarshal(m["1"], &x.UserId, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'UserId': %w", err)
+	}
+	err = ddb.Unmarshal(m["2"], &x.GameTitle, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'GameTitle': %w", err)
+	}
+	err = ddb.Unmarshal(m["3"], &x.TopScore, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'TopScore': %w", err)
+	}
+	err = ddb.Unmarshal(m["4"], &x.TopScoreDateTime, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'TopScoreDateTime': %w", err)
+	}
+	err = ddb.Unmarshal(m["5"], &x.Wins, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Wins': %w", err)
+	}
+	err = ddb.Unmarshal(m["6"], &x.Losses, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'Losses': %w", err)
+	}
+	return nil
+}
+
+// DynamoPartitionKey returns a key builder for the partition key
+func (x *GameScore) DynamoPartitionKey() (v expression.KeyBuilder) {
+	return ddbpath.GameScorePartitionKey()
+}
+
+// DynamoPartitionKeyName returns a key builder for the partition key
+func (x *GameScore) DynamoPartitionKeyName() (v expression.NameBuilder) {
+	return ddbpath.GameScorePartitionKeyName()
+}
+
+// DynamoSortKey returns a key builder for the sort key
+func (x *GameScore) DynamoSortKey() (v expression.KeyBuilder) {
+	return ddbpath.GameScoreSortKey()
+}
+
+// DynamoSortKeyName returns a key builder for the sort key
+func (x *GameScore) DynamoSortKeyName() (v expression.NameBuilder) {
+	return ddbpath.GameScoreSortKeyName()
+}
+
+// DynamoKeyNames returns the attribute names of the partition and sort keys respectively
+func (x *GameScore) DynamoKeyNames() (v []string) {
+	return ddbpath.GameScoreKeyNames()
+}
