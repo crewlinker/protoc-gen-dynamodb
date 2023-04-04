@@ -1,7 +1,6 @@
 package generator_test
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbtest"
 	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
 	messagev1ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/ddbpath"
 	fuzz "github.com/google/gofuzz"
@@ -347,7 +347,7 @@ var _ = DescribeTable("json embed fuzz", func(seed int64) {
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
 		var in, out messagev1.JsonFields
-		f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
+		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 
 		item, err := in.MarshalDynamoItem()
 		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
@@ -369,7 +369,7 @@ var _ = DescribeTable("kitchen fuzz", func(seed int64) {
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
 		var in, out messagev1.Kitchen
-		f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
+		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 
 		item, err := in.MarshalDynamoItem()
 		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
@@ -393,7 +393,7 @@ var _ = DescribeTable("map galore fuzz", func(seed int64) {
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
 		var in, out messagev1.MapGalore
-		f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
+		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 		item, err := in.MarshalDynamoItem()
 		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
 			continue // skip, unsupported variant
@@ -414,7 +414,7 @@ var _ = DescribeTable("value galore fuzz", func(seed int64) {
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
 		var in, out messagev1.ValueGalore
-		f.Funcs(PbDurationFuzz, PbTimestampFuzz, PbValueFuzz).Fuzz(&in)
+		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 		item, err := in.MarshalDynamoItem()
 		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
 			continue // skip, unsupported variant
@@ -544,57 +544,4 @@ func ExpectJSONFieldPresence(m proto.Message, it map[string]types.AttributeValue
 	sort.Strings(jkeys)
 	sort.Strings(dkeys)
 	Expect(dkeys).To(Equal(jkeys))
-}
-
-// PbDurationFuzz fuzzes with some bounds on the duration as specified here
-// https://pkg.go.dev/google.golang.org/protobuf/types/known/durationpb#Duration
-func PbDurationFuzz(s *durationpb.Duration, c fuzz.Continue) {
-	max := int64(math.MaxInt64)
-	*s = *durationpb.New(time.Duration(c.Rand.Int63n(max) - (max / 2)))
-}
-
-// PbTimestampFuzz fuzzes with some bounds on the timestamp as specified here
-// https://pkg.go.dev/google.golang.org/protobuf/types/known/durationpb#Duration
-func PbTimestampFuzz(s *timestamppb.Timestamp, c fuzz.Continue) {
-	max := int64(99999999999)
-	*s = *timestamppb.New(time.Unix(c.Rand.Int63n(max)-(max/2), int64(c.RandUint64())))
-}
-
-// PbValueFuzz fuzzes code for structpb value. It doesn't recurse because go fuzz can't handle
-// maps or lists with interface values.
-func PbValueFuzz(s *structpb.Value, c fuzz.Continue) {
-	switch c.Int63n(8) {
-	case 0:
-		s.Kind = &structpb.Value_BoolValue{BoolValue: c.RandBool()}
-		return
-	case 1:
-		s.Kind = &structpb.Value_StringValue{StringValue: c.RandString()}
-		return
-	case 2:
-		s.Kind = &structpb.Value_NullValue{NullValue: structpb.NullValue_NULL_VALUE}
-		return
-	case 3:
-		s.Kind = &structpb.Value_NumberValue{NumberValue: c.ExpFloat64()}
-		return
-	case 4:
-		lv := &structpb.Value_ListValue{}
-		lv.ListValue, _ = structpb.NewList([]any{c.RandString()})
-		s.Kind = lv
-		return
-	case 5:
-		lv := &structpb.Value_StructValue{}
-		lv.StructValue, _ = structpb.NewStruct(map[string]any{c.RandString(): c.RandString()})
-		s.Kind = lv
-		return
-	case 6:
-		s.Kind = &structpb.Value_NumberValue{NumberValue: float64(c.RandUint64())}
-		return
-	case 7:
-		p := make([]byte, 10)
-		c.Read(p)
-		s.Kind = &structpb.Value_StringValue{StringValue: base64.StdEncoding.EncodeToString(p)}
-		return
-	default:
-		panic("unsupported")
-	}
 }
