@@ -16,8 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbtest"
-	messagev1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1"
-	messagev1ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/message/v1/ddbpath"
+	modelv1 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/model/v1"
+	modelv1ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/model/v1/ddbpath"
 	fuzz "github.com/google/gofuzz"
 	"github.com/onsi/gomega/format"
 	"github.com/samber/lo"
@@ -41,7 +41,7 @@ func TestGenerator(t *testing.T) {
 // test with messages defined in the example directory
 var _ = Describe("handling example messages", func() {
 	It("should (un)marshal engine example", func() {
-		c1 := &messagev1.Car{Engine: &messagev1.Engine{Brand: "somedrain", Dirtyness: messagev1.Dirtyness_DIRTYNESS_CLEAN}, Name: "foo"}
+		c1 := &modelv1.Car{Engine: &modelv1.Engine{Brand: "somedrain", Dirtyness: modelv1.Dirtyness_DIRTYNESS_CLEAN}, Name: "foo"}
 		m1, err := c1.MarshalDynamoItem()
 		Expect(err).ToNot(HaveOccurred())
 
@@ -53,35 +53,35 @@ var _ = Describe("handling example messages", func() {
 			"2": &types.AttributeValueMemberS{Value: "foo"},
 		}))
 
-		var c2 messagev1.Car
+		var c2 modelv1.Car
 		Expect(c2.UnmarshalDynamoItem(m1)).To(Succeed())
 		ExpectProtoEqual(&c2, c1)
 	})
 
 	It("should have generated key functions", func() {
-		Expect((&messagev1.Car{}).DynamoKeyNames()).To(Equal([]string{"ws"}))
-		Expect(messagev1ddbpath.CarKeyNames()).To(Equal([]string{"ws"}))
-		Expect(messagev1ddbpath.CarPartitionKey()).To(Equal(expression.Key("ws")))
-		Expect((&messagev1.Car{}).DynamoPartitionKey()).To(Equal(expression.Key("ws")))
-		Expect(messagev1ddbpath.CarPartitionKeyName()).To(Equal(expression.Name("ws")))
-		Expect((&messagev1.Car{}).DynamoPartitionKeyName()).To(Equal(expression.Name("ws")))
+		Expect((&modelv1.Car{}).DynamoKeyNames()).To(Equal([]string{"ws"}))
+		Expect(modelv1ddbpath.CarKeyNames()).To(Equal([]string{"ws"}))
+		Expect(modelv1ddbpath.CarPartitionKey()).To(Equal(expression.Key("ws")))
+		Expect((&modelv1.Car{}).DynamoPartitionKey()).To(Equal(expression.Key("ws")))
+		Expect(modelv1ddbpath.CarPartitionKeyName()).To(Equal(expression.Name("ws")))
+		Expect((&modelv1.Car{}).DynamoPartitionKeyName()).To(Equal(expression.Name("ws")))
 
-		Expect((&messagev1.Kitchen{}).DynamoKeyNames()).To(Equal([]string{"1", "3"}))
-		Expect(messagev1ddbpath.KitchenKeyNames()).To(Equal([]string{"1", "3"}))
-		Expect(messagev1ddbpath.KitchenSortKey()).To(Equal(expression.Key("3")))
-		Expect((&messagev1.Kitchen{}).DynamoSortKey()).To(Equal(expression.Key("3")))
-		Expect(messagev1ddbpath.KitchenSortKeyName()).To(Equal(expression.Name("3")))
-		Expect((&messagev1.Kitchen{}).DynamoSortKeyName()).To(Equal(expression.Name("3")))
+		Expect((&modelv1.Kitchen{}).DynamoKeyNames()).To(Equal([]string{"1", "3"}))
+		Expect(modelv1ddbpath.KitchenKeyNames()).To(Equal([]string{"1", "3"}))
+		Expect(modelv1ddbpath.KitchenSortKey()).To(Equal(expression.Key("3")))
+		Expect((&modelv1.Kitchen{}).DynamoSortKey()).To(Equal(expression.Key("3")))
+		Expect(modelv1ddbpath.KitchenSortKeyName()).To(Equal(expression.Name("3")))
+		Expect((&modelv1.Kitchen{}).DynamoSortKeyName()).To(Equal(expression.Name("3")))
 	})
 
 	It("should handle omit tags correctly", func() {
-		msgt := reflect.TypeOf(&messagev1.Ignored{})
+		msgt := reflect.TypeOf(&modelv1.Ignored{})
 		_, ok := msgt.MethodByName("SortKey")
 		Expect(ok).To(Equal(false))
 		_, ok = msgt.MethodByName("PartitionKey")
 		Expect(ok).To(Equal(false))
 
-		pt := reflect.TypeOf(&messagev1ddbpath.IgnoredPath{})
+		pt := reflect.TypeOf(&modelv1ddbpath.IgnoredPath{})
 		_, ok = pt.MethodByName("Pk")
 		Expect(ok).To(Equal(false))
 		_, ok = pt.MethodByName("Sk")
@@ -90,7 +90,7 @@ var _ = Describe("handling example messages", func() {
 		Expect(ok).To(Equal(false))
 
 		By("not marshalling from struct event if fields are not empty")
-		m1, err := (&messagev1.Ignored{Pk: "Pk", Sk: "Sk", Other: "other", Visible: "visible"}).MarshalDynamoItem()
+		m1, err := (&modelv1.Ignored{Pk: "Pk", Sk: "Sk", Other: "other", Visible: "visible"}).MarshalDynamoItem()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(m1).To(Equal(
 			map[string]types.AttributeValue{
@@ -99,66 +99,66 @@ var _ = Describe("handling example messages", func() {
 		))
 
 		By("not unmarshalling into struct event if fieldsa re provided")
-		m2 := &messagev1.Ignored{}
+		m2 := &modelv1.Ignored{}
 		Expect(m2.UnmarshalDynamoItem(map[string]types.AttributeValue{
 			"1": &types.AttributeValueMemberS{Value: "pk"},
 			"2": &types.AttributeValueMemberS{Value: "sk"},
 			"3": &types.AttributeValueMemberS{Value: "other"},
 			"4": &types.AttributeValueMemberS{Value: "visible"},
 		})).To(Succeed())
-		Expect(m2).To(Equal(&messagev1.Ignored{Visible: "visible"}))
+		Expect(m2).To(Equal(&modelv1.Ignored{Visible: "visible"}))
 	})
 })
 
 // assert unmarshalling of various attribute maps
-var _ = DescribeTable("kitchen unmarshaling", func(m map[string]types.AttributeValue, exp *messagev1.Kitchen) {
-	var msg messagev1.Kitchen
+var _ = DescribeTable("kitchen unmarshaling", func(m map[string]types.AttributeValue, exp *modelv1.Kitchen) {
+	var msg modelv1.Kitchen
 	Expect(msg.UnmarshalDynamoItem(m)).To(Succeed())
 	ExpectProtoEqual(&msg, exp)
 },
-	Entry("empty", map[string]types.AttributeValue{}, &messagev1.Kitchen{}),
+	Entry("empty", map[string]types.AttributeValue{}, &modelv1.Kitchen{}),
 )
 
 // assert unmarshalling of various attribute maps with complicated presence
-var _ = DescribeTable("presence unmarshaling", func(jb string, m map[string]types.AttributeValue, exp *messagev1.FieldPresence) {
-	var msg messagev1.FieldPresence
+var _ = DescribeTable("presence unmarshaling", func(jb string, m map[string]types.AttributeValue, exp *modelv1.FieldPresence) {
+	var msg modelv1.FieldPresence
 	Expect(msg.UnmarshalDynamoItem(m)).To(Succeed())
 	ExpectProtoEqual(&msg, exp)
 
-	var jmsg messagev1.FieldPresence
+	var jmsg modelv1.FieldPresence
 	Expect(protojson.Unmarshal([]byte(jb), &jmsg)).To(Succeed())
 	ExpectProtoEqual(&msg, &jmsg)
 },
-	Entry("empty", `{}`, map[string]types.AttributeValue{}, &messagev1.FieldPresence{}),
+	Entry("empty", `{}`, map[string]types.AttributeValue{}, &modelv1.FieldPresence{}),
 
 	Entry("null map 1", `{"strMap":null}`, map[string]types.AttributeValue{
 		"strMap": nil,
-	}, &messagev1.FieldPresence{}),
+	}, &modelv1.FieldPresence{}),
 	Entry("null map 2", `{"strMap":null}`, map[string]types.AttributeValue{
 		"strMap": &types.AttributeValueMemberNULL{},
-	}, &messagev1.FieldPresence{}),
+	}, &modelv1.FieldPresence{}),
 	Entry("null map 3", `{"strMap":null}`, map[string]types.AttributeValue{
 		"strMap": &types.AttributeValueMemberNULL{Value: true},
-	}, &messagev1.FieldPresence{}),
+	}, &modelv1.FieldPresence{}),
 
 	Entry("empty map 1", `{"strMap":{}}`, map[string]types.AttributeValue{
 		"strMap": &types.AttributeValueMemberM{},
-	}, &messagev1.FieldPresence{}),
+	}, &modelv1.FieldPresence{}),
 	Entry("empty map 2", `{"strMap":{}}`, map[string]types.AttributeValue{
 		"strMap": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{}},
-	}, &messagev1.FieldPresence{}),
+	}, &modelv1.FieldPresence{}),
 
-	Entry("null msg", `{"msg":null}`, map[string]types.AttributeValue{}, &messagev1.FieldPresence{}),
-	Entry("str value", `{"strVal":null}`, map[string]types.AttributeValue{}, &messagev1.FieldPresence{}),
+	Entry("null msg", `{"msg":null}`, map[string]types.AttributeValue{}, &modelv1.FieldPresence{}),
+	Entry("str value", `{"strVal":null}`, map[string]types.AttributeValue{}, &modelv1.FieldPresence{}),
 	Entry("str value 2", `{"strVal":""}`, map[string]types.AttributeValue{
 		"strVal": &types.AttributeValueMemberS{},
-	}, &messagev1.FieldPresence{
+	}, &modelv1.FieldPresence{
 		StrVal: wrapperspb.String(""),
 	}),
 )
 
 // Assert marshalling output of the kitchen message
-var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[string]types.AttributeValue, expErr string) {
+var _ = DescribeTable("kitchen marshaling", func(k *modelv1.Kitchen, exp map[string]types.AttributeValue, expErr string) {
 	m, err := k.MarshalDynamoItem()
 	if expErr == "" {
 		Expect(err).To(BeNil())
@@ -170,10 +170,10 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 	Expect(m).To(Equal(exp))
 },
 	Entry("zero value",
-		&messagev1.Kitchen{},
+		&modelv1.Kitchen{},
 		map[string]types.AttributeValue{}, nil),
 	Entry("with values",
-		&messagev1.Kitchen{
+		&modelv1.Kitchen{
 			Brand:             "Siemens",
 			IsRenovated:       true,
 			QrCode:            []byte{'A'},
@@ -185,12 +185,12 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 			NumLargeForks:     math.MaxUint64,
 			PercentBlackTiles: math.MaxFloat32,
 			PercentWhiteTiles: math.MaxFloat64,
-			Dirtyness:         messagev1.Dirtyness_DIRTYNESS_CLEAN,
-			Furniture:         map[int64]*messagev1.Appliance{100: {Brand: "Siemens"}},
+			Dirtyness:         modelv1.Dirtyness_DIRTYNESS_CLEAN,
+			Furniture:         map[int64]*modelv1.Appliance{100: {Brand: "Siemens"}},
 			Calendar:          map[string]int64{"nov": 31},
 			Timer:             durationpb.New((time.Second * 100) + 5),
 			WallTime:          timestamppb.New(time.Unix(1678145849, 100)),
-			ApplianceEngines:  []*messagev1.Engine{{Brand: "Kooks"}, {Brand: "Simens"}},
+			ApplianceEngines:  []*modelv1.Engine{{Brand: "Kooks"}, {Brand: "Simens"}},
 			OtherBrands:       []string{"Bosch", "Magimix"},
 			SomeAny: &anypb.Any{
 				TypeUrl: "type.googleapis.com/message.v1.Engine",
@@ -225,7 +225,7 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 			"10": &types.AttributeValueMemberN{Value: "340282350000000000000000000000000000000"},
 			"11": &types.AttributeValueMemberN{Value: "179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},
 			// enum
-			"12": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", messagev1.Dirtyness_DIRTYNESS_CLEAN)},
+			"12": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", modelv1.Dirtyness_DIRTYNESS_CLEAN)},
 			// maps
 			"13": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
 				"100": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
@@ -280,7 +280,7 @@ var _ = DescribeTable("kitchen marshaling", func(k *messagev1.Kitchen, exp map[s
 )
 
 // Assert marshalling of json embeddings
-var _ = DescribeTable("json embed marshalling", func(k *messagev1.JsonFields, exp map[string]types.AttributeValue, expErr string) {
+var _ = DescribeTable("json embed marshalling", func(k *modelv1.JsonFields, exp map[string]types.AttributeValue, expErr string) {
 	m, err := k.MarshalDynamoItem()
 	if expErr == "" {
 		Expect(err).To(BeNil())
@@ -292,15 +292,15 @@ var _ = DescribeTable("json embed marshalling", func(k *messagev1.JsonFields, ex
 	Expect(m).To(Equal(exp))
 },
 	Entry("zero value",
-		&messagev1.JsonFields{},
+		&modelv1.JsonFields{},
 		map[string]types.AttributeValue{}, nil),
 	Entry("some data",
-		&messagev1.JsonFields{
+		&modelv1.JsonFields{
 			JsonStrList:    []string{"a", "b", "c"},
-			JsonEngine:     &messagev1.Engine{Brand: "brand-a"},
+			JsonEngine:     &modelv1.Engine{Brand: "brand-a"},
 			JsonIntMap:     map[int64]string{100: "foo", 200: "bar"},
-			JsonEngineList: []*messagev1.Engine{{Brand: "bar"}, {Brand: "foo"}},
-			JsonEngineMap:  map[bool]*messagev1.Engine{true: {Brand: "true"}, false: {Brand: "false"}},
+			JsonEngineList: []*modelv1.Engine{{Brand: "bar"}, {Brand: "foo"}},
+			JsonEngineMap:  map[bool]*modelv1.Engine{true: {Brand: "true"}, false: {Brand: "false"}},
 			JsonNrSet:      []int64{math.MaxInt64, 10},
 		},
 		map[string]types.AttributeValue{
@@ -314,7 +314,7 @@ var _ = DescribeTable("json embed marshalling", func(k *messagev1.JsonFields, ex
 )
 
 // Assert marshalling of json embeddings
-var _ = DescribeTable("json embed oneof", func(in *messagev1.JsonOneofs, exp map[string]types.AttributeValue, expErr string) {
+var _ = DescribeTable("json embed oneof", func(in *modelv1.JsonOneofs, exp map[string]types.AttributeValue, expErr string) {
 	m, err := in.MarshalDynamoItem()
 	if expErr == "" {
 		Expect(err).To(BeNil())
@@ -322,20 +322,20 @@ var _ = DescribeTable("json embed oneof", func(in *messagev1.JsonOneofs, exp map
 		Expect(err).To(MatchError(expErr))
 	}
 	Expect(m).To(Equal(exp))
-	var out messagev1.JsonOneofs
+	var out modelv1.JsonOneofs
 	Expect(out.UnmarshalDynamoItem(m)).To(Succeed())
 	ExpectProtoEqual(in, &out)
 },
 	Entry("zero value",
-		&messagev1.JsonOneofs{},
+		&modelv1.JsonOneofs{},
 		map[string]types.AttributeValue{}, nil),
 	Entry("one part",
-		&messagev1.JsonOneofs{JsonOo: &messagev1.JsonOneofs_OneofMsg{OneofMsg: &messagev1.Engine{Brand: "brand"}}},
+		&modelv1.JsonOneofs{JsonOo: &modelv1.JsonOneofs_OneofMsg{OneofMsg: &modelv1.Engine{Brand: "brand"}}},
 		map[string]types.AttributeValue{
 			"8": &types.AttributeValueMemberS{Value: `{"brand":"brand"}`},
 		}, nil),
 	Entry("one part",
-		&messagev1.JsonOneofs{JsonOo: &messagev1.JsonOneofs_OneofStr{OneofStr: "foo"}},
+		&modelv1.JsonOneofs{JsonOo: &modelv1.JsonOneofs_OneofStr{OneofStr: "foo"}},
 		map[string]types.AttributeValue{
 			"7": &types.AttributeValueMemberS{Value: `"foo"`},
 		}, nil),
@@ -346,7 +346,7 @@ var _ = DescribeTable("json embed fuzz", func(seed int64) {
 	f := fuzz.NewWithSeed(seed).NilChance(0.5)
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
-		var in, out messagev1.JsonFields
+		var in, out modelv1.JsonFields
 		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 
 		item, err := in.MarshalDynamoItem()
@@ -368,7 +368,7 @@ var _ = DescribeTable("kitchen fuzz", func(seed int64) {
 	f := fuzz.NewWithSeed(seed).NilChance(0.5)
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
-		var in, out messagev1.Kitchen
+		var in, out modelv1.Kitchen
 		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 
 		item, err := in.MarshalDynamoItem()
@@ -392,7 +392,7 @@ var _ = DescribeTable("map galore fuzz", func(seed int64) {
 	f := fuzz.NewWithSeed(seed).NilChance(0.5)
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
-		var in, out messagev1.MapGalore
+		var in, out modelv1.MapGalore
 		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 		item, err := in.MarshalDynamoItem()
 		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
@@ -413,7 +413,7 @@ var _ = DescribeTable("value galore fuzz", func(seed int64) {
 	f := fuzz.NewWithSeed(seed).NilChance(0.5)
 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)
 	for i := 0; i < 10000; i++ {
-		var in, out messagev1.ValueGalore
+		var in, out modelv1.ValueGalore
 		f.Funcs(ddbtest.PbDurationFuzz, ddbtest.PbTimestampFuzz, ddbtest.PbValueFuzz).Fuzz(&in)
 		item, err := in.MarshalDynamoItem()
 		if err != nil && strings.Contains(err.Error(), "map key cannot be empty") {
@@ -432,32 +432,32 @@ var _ = DescribeTable("value galore fuzz", func(seed int64) {
 // Assert that fields present in the resuling map are the same as present in canonical json encoding.
 // This works if we have a message where dynamo attr names are explicitely set to match that of the
 // the json encoding.
-var _ = DescribeTable("field presence", func(m *messagev1.FieldPresence, e map[string]types.AttributeValue) {
+var _ = DescribeTable("field presence", func(m *modelv1.FieldPresence, e map[string]types.AttributeValue) {
 	it, err := m.MarshalDynamoItem()
 	Expect(err).ToNot(HaveOccurred())
 	ExpectJSONFieldPresence(m, it)
 
-	var m2 messagev1.FieldPresence
+	var m2 modelv1.FieldPresence
 	Expect(m2.UnmarshalDynamoItem(it)).To(Succeed())
 
 	ExpectProtoEqual(&m2, m)
 	Expect(it).To(Equal(e))
 },
 	Entry("presence message zero",
-		&messagev1.FieldPresence{}, map[string]types.AttributeValue{}),
+		&modelv1.FieldPresence{}, map[string]types.AttributeValue{}),
 	Entry("presence with field values at (non-nil) zero",
-		&messagev1.FieldPresence{
+		&modelv1.FieldPresence{
 			Str:     "",
 			OptStr:  proto.String(""),
-			Msg:     &messagev1.Engine{},
-			OptMsg:  &messagev1.Engine{},
+			Msg:     &modelv1.Engine{},
+			OptMsg:  &modelv1.Engine{},
 			StrList: []string{},
-			MsgList: []*messagev1.Engine{},
+			MsgList: []*modelv1.Engine{},
 			StrMap:  map[string]string{},
-			MsgMap:  map[string]*messagev1.Engine{},
-			Enum:    messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED,
-			OptEnum: messagev1.Dirtyness_DIRTYNESS_UNSPECIFIED.Enum(),
-			Oo:      &messagev1.FieldPresence_OneofStr{},
+			MsgMap:  map[string]*modelv1.Engine{},
+			Enum:    modelv1.Dirtyness_DIRTYNESS_UNSPECIFIED,
+			OptEnum: modelv1.Dirtyness_DIRTYNESS_UNSPECIFIED.Enum(),
+			Oo:      &modelv1.FieldPresence_OneofStr{},
 
 			StrVal:    wrapperspb.String(""),
 			BoolVal:   wrapperspb.Bool(false),
@@ -486,8 +486,8 @@ var _ = DescribeTable("field presence", func(m *messagev1.FieldPresence, e map[s
 			"uint64Val": &types.AttributeValueMemberN{Value: "0"},
 		}),
 	Entry("just oneof mesage",
-		&messagev1.FieldPresence{
-			Oo: &messagev1.FieldPresence_OneofMsg{OneofMsg: &messagev1.Engine{Brand: "foo"}},
+		&modelv1.FieldPresence{
+			Oo: &modelv1.FieldPresence_OneofMsg{OneofMsg: &modelv1.Engine{Brand: "foo"}},
 		}, map[string]types.AttributeValue{
 			"oneofMsg": &types.AttributeValueMemberM{
 				Value: map[string]types.AttributeValue{
@@ -498,9 +498,9 @@ var _ = DescribeTable("field presence", func(m *messagev1.FieldPresence, e map[s
 			},
 		}),
 
-	Entry("nil values for map entries and lists", &messagev1.FieldPresence{
-		MsgMap:  map[string]*messagev1.Engine{"foo": nil},
-		MsgList: []*messagev1.Engine{nil},
+	Entry("nil values for map entries and lists", &modelv1.FieldPresence{
+		MsgMap:  map[string]*modelv1.Engine{"foo": nil},
+		MsgList: []*modelv1.Engine{nil},
 	}, map[string]types.AttributeValue{
 		"msgList": &types.AttributeValueMemberL{
 			Value: []types.AttributeValue{

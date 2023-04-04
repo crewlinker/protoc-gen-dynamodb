@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package example.message.v1;
+package example.model.v1;
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";

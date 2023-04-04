@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package example.message.v1;
+package example.model.v1;
 import "google/protobuf/duration.proto";
-import "example/message/v1/message.proto";
+import "example/model/v1/message.proto";
 
 // OtherKitchen holds fields that are similar to the first kitchen. To test name collisions
 // for identifiers
