@@ -7,6 +7,7 @@ import (
 	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
+	ddbtable "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbtable"
 	v1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
 	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/model/v1/ddbpath"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -1295,6 +1296,27 @@ func (x *Thread) DynamoSortKeyName() (v expression.NameBuilder) {
 func (x *Thread) DynamoKeyNames() (v []string) {
 	return ddbpath.ThreadKeyNames()
 }
+func init() {
+	ddbtable.MustRegister(&Thread{}, ddbtable.MessagePlacement{
+		GlobalSecondaryIdxs: map[string]ddbtable.GlobalSecondaryIndexPlacement{},
+		LocalSecondaryIdxs: map[string]ddbtable.LocalSecondaryIndexPlacement{"last_post_index": {
+			OtherAttrNames: []string{"2", "4"},
+			SortKey: ddbtable.KeyPlacement{
+				AttrName: "3",
+				AttrType: expression.String,
+			},
+		}},
+		PartitionKey: ddbtable.KeyPlacement{
+			AttrName: "1",
+			AttrType: expression.String,
+		},
+		SortKey: ddbtable.KeyPlacement{
+			AttrName: "2",
+			AttrType: expression.String,
+		},
+		TableNames: []string{"threads"},
+	})
+}
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *GameScore) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
@@ -1390,4 +1412,29 @@ func (x *GameScore) DynamoSortKeyName() (v expression.NameBuilder) {
 // DynamoKeyNames returns the attribute names of the partition and sort keys respectively
 func (x *GameScore) DynamoKeyNames() (v []string) {
 	return ddbpath.GameScoreKeyNames()
+}
+func init() {
+	ddbtable.MustRegister(&GameScore{}, ddbtable.MessagePlacement{
+		GlobalSecondaryIdxs: map[string]ddbtable.GlobalSecondaryIndexPlacement{"game_title_index": {
+			OtherAttrNames: []string{"2", "3", "5", "6"},
+			PartitionKey: ddbtable.KeyPlacement{
+				AttrName: "2",
+				AttrType: expression.String,
+			},
+			SortKey: ddbtable.KeyPlacement{
+				AttrName: "3",
+				AttrType: expression.Number,
+			},
+		}},
+		LocalSecondaryIdxs: map[string]ddbtable.LocalSecondaryIndexPlacement{},
+		PartitionKey: ddbtable.KeyPlacement{
+			AttrName: "1",
+			AttrType: expression.String,
+		},
+		SortKey: ddbtable.KeyPlacement{
+			AttrName: "2",
+			AttrType: expression.String,
+		},
+		TableNames: []string{"game_scores"},
+	})
 }

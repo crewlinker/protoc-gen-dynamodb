@@ -49,6 +49,10 @@ var _ = Describe("e2e tests", func() {
 		})
 	})
 
+	It("should create tables", func() {
+
+	})
+
 	// DescribeTable("put get fuzzing", func(ctx context.Context, seed int64) {
 	// 	f := fuzz.NewWithSeed(seed).NilChance(0.5)
 	// 	fmt.Fprintf(GinkgoWriter, "Fuzz Seed: %d", seed)

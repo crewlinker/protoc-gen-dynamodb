@@ -23,10 +23,11 @@ type Target struct {
 	src    *protogen.File
 	logs   *zap.Logger
 	idents struct {
-		ddb     string
-		ddbv1   string
-		ddbpath string
-		ddbimp  string
+		ddb      string
+		ddbv1    string
+		ddbpath  string
+		ddbtable string
+		ddbimp   string
 	}
 }
 
@@ -259,9 +260,14 @@ func (tg *Target) GenerateMessageLogic(w io.Writer) error {
 			return fmt.Errorf("failed to generate unmarshal: %w", err)
 		}
 
-		// generate methods that return key info
+		// generate message methods that return key info
 		if err := tg.genMessageKeying(f, m); err != nil {
 			return fmt.Errorf("failed to generate key methods: %w", err)
+		}
+
+		// generate message table placement registration
+		if err := tg.genRegisterTablePlacement(f, m); err != nil {
+			return fmt.Errorf("failed to generate register table placement: %w", err)
 		}
 
 	}
