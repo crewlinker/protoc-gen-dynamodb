@@ -69,6 +69,66 @@ func init() {
 	})
 }
 
+// GsiOptionsV2Path allows for constructing type-safe expression names
+type GsiOptionsV2Path struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p GsiOptionsV2Path) WithDynamoNameBuilder(n expression.NameBuilder) GsiOptionsV2Path {
+	p.NameBuilder = n
+	return p
+}
+
+// Name appends the path being build
+func (p GsiOptionsV2Path) Name() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Pk appends the path being build
+func (p GsiOptionsV2Path) Pk() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+
+// Sk appends the path being build
+func (p GsiOptionsV2Path) Sk() expression.NameBuilder {
+	return p.AppendName(expression.Name("3"))
+}
+func init() {
+	ddbpath.Register(GsiOptionsV2Path{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// LsiOptionsV2Path allows for constructing type-safe expression names
+type LsiOptionsV2Path struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p LsiOptionsV2Path) WithDynamoNameBuilder(n expression.NameBuilder) LsiOptionsV2Path {
+	p.NameBuilder = n
+	return p
+}
+
+// Name appends the path being build
+func (p LsiOptionsV2Path) Name() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Sk appends the path being build
+func (p LsiOptionsV2Path) Sk() expression.NameBuilder {
+	return p.AppendName(expression.Name("3"))
+}
+func init() {
+	ddbpath.Register(LsiOptionsV2Path{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
 // FieldOptionsPath allows for constructing type-safe expression names
 type FieldOptionsPath struct {
 	expression.NameBuilder
@@ -153,6 +213,128 @@ func (p MessageOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) Mess
 func (p MessageOptionsPath) Table() ddbpath.List {
 	return ddbpath.List{NameBuilder: p.AppendName(expression.Name("1"))}
 }
+
+// Gsi returns 'p' appended with the attribute while allow indexing a nested message
+func (p MessageOptionsPath) Gsi() ddbpath.ItemList[GsiOptionsV2Path] {
+	return ddbpath.ItemList[GsiOptionsV2Path]{NameBuilder: p.AppendName(expression.Name("2"))}
+}
+
+// Lsi returns 'p' appended with the attribute while allow indexing a nested message
+func (p MessageOptionsPath) Lsi() ddbpath.ItemList[LsiOptionsV2Path] {
+	return ddbpath.ItemList[LsiOptionsV2Path]{NameBuilder: p.AppendName(expression.Name("3"))}
+}
 func init() {
-	ddbpath.Register(MessageOptionsPath{}, map[string]ddbpath.FieldInfo{"1": {Kind: ddbpath.FieldKindList}})
+	ddbpath.Register(MessageOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindList},
+		"2": {
+			Kind:    ddbpath.FieldKindList,
+			Message: reflect.TypeOf(GsiOptionsV2Path{}),
+		},
+		"3": {
+			Kind:    ddbpath.FieldKindList,
+			Message: reflect.TypeOf(LsiOptionsV2Path{}),
+		},
+	})
+}
+
+// TableGsiOptionsPath allows for constructing type-safe expression names
+type TableGsiOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p TableGsiOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) TableGsiOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Name appends the path being build
+func (p TableGsiOptionsPath) Name() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Pk appends the path being build
+func (p TableGsiOptionsPath) Pk() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+
+// Sk appends the path being build
+func (p TableGsiOptionsPath) Sk() expression.NameBuilder {
+	return p.AppendName(expression.Name("3"))
+}
+func init() {
+	ddbpath.Register(TableGsiOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// TableOptionsPath allows for constructing type-safe expression names
+type TableOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p TableOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) TableOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Pk appends the path being build
+func (p TableOptionsPath) Pk() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+
+// Sk appends the path being build
+func (p TableOptionsPath) Sk() expression.NameBuilder {
+	return p.AppendName(expression.Name("3"))
+}
+
+// Gsi returns 'p' appended with the attribute while allow indexing a nested message
+func (p TableOptionsPath) Gsi() ddbpath.ItemList[TableGsiOptionsPath] {
+	return ddbpath.ItemList[TableGsiOptionsPath]{NameBuilder: p.AppendName(expression.Name("10"))}
+}
+func init() {
+	ddbpath.Register(TableOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"10": {
+			Kind:    ddbpath.FieldKindList,
+			Message: reflect.TypeOf(TableGsiOptionsPath{}),
+		},
+		"2": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// AttributeOptionsPath allows for constructing type-safe expression names
+type AttributeOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p AttributeOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) AttributeOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+func init() {
+	ddbpath.Register(AttributeOptionsPath{}, map[string]ddbpath.FieldInfo{})
+}
+
+// EntityOptionsPath allows for constructing type-safe expression names
+type EntityOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p EntityOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) EntityOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// TypeAttr appends the path being build
+func (p EntityOptionsPath) TypeAttr() expression.NameBuilder {
+	return p.AppendName(expression.Name("4"))
+}
+func init() {
+	ddbpath.Register(EntityOptionsPath{}, map[string]ddbpath.FieldInfo{"4": {Kind: ddbpath.FieldKindSingle}})
 }

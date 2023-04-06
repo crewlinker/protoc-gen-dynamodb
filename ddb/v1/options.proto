@@ -32,6 +32,24 @@ message GsiOptions {
     optional bool sk = 3;
 }
 
+// New options for providing gsi options on the table
+message GsiOptionsV2 {
+    // name of the gsi
+    required string name = 1;
+    // primary key attribute for the gsi
+    required string pk = 2;
+    // optional sort key for the gsi
+    optional string sk = 3;
+}
+
+// New options for providing lsi options on the table
+message LsiOptionsV2 {
+    // name of the gsi
+    required string name = 1;
+    // optional sort key for the gsi
+    required string sk = 3;
+}
+
 // FieldOptions presents options to configure fields for DynamoDB 
 message FieldOptions {
     // specify the name of the DynamoDB attribute
@@ -56,12 +74,50 @@ message FieldOptions {
 message MessageOptions {
     // table name in which the message will be stored
     repeated string table = 1;
+    // gsi allows global secondary indexes to be configured 
+    repeated GsiOptionsV2 gsi = 2;
+    // lsi allows local secondary indexes to be configured for the table
+    repeated LsiOptionsV2 lsi = 3;
+}
+
+// Configure a global secondary index
+message TableGsiOptions {
+    // name of the gsi
+    required string name = 1;
+    // partition key for the gsi
+    required uint32 pk = 2;
+    // sort key for the gsi
+    optional uint32 sk = 3;
+}
+
+// TableOptions provide options for messages that describe tables
+message TableOptions {
+    // field number of the partition key
+    optional uint32 pk = 2;
+    // field number of the sort key
+    optional uint32 sk = 3;
+
+    // any global secondary indices
+    repeated TableGsiOptions gsi = 10;
+}
+
+// AttributeOptions provide options for fields that describe attributes
+message AttributeOptions {}
+// EntityOptions are options for entity
+message EntityOptions {
+    // entity type attribute
+    optional uint32 type_attr = 4;
 }
 
 extend google.protobuf.MessageOptions {
     optional MessageOptions msg = 1099;
+    optional TableOptions table = 1098;
 }
 
 extend google.protobuf.FieldOptions {
     optional FieldOptions field = 1099;
+    optional AttributeOptions attr = 1098;
+}
+extend google.protobuf.OneofOptions{
+    optional EntityOptions entity = 1098;
 }

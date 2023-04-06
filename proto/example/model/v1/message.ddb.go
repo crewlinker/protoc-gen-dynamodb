@@ -1297,20 +1297,20 @@ func (x *Thread) DynamoKeyNames() (v []string) {
 	return ddbpath.ThreadKeyNames()
 }
 func init() {
-	ddbtable.MustRegister(&Thread{}, ddbtable.MessagePlacement{
-		GlobalSecondaryIdxs: map[string]ddbtable.GlobalSecondaryIndexPlacement{},
-		LocalSecondaryIdxs: map[string]ddbtable.LocalSecondaryIndexPlacement{"last_post_index": {
+	ddbtable.MustRegister(&Thread{}, &ddbtable.TablePlacement{
+		GlobalSecondaryIdxs: map[string]*ddbtable.GlobalSecondaryIndexPlacement{},
+		LocalSecondaryIdxs: map[string]*ddbtable.LocalSecondaryIndexPlacement{"last_post_index": {
 			OtherAttrNames: []string{"2", "4"},
-			SortKey: ddbtable.KeyPlacement{
+			SortKey: ddbtable.KeyDescriptor{
 				AttrName: "3",
 				AttrType: expression.String,
 			},
 		}},
-		PartitionKey: ddbtable.KeyPlacement{
+		PartitionKey: ddbtable.KeyDescriptor{
 			AttrName: "1",
 			AttrType: expression.String,
 		},
-		SortKey: ddbtable.KeyPlacement{
+		SortKey: &ddbtable.KeyDescriptor{
 			AttrName: "2",
 			AttrType: expression.String,
 		},
@@ -1414,24 +1414,24 @@ func (x *GameScore) DynamoKeyNames() (v []string) {
 	return ddbpath.GameScoreKeyNames()
 }
 func init() {
-	ddbtable.MustRegister(&GameScore{}, ddbtable.MessagePlacement{
-		GlobalSecondaryIdxs: map[string]ddbtable.GlobalSecondaryIndexPlacement{"game_title_index": {
+	ddbtable.MustRegister(&GameScore{}, &ddbtable.TablePlacement{
+		GlobalSecondaryIdxs: map[string]*ddbtable.GlobalSecondaryIndexPlacement{"game_title_index": {
 			OtherAttrNames: []string{"2", "3", "5", "6"},
-			PartitionKey: ddbtable.KeyPlacement{
+			PartitionKey: ddbtable.KeyDescriptor{
 				AttrName: "2",
 				AttrType: expression.String,
 			},
-			SortKey: ddbtable.KeyPlacement{
+			SortKey: &ddbtable.KeyDescriptor{
 				AttrName: "3",
 				AttrType: expression.Number,
 			},
 		}},
-		LocalSecondaryIdxs: map[string]ddbtable.LocalSecondaryIndexPlacement{},
-		PartitionKey: ddbtable.KeyPlacement{
+		LocalSecondaryIdxs: map[string]*ddbtable.LocalSecondaryIndexPlacement{},
+		PartitionKey: ddbtable.KeyDescriptor{
 			AttrName: "1",
 			AttrType: expression.String,
 		},
-		SortKey: ddbtable.KeyPlacement{
+		SortKey: &ddbtable.KeyDescriptor{
 			AttrName: "2",
 			AttrType: expression.String,
 		},

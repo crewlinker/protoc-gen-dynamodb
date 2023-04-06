@@ -292,6 +292,20 @@ message Thread {
 // GameScore stores the scores of a game, following the scenario for global secondary indexes:
 // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html#GSI.scenario
 message GameScore {
+    // @TODO Problem, implicit projections. If message A marks field "5" as being projected into
+    // an index. All other messages with a '5' field will also get that field stored in the LSI, this
+    // is unexpected and unintuitive. Solutions:
+    // - If a field is marked for GSI/LSI inclusion (or as pk/sk of base table), it MUST have an explicit 
+    //   field name
+    // - force non-overlapping numbers when multiple messages are place in a single table. Only explicitely
+    //   named attributes are allowed to overlap.
+    // - Or, tables are defined as a field with OneOf field. Each item's attribute when placed in the 
+    //   the table is prefixed with the one-of's field nr. 
+    // what happens in general if a non-key field of a certain type gets put a value
+    // of a non comability type: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.OnlineOps.ViolationDetection.html
+    // This is Ok, but not ok once a GSI is added. But at that point, we can break it in a backwards 
+    // compatible way because the attrname would need to be rename, which makes queries return zeros
+
     // table in which the game score is stored
     option (ddb.v1.msg).table = "game_scores";
     // user that owns the score
@@ -311,3 +325,94 @@ message GameScore {
     int64 losses = 6 [(ddb.v1.field).gsi={name:"game_title_index"}];
 }
 
+// @TODO maybe focus on single table designs in the first place:
+// - https://www.alexdebrie.com/posts/dynamodb-single-table/
+// - "well-optimized single-table DynamoDB layout looks more like machine code than a simple spreadsheet":
+//  - https://www.trek10.com/blog/dynamodb-single-table-relational-modeling/
+// - Let's implement the following: https://dynobase.dev/dynamodb-single-table-design-examples/Hospital/
+
+// single table design
+// message MainTable2 {
+//     // reference the sort and partition key for the table. 
+//     // - MUST generate table code if the ".pk" option is specified, this triggers a message to be a "table"
+//     // - MUST use field numbers as references. To cause backwards imcompatible changes to be clear
+//     // - MUST error if the field numbers are not present as fields in the table message (see below)
+//     // - MUST error if fields with these number are not present in all messages mentioned in "spread" fields
+//     option (ddb.v1.table).pk = 1;
+//     option (ddb.v1.table).sk = 2; // MUST be optional to create a valid table
+    
+//     // partition key attribute 
+//     string pk = 1;
+//     // sort key attribute
+//     string sk = 2;
+//     // category
+//     int64 type = 3;
+
+//     // gsi that groups by category
+//     // - MUST provide a field number as the reference, such that backwards incompatible changes can be caught
+//     // - MUST error if the pk/sk number don't exist as fields on the base table
+//     option (ddb.v1.table).gsi = {pk:3,sk:2};
+// }
+
+
+// MainTable describes a table that holds all messages.
+// message MainTable {
+
+    
+//     // @TODO COULD rename "msg" method option to "table"
+//     // @TODO Could rename "field" method option to "attr"
+
+//     // NOTE: all pk/sks (base table AND indices), need to be defined on the table. If not, it should
+//     // error.
+//     // Q: what if messages wanna include their fields in the projection of a GSI
+
+//     // global secondary index 1
+//     option (ddb.v1.msg).gsi = {name:"gsi1",pk:"pk"};
+//     // global secondary index 2
+//     option (ddb.v1.msg).gsi = {name:"gsi2",pk:"pk"};
+//     // lsi 1
+//     option (ddb.v1.msg).lsi = {name:"lsi1",sk:"date"};
+
+//     // NOTE: in practice, these "shared" fields are the combination of all pk/sk fields of the 
+//     // base table and indices.
+
+//     // partition key of the table, all items will need to provide this field
+//     string pk = 1 [(ddb.v1.field).name="pk", (ddb.v1.field).pk=true];
+//     // sort key of the table, all items will be generated with this field
+//     string sk = 3 [(ddb.v1.field).name="sk", (ddb.v1.field).sk=true];
+
+//     // date is used in the lsi1
+//     int64 date = 8;
+
+//     // IDEA: "shared" fields cause the generation of an interface for marshalling messages for the table.
+//     // A shared field called "string pk" will cause an interface constraint of GetPk() string. 
+//     // - Messages with a "pk" field will automatically implement the interface
+//     // - Messages can optionally "omit" this field if it shouldn't be stored under the "number" as well
+//     // - All messages in the oneof, will have their marshalled fields prefixed with the one_of's field
+//     //   number so their fields never collide in the table itself
+//     // - QUESTION: can we enforce the "shared" field interface on the one_of generated code
+//     // - QUESTION: can we model the optional nature of gsi/lsi keys in this way?
+//     // IDEA: if the "Table" message does not have the special "one of" field it just marshals as 
+//     // usual. To support, one-message per table design.
+//     // IDEA: COULD only generate marshal dynamo item on "table" messages (messages with a "pk" field.
+//     // IDEA: COULD make a generic option to "spread" one-of fields over the table. Prefixing fields as 
+//     // described above.
+//     // IDEA: COULD automatically generate a "static" pk/sk for base table if item doesn't provide it
+//     // IDEA: With the interface approach, "adding" a GSI means declaring the shared fields
+//     //   if: items already have a field with the name, it will implement the interface and marshalling/unmarshalling
+//     //   BUT: we need the underlying "attribute" names to match gsi/lsi. NOT the interfaces/field names
+
+
+//     // item holds all the items that will be stored in this table
+//     oneof item {
+//         // game_score
+//         GameScore game_score = 4;
+//     }
+
+
+//     // @TODO generates interface for pk/sk that messages need to implement
+//     // @TODO each gsi/lsi generates optional interfaces for pk/sk fields
+
+
+
+// }

@@ -40,11 +40,11 @@ func (tg *Target) genRegisterTablePlacement(f *File, m *protogen.Message) (err e
 	gsidict := Dict{}
 	for name, gsi := range placement.gsis {
 		gsidict[Lit(name)] = Values(Dict{
-			Id("PartitionKey"): Qual(tg.idents.ddbtable, "KeyPlacement").Values(Dict{
+			Id("PartitionKey"): Qual(tg.idents.ddbtable, "KeyDescriptor").Values(Dict{
 				Id("AttrName"): Lit(tg.attrName(gsi.pkField)),
 				Id("AttrType"): genPkSkAttrType(gsi.pkType),
 			}),
-			Id("SortKey"): Qual(tg.idents.ddbtable, "KeyPlacement").Values(Dict{
+			Id("SortKey"): Op("&").Qual(tg.idents.ddbtable, "KeyDescriptor").Values(Dict{
 				Id("AttrName"): Lit(tg.attrName(gsi.skField)),
 				Id("AttrType"): genPkSkAttrType(gsi.skType),
 			}),
@@ -59,7 +59,7 @@ func (tg *Target) genRegisterTablePlacement(f *File, m *protogen.Message) (err e
 	lsidict := Dict{}
 	for name, lsi := range placement.lsis {
 		lsidict[Lit(name)] = Values(Dict{
-			Id("SortKey"): Qual(tg.idents.ddbtable, "KeyPlacement").Values(Dict{
+			Id("SortKey"): Qual(tg.idents.ddbtable, "KeyDescriptor").Values(Dict{
 				Id("AttrName"): Lit(tg.attrName(lsi.skField)),
 				Id("AttrType"): genPkSkAttrType(lsi.skType),
 			}),
@@ -75,19 +75,19 @@ func (tg *Target) genRegisterTablePlacement(f *File, m *protogen.Message) (err e
 	f.Func().Id("init").Params().Block(
 		Qual(tg.idents.ddbtable, "MustRegister").Call(
 			Op("&").Id(m.GoIdent.GoName).Values(),
-			Qual(tg.idents.ddbtable, "MessagePlacement").Values(Dict{
+			Op("&").Qual(tg.idents.ddbtable, "TablePlacement").Values(Dict{
 				Id("TableNames"): Index().String().Values(tnames...),
-				Id("PartitionKey"): Qual(tg.idents.ddbtable, "KeyPlacement").Values(Dict{
+				Id("PartitionKey"): Qual(tg.idents.ddbtable, "KeyDescriptor").Values(Dict{
 					Id("AttrName"): Lit(tg.attrName(placement.pkField)),
 					Id("AttrType"): genPkSkAttrType(placement.pkType),
 				}),
-				Id("SortKey"): Qual(tg.idents.ddbtable, "KeyPlacement").Values(Dict{
+				Id("SortKey"): Op("&").Qual(tg.idents.ddbtable, "KeyDescriptor").Values(Dict{
 					Id("AttrName"): Lit(tg.attrName(placement.skField)),
 					Id("AttrType"): genPkSkAttrType(placement.skType),
 				}),
-				Id("GlobalSecondaryIdxs"): Map(String()).Qual(tg.idents.ddbtable, "GlobalSecondaryIndexPlacement").
+				Id("GlobalSecondaryIdxs"): Map(String()).Op("*").Qual(tg.idents.ddbtable, "GlobalSecondaryIndexPlacement").
 					Values(gsidict),
-				Id("LocalSecondaryIdxs"): Map(String()).Qual(tg.idents.ddbtable, "LocalSecondaryIndexPlacement").
+				Id("LocalSecondaryIdxs"): Map(String()).Op("*").Qual(tg.idents.ddbtable, "LocalSecondaryIndexPlacement").
 					Values(lsidict),
 			}),
 		),

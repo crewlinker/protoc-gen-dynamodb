@@ -1,0 +1,223 @@
+syntax = "proto3";
+
+package example.model.v2;
+import "ddb/v1/options.proto";
+import "google/protobuf/timestamp.proto";
+
+// types in our flight fares type our single table design
+enum FlightFareType {
+    // value when type is unspecified
+    FLIGHT_FARE_TYPE_UNSPECIFIED = 0;
+    // flight entity type
+    FLIGHT_FARE_TYPE_FLIGHT = 1;
+    // fare entity type
+    FLIGHT_FARE_TYPE_FARE = 2;
+    // assignment entity type
+    FLIGHT_FARE_TYPE_ASSIGNMENT = 3;
+    // assignment entity type
+    FLIGHT_FARE_TYPE_BOOKING = 4;
+}
+
+// Airport used for flight destination and origins
+enum Airport {
+    // when not specified
+    AIRPORT_UNSPECIFIED = 0;
+    // denver
+    AIRPORT_DEN = 1;
+    // john-f-kennedy (new york)
+    AIRPORT_JFK = 2;
+    // san francisco
+    AIRPORT_SFO = 3;
+}
+
+// the type of flight
+enum FlightClass {
+    // when not specified
+    FLIGHT_CLASS_UNSPECIFIED = 0;
+    // direct but with stops
+    FLIGHT_CLASS_DIRECT = 1;
+    // direct without any stops
+    FLIGHT_CLASS_NON_STOP = 2;
+}
+
+// Special service requests
+enum SSR {
+    // zero value
+    SSR_UNSPECIFIED = 0;
+    // wheelchair (manual power)
+    SSR_WCMP = 1;
+    // Vegetarian vegan meal
+    SSR_VGML = 2;
+}
+
+// Flight entity
+message Flight {
+    // the flight number
+    uint64 number = 1;
+    // departure time of the flight
+    google.protobuf.Timestamp depature_at = 2;
+    // arrival time of the flight
+    google.protobuf.Timestamp arrival_at = 3;
+    // origin of the flight
+    Airport origin = 4;
+    // flight destination
+    Airport destination = 5;
+    // kind of flight
+    FlightClass class = 6;
+
+    // is part of a flight with segments
+    bool is_segment = 7;
+    // id if a segment
+    uint64 segment_id = 8;
+    // segments of the flight (if any)
+    string segments = 9;
+}
+
+// Fare for a flight
+message Fare {
+    // start time of the fare
+    google.protobuf.Timestamp start_at = 1;
+    // end time of the fare
+    google.protobuf.Timestamp end_at = 2;
+    // origin of the fare
+    Airport origin = 3;
+    // destination of the fare
+    Airport destination = 4;
+    // class for the ticket fare
+    FlightClass class = 5;
+}
+
+// Assignment for a flight
+message Assignment {
+    // number 
+    uint64 number = 1;
+    // flight number
+    uint64 flight_number = 2;
+    // segment for the assignment
+    uint64 segment_id = 3;
+    // seat in whch the passenger is put
+    string seat = 4;
+    // departure time of the flight
+    google.protobuf.Timestamp departure_at = 5;
+    // arrival time of the flight
+    google.protobuf.Timestamp arrival_at = 6;
+    // origin of the flight
+    Airport origin = 7;
+    // flight destination
+    Airport destination = 8;
+    // special service requests
+    repeated SSR special_service_requests = 9;
+    // first name of the passenger
+    string first_name = 10;
+    // last name of the passenger
+    string last_name = 11;
+}
+
+// Booking on a flight
+message Booking {
+    // flight number
+    uint64 flight_number = 1;
+    // departure time of the booking
+    google.protobuf.Timestamp departure_at = 2;
+    // arrival time of the booking
+    google.protobuf.Timestamp arrival_at = 3;
+    // segments of the booking
+    uint32 segments = 4;
+    // origin of the flight
+    Airport origin = 5;
+    // flight destination
+    Airport destination = 6;
+    // first name of the passenger
+    string first_name = 10;
+    // last name of the passenger
+    string last_name = 11;
+}
+
+// The single table design that describes the table structure for the example here:
+// https://dynobase.dev/dynamodb-single-table-design-examples/FlightFares/
+message FlightFares {
+    option (ddb.v1.table).pk = 1; // partition key attribute
+    option (ddb.v1.table).sk = 2;  // sort key attribute
+    
+    // partition key
+    string pk = 1;
+    // sort key
+    string sk = 2;
+    // entity type stored in the table
+    FlightFareType type = 3;
+
+    // gsi1 partition key
+    string gsi1_pk = 4;
+    // gsi1 sort key
+    string gsi1_sk = 5;
+    // gsi1 index definition
+    option (ddb.v1.table).gsi = {name:"gsi1",pk:4,sk:5};
+
+    // gsi2 partition key
+    string gsi2_pk = 6;
+    // gsi2 sort key
+    string gsi2_sk = 7;
+    // gsi2 index definition
+    option (ddb.v1.table).gsi = {name:"gsi2",pk:6,sk:7};
+
+    // entity being stored in the table
+    oneof entity {
+        option (ddb.v1.entity).type_attr = 3; 
+        
+        // flight that has a fare
+        Flight flight = 100;
+        // fare for a flight
+        Fare fare = 101;
+        // assignment of a passenger
+        Assignment assignment = 102;
+        // booking on a flight
+        Booking  booking = 103;
+    }
+}
+
+
+// Input into the access pattern. It will generate 
+message FlightsToFromInYearRequest{
+    // e.g: to JFK
+    Airport to = 1;
+    // e.g: from SFO
+    Airport from = 2;
+    // e.g: in 2021
+    uint32 year = 3;
+}
+
+// Output from the access pattern's execution
+message FlightsToFromInYearResponse{
+
+}
+
+// Input into the pattern
+message PassengerBookingsInYearRequest{
+    // first name of the passenger
+    string first_name = 1;
+    // last name of hte passenger
+    string last_name = 2;
+    // year we're checking for
+    uint32 year = 3;
+}
+// Output from the pattern
+message PassengerBookingsInYearResponse{}
+
+// IDEA 2: use rpc notation to model access patterns
+service FlightFareService{
+    // for example: "Flights to SFO from JFK in 2021"
+    rpc FlightsToFromInYear(FlightsToFromInYearRequest) returns(FlightsToFromInYearResponse);
+    // for example: "Bookings for Smith,John in 2021"
+    rpc PassengerBookingsInYear(PassengerBookingsInYearRequest) returns (PassengerBookingsInYearResponse);
+}
+
+// IDEA 1: Access patterns as messages, fields define the input
+// e.g: Flights to SFO from JFK in 2021
+// message FlightsToFromInYear {
+//     // gsi: gsi1
+//     // pk: 1
+//     // sk: 2,3
+//     Airport to = 1;
+//     Airport from = 2;
+//     uint32 year = 3;
+// }

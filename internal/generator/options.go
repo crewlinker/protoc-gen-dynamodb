@@ -195,6 +195,8 @@ func (tg *Target) tablePlacementOptions(msg *protogen.Message) (mp *tablePlaceme
 		// @TODO error if pk/sk is set twice for a certain gsi/lsi
 		// @TODO error if field is part of the projection and of a sk/pk
 
+		// @TODO error if the message has no pk defined for base table (even though it wants to be placed in a table)
+
 		for _, gsio := range fopts.Gsi {
 			if gsio == nil {
 				continue // not part of gsi in any way
