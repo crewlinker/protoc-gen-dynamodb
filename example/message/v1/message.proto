@@ -90,7 +90,7 @@ message Kitchen {
     map<string,int64> calendar = 14;
 
     // nested message
-    Engine washer_engine = 77;
+    Engine washer_engine = 15;
     // extra nested message to test recursion
     Kitchen extra_kitchen = 16;
     
