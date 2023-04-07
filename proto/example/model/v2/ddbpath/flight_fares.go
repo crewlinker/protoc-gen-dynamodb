@@ -403,8 +403,16 @@ func (p FlightsToFromInYearResponsePath) WithDynamoNameBuilder(n expression.Name
 	p.NameBuilder = n
 	return p
 }
+
+// Flights returns 'p' appended with the attribute while allow indexing a nested message
+func (p FlightsToFromInYearResponsePath) Flights() ddbpath.ItemList[FlightPath] {
+	return ddbpath.ItemList[FlightPath]{NameBuilder: p.AppendName(expression.Name("1"))}
+}
 func init() {
-	ddbpath.Register(FlightsToFromInYearResponsePath{}, map[string]ddbpath.FieldInfo{})
+	ddbpath.Register(FlightsToFromInYearResponsePath{}, map[string]ddbpath.FieldInfo{"1": {
+		Kind:    ddbpath.FieldKindList,
+		Message: reflect.TypeOf(FlightPath{}),
+	}})
 }
 
 // PassengerBookingsInYearRequestPath allows for constructing type-safe expression names
@@ -450,6 +458,14 @@ func (p PassengerBookingsInYearResponsePath) WithDynamoNameBuilder(n expression.
 	p.NameBuilder = n
 	return p
 }
+
+// Bookings returns 'p' appended with the attribute while allow indexing a nested message
+func (p PassengerBookingsInYearResponsePath) Bookings() ddbpath.ItemList[BookingPath] {
+	return ddbpath.ItemList[BookingPath]{NameBuilder: p.AppendName(expression.Name("1"))}
+}
 func init() {
-	ddbpath.Register(PassengerBookingsInYearResponsePath{}, map[string]ddbpath.FieldInfo{})
+	ddbpath.Register(PassengerBookingsInYearResponsePath{}, map[string]ddbpath.FieldInfo{"1": {
+		Kind:    ddbpath.FieldKindList,
+		Message: reflect.TypeOf(BookingPath{}),
+	}})
 }

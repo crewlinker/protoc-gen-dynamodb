@@ -3,10 +3,87 @@ package modelv2
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	modelv2ddbpath "github.com/crewlinker/protoc-gen-dynamodb/proto/example/model/v2/ddbpath"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// FormatTimestamp formats a timestamp for key construction
+func FormatTimestamp(dt *timestamppb.Timestamp) string {
+	return dt.AsTime().Format(time.RFC3339)
+}
+
+// FlightFaresModel holds all domain specific logic for the single page design of
+type FlightFaresModel struct{}
+
+// MapFare maps a assignment record onto table keys
+func (m FlightFaresModel) MapFare(v *Fare) (km FlightFaresKeys, err error) {
+	km.PK = v.Origin.String()
+	km.SK = fmt.Sprintf("%s#%s#%s", v.Destination, FormatTimestamp(v.StartAt), v.Class)
+	return
+}
+
+// MapFlight maps a assignment record onto table keys
+func (m FlightFaresModel) MapFlight(v *Flight) (km FlightFaresKeys, err error) {
+	km.PK = v.Origin.String()
+	km.SK = fmt.Sprintf("%s#%s#%d#%d", // ${origin}#${depart}#${number}#${segId}
+		v.Origin, FormatTimestamp(v.DepatureAt), v.Number, v.SegmentId)
+	km.Gsi1Pk = aws.String(v.Destination.String())
+	km.Gsi1Sk = aws.String(fmt.Sprintf("%s#%s", // ${origin}#${arrive}
+		v.Origin, FormatTimestamp(v.ArrivalAt),
+	))
+	km.Gsi2Pk = aws.String(fmt.Sprintf("%d", v.Number))
+	km.Gsi2Sk = aws.String(fmt.Sprintf("%d", v.SegmentId))
+	return
+}
+
+// MapAssignment maps a assignment record onto table keys
+func (m FlightFaresModel) MapAssignment(v *Assignment) (km FlightFaresKeys, err error) {
+	km.PK = fmt.Sprintf("%s, %s", v.LastName, v.FirstName)
+	km.SK = fmt.Sprintf("%s#%d#%d#%s", // ${depart}#${flight}#${segId}#${seat}
+		FormatTimestamp(v.DepartureAt),
+		v.FlightNumber,
+		v.SegmentId,
+		v.Seat)
+	km.Gsi2Pk = aws.String(fmt.Sprintf("%d", v.Number))
+	km.Gsi2Sk = aws.String(fmt.Sprintf("%d#%s", v.SegmentId, v.Seat))
+	return
+}
+
+// MapBooking maps a booking record onto table keys
+func (m FlightFaresModel) MapBooking(v *Booking) (km FlightFaresKeys, err error) {
+	km.PK = fmt.Sprintf("%s, %s", v.LastName, v.FirstName)
+	km.SK = fmt.Sprintf("%s#%d", // ${depart}#${flight}
+		FormatTimestamp(v.DepartureAt),
+		v.FlightNumber,
+	)
+	return
+}
+
+// FlightsToFromInYearExpr implements the access pattern
+func (m FlightFaresModel) FlightsToFromInYearExpr(in *FlightsToFromInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error) {
+	// @TODO we can provide the keyname builder for pk and sk to make expressions easier
+	// @TODO if gsi only provides a pk, only that should be provided.
+	// @TODO would be convenient if the right key/attr names where provided so we don't have to lookup "1"
+	kb = expression.Key("4").Equal(expression.Value(in.To.String())).And(
+		expression.Key("5").BeginsWith(fmt.Sprintf("%s#%d", in.From, in.Year)))
+	fb = (modelv2ddbpath.FlightFaresPath{}).Type().Equal(expression.Value(FlightFareType_FLIGHT_FARE_TYPE_FLIGHT))
+	return
+}
+
+// FlightsToFromInYearOut implements the access pattern
+func (m FlightFaresModel) FlightsToFromInYearOut(x *FlightFares, out *FlightsToFromInYearResponse) (err error) {
+	out.Flights = append(out.Flights, x.GetFlight())
+	return
+}
+
+////////
+/// Everything Below Will be Generated at some point
+////////
 
 // FlightFaresAccess interface must be implemented to support access patterns
 type FlightFaresAccess interface {
@@ -23,16 +100,63 @@ type DynamoQuerier interface {
 	Query(ctx context.Context, params *dynamodb.QueryInput, optFns ...func(*dynamodb.Options)) (*dynamodb.QueryOutput, error)
 }
 
+// DynamoMutater provides mutating methods on dynamodb
+type DynamoMutater interface {
+	PutItem(ctx context.Context, params *dynamodb.PutItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.PutItemOutput, error)
+}
+
+// FlightFaresMutater provides the writing part of the flight fares table
+type FlightFaresMutater struct {
+	tn  string
+	cl  DynamoMutater
+	mpr FlightFaresKeyMapper
+}
+
+// NewFlightFaresMutater inits the mutating side of the table
+func NewFlightFaresMutater(tn string, cl DynamoMutater, mpr FlightFaresKeyMapper) *FlightFaresMutater {
+	return &FlightFaresMutater{tn: tn, cl: cl, mpr: mpr}
+}
+
+// PutFlight will put a flight in the table
+func (m *FlightFaresMutater) PutFlight(ctx context.Context, x *Flight) (err error) {
+	var tbx FlightFares
+
+	// @TODO should perform checks on 'x' to make sure we don't insert invalid values
+	// @TODO we could use the validation package for this.
+	// @TODO we could check that all values required for the keys are set explicitely
+
+	if err = tbx.FromDynamoEntity(&FlightFares_Flight{x}, m.mpr); err != nil {
+		return fmt.Errorf("failed to create table message from entity message: %w", err)
+	}
+
+	var put dynamodb.PutItemInput
+	put.TableName = &m.tn
+	if put.Item, err = tbx.MarshalDynamoItem(); err != nil {
+		return fmt.Errorf("failed to marshal: %w", err)
+	}
+	if _, err = m.cl.PutItem(ctx, &put); err != nil {
+		return fmt.Errorf("failed to put: %w", err)
+	}
+
+	return nil
+}
+
+// NewFlightFaresQuerier inits the querying side of the table
+func NewFlightFaresQuerier(tn string, cl DynamoQuerier, ap FlightFaresAccess) *FlightFaresQuerier {
+	return &FlightFaresQuerier{tn: tn, cl: cl, ap: ap}
+}
+
 // FlightFaresQuerier is generated from the flight fares access pattern definition
 type FlightFaresQuerier struct {
+	tn string
 	ap FlightFaresAccess
 	cl DynamoQuerier
 }
 
 // FlightsToFromInYear returns flight from and to an airport in a given year
-func (tbl *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *FlightsToFromInYearRequest) (out *FlightsToFromInYearResponse, err error) {
+func (q *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *FlightsToFromInYearRequest) (out *FlightsToFromInYearResponse, err error) {
 	var qryin dynamodb.QueryInput
-	kb, fb, err := tbl.ap.FlightsToFromInYearExpr(in)
+	kb, fb, err := q.ap.FlightsToFromInYearExpr(in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup expressions: %w", err)
 	}
@@ -42,12 +166,14 @@ func (tbl *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *Flig
 		return nil, fmt.Errorf("failed to build expression: %w", err)
 	}
 
+	qryin.TableName = &q.tn
+	qryin.IndexName = aws.String("gsi1")
 	qryin.ExpressionAttributeNames = expr.Names()
 	qryin.ExpressionAttributeValues = expr.Values()
 	qryin.KeyConditionExpression = expr.KeyCondition()
 	qryin.FilterExpression = expr.Filter()
 
-	qryout, err := tbl.cl.Query(ctx, &qryin)
+	qryout, err := q.cl.Query(ctx, &qryin)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query: %w", err)
 	}
@@ -59,7 +185,7 @@ func (tbl *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *Flig
 			return nil, fmt.Errorf("failed to unmarshal queried item: %w", err)
 		}
 
-		if err := tbl.ap.FlightsToFromInYearOut(&x, out); err != nil {
+		if err := q.ap.FlightsToFromInYearOut(&x, out); err != nil {
 			return nil, fmt.Errorf("failed to conver item into output: %w", err)
 		}
 	}
@@ -67,151 +193,68 @@ func (tbl *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *Flig
 	return
 }
 
-// FlightFaresEntity needs to be implemented by entities to allow marshalling for the
-// FlightFares table
-type FlightFaresEntity interface {
-	GetPk() string             // return type depends on protobuf type
-	GetSk() string             // should only be generated when a sk is provided
-	GetGsi1Pk() (string, bool) // can return false if it needs to be left undefined
-	GetGsi1Sk() (string, bool)
-	GetGsi2Pk() (string, bool)
-	GetGsi2Sk() (string, bool)
-	isFlightFares_Entity()
+// FlightFaresKeys describes key attributes the FlightFares table
+type FlightFaresKeys struct {
+	PK     string
+	SK     string
+	Gsi1Pk *string
+	Gsi1Sk *string
+	Gsi2Pk *string
+	Gsi2Sk *string
+}
+
+// FlightFaresKeyMapper can be implemented to map entities onto key values
+type FlightFaresKeyMapper interface {
+	MapFare(v *Fare) (FlightFaresKeys, error)
+	MapFlight(v *Flight) (FlightFaresKeys, error)
+	MapAssignment(v *Assignment) (FlightFaresKeys, error)
+	MapBooking(v *Booking) (FlightFaresKeys, error)
 }
 
 // FromDynamoEntity fills the flight vares message from an entity interface
-func (x *FlightFares) FromDynamoEntity(e FlightFaresEntity) {
-	x.Pk, x.Sk = e.GetPk(), e.GetSk()
+func (x *FlightFares) FromDynamoEntity(e isFlightFares_Entity, m FlightFaresKeyMapper) (err error) {
+	var keys FlightFaresKeys
 	switch et := e.(type) {
 	case *FlightFares_Fare:
 		x.Type = FlightFareType_FLIGHT_FARE_TYPE_FARE
 		x.Entity = et
+		keys, err = m.MapFare(et.Fare)
 	case *FlightFares_Flight:
 		x.Type = FlightFareType_FLIGHT_FARE_TYPE_FLIGHT
 		x.Entity = et
+		keys, err = m.MapFlight(et.Flight)
 	case *FlightFares_Assignment:
 		x.Type = FlightFareType_FLIGHT_FARE_TYPE_ASSIGNMENT
 		x.Entity = et
+		keys, err = m.MapAssignment(et.Assignment)
 	case *FlightFares_Booking:
 		x.Type = FlightFareType_FLIGHT_FARE_TYPE_BOOKING
 		x.Entity = et
+		keys, err = m.MapBooking(et.Booking)
 	default:
-		panic(fmt.Sprintf("unsupported entity: %T", et))
+		return fmt.Errorf("unsupported entity: %T", et)
 	}
 
-	if kv, ok := e.GetGsi1Pk(); ok {
-		x.Gsi1Pk = kv
-		if kv, ok := e.GetGsi1Sk(); ok {
-			x.Gsi1Sk = kv
+	if err != nil {
+		return fmt.Errorf("failed to map keys: %w", err)
+	}
+
+	// @TODO error if pk/sk key has zero values or keymap is otherwise invalid
+
+	x.Pk, x.Sk = keys.PK, keys.SK
+	if keys.Gsi1Pk != nil {
+		x.Gsi1Pk = *keys.Gsi1Pk
+		if keys.Gsi1Sk != nil {
+			x.Gsi1Sk = *keys.Gsi1Sk
 		}
 	}
 
-	if kv, ok := e.GetGsi2Pk(); ok {
-		x.Gsi2Pk = kv
-		if kv, ok := e.GetGsi2Sk(); ok {
-			x.Gsi2Sk = kv
+	if keys.Gsi2Pk != nil {
+		x.Gsi2Pk = *keys.Gsi2Pk
+		if keys.Gsi2Sk != nil {
+			x.Gsi2Sk = *keys.Gsi2Sk
 		}
 	}
-}
 
-// FlightFares Fare
-var _ FlightFaresEntity = &FlightFares_Fare{}
-
-func (x FlightFares_Fare) GetPk() string {
-	return x.Fare.Origin.String() // e.g: DEN
-}
-func (x FlightFares_Fare) GetSk() string {
-	return fmt.Sprintf("%s#%s#%s", x.Fare.Destination, x.Fare.StartAt, x.Fare.Class)
-}
-func (x FlightFares_Fare) GetGsi1Pk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Fare) GetGsi1Sk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Fare) GetGsi2Pk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Fare) GetGsi2Sk() (string, bool) {
-	return "", false
-}
-
-// FlightFares Flight
-var _ FlightFaresEntity = &FlightFares_Flight{}
-
-func (x FlightFares_Flight) GetPk() string {
-	return x.Flight.Origin.String() // e.g: DEN
-}
-func (x FlightFares_Flight) GetSk() string {
-	return fmt.Sprintf("%s#%s#%d#%d", // ${origin}#${depart}#${number}#${segId}
-		x.Flight.Origin, x.Flight.DepatureAt, x.Flight.Number, x.Flight.SegmentId,
-	)
-}
-func (x FlightFares_Flight) GetGsi1Pk() (string, bool) {
-	return x.Flight.Destination.String(), true
-}
-func (x FlightFares_Flight) GetGsi1Sk() (string, bool) {
-	return fmt.Sprintf("%s#%s", // ${origin}#${arrive}
-		x.Flight.Origin, x.Flight.ArrivalAt,
-	), true
-}
-func (x FlightFares_Flight) GetGsi2Pk() (string, bool) {
-	return fmt.Sprintf("%d", x.Flight.Number), true
-}
-func (x FlightFares_Flight) GetGsi2Sk() (string, bool) {
-	if !x.Flight.IsSegment {
-		return "0", true
-	}
-	return fmt.Sprintf("%d", x.Flight.SegmentId), true
-}
-
-// FlightFares Assignment
-var _ FlightFaresEntity = &FlightFares_Assignment{}
-
-func (x FlightFares_Assignment) GetPk() string {
-	return fmt.Sprintf("%s, %s", x.Assignment.LastName, x.Assignment.FirstName)
-}
-func (x FlightFares_Assignment) GetSk() string {
-	return fmt.Sprintf("%s#%d#%d#%s", // ${depart}#${flight}#${segId}#${seat}
-		x.Assignment.DepartureAt,
-		x.Assignment.FlightNumber,
-		x.Assignment.SegmentId,
-		x.Assignment.Seat)
-}
-func (x FlightFares_Assignment) GetGsi1Pk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Assignment) GetGsi1Sk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Assignment) GetGsi2Pk() (string, bool) {
-	return fmt.Sprintf("%d", x.Assignment.Number), true
-}
-func (x FlightFares_Assignment) GetGsi2Sk() (string, bool) {
-	return fmt.Sprintf("%d#%s", x.Assignment.SegmentId, x.Assignment.Seat), true
-}
-
-// FlightFares Booking
-var _ FlightFaresEntity = &FlightFares_Booking{}
-
-func (x FlightFares_Booking) GetPk() string {
-	return fmt.Sprintf("%s, %s", x.Booking.LastName, x.Booking.FirstName)
-}
-func (x FlightFares_Booking) GetSk() string {
-	return fmt.Sprintf("%s#%d", // ${depart}#${flight}
-		x.Booking.DepartureAt,
-		x.Booking.FlightNumber,
-	)
-}
-func (x FlightFares_Booking) GetGsi1Pk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Booking) GetGsi1Sk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Booking) GetGsi2Pk() (string, bool) {
-	return "", false
-}
-func (x FlightFares_Booking) GetGsi2Sk() (string, bool) {
-	return "", false
+	return nil
 }

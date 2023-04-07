@@ -281,6 +281,11 @@ func (p TableOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) TableO
 	return p
 }
 
+// Name appends the path being build
+func (p TableOptionsPath) Name() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
 // Pk appends the path being build
 func (p TableOptionsPath) Pk() expression.NameBuilder {
 	return p.AppendName(expression.Name("2"))
@@ -297,6 +302,7 @@ func (p TableOptionsPath) Gsi() ddbpath.ItemList[TableGsiOptionsPath] {
 }
 func init() {
 	ddbpath.Register(TableOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
 		"10": {
 			Kind:    ddbpath.FieldKindList,
 			Message: reflect.TypeOf(TableGsiOptionsPath{}),
@@ -337,4 +343,31 @@ func (p EntityOptionsPath) TypeAttr() expression.NameBuilder {
 }
 func init() {
 	ddbpath.Register(EntityOptionsPath{}, map[string]ddbpath.FieldInfo{"4": {Kind: ddbpath.FieldKindSingle}})
+}
+
+// QueryOptionsPath allows for constructing type-safe expression names
+type QueryOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p QueryOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) QueryOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Table appends the path being build
+func (p QueryOptionsPath) Table() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Index appends the path being build
+func (p QueryOptionsPath) Index() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+func init() {
+	ddbpath.Register(QueryOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
+	})
 }

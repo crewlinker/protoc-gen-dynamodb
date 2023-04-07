@@ -605,11 +605,23 @@ func (x *FlightsToFromInYearRequest) UnmarshalDynamoItem(m map[string]types.Attr
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *FlightsToFromInYearResponse) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
+	if len(x.Flights) != 0 {
+		m["1"], err = ddb.MarshalRepeatedMessage(x.Flights, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal repeated message field 'Flights': %w", err)
+		}
+	}
 	return m, nil
 }
 
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *FlightsToFromInYearResponse) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	if m["1"] != nil {
+		x.Flights, err = ddb.UnmarshalRepeatedMessage[Flight](m["1"], ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Flights': %w", err)
+		}
+	}
 	return nil
 }
 
@@ -657,10 +669,22 @@ func (x *PassengerBookingsInYearRequest) UnmarshalDynamoItem(m map[string]types.
 // MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *PassengerBookingsInYearResponse) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
+	if len(x.Bookings) != 0 {
+		m["1"], err = ddb.MarshalRepeatedMessage(x.Bookings, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal repeated message field 'Bookings': %w", err)
+		}
+	}
 	return m, nil
 }
 
 // UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
 func (x *PassengerBookingsInYearResponse) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	if m["1"] != nil {
+		x.Bookings, err = ddb.UnmarshalRepeatedMessage[Booking](m["1"], ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Bookings': %w", err)
+		}
+	}
 	return nil
 }

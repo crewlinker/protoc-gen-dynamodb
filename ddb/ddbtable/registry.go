@@ -20,7 +20,7 @@ type Registry struct {
 
 // NewRegistry inits an empty registry
 func NewRegistry() *Registry {
-	return &Registry{}
+	return &Registry{tables: map[string]*TablePlacement{}}
 }
 
 // KeyDescriptor describes the key's attribute name and type

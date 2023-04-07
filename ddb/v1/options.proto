@@ -92,21 +92,30 @@ message TableGsiOptions {
 
 // TableOptions provide options for messages that describe tables
 message TableOptions {
+    // name of the table
+    required string name = 1;
     // field number of the partition key
-    optional uint32 pk = 2;
+    required uint32 pk = 2;
     // field number of the sort key
-    optional uint32 sk = 3;
-
+    optional uint32 sk = 3;    
     // any global secondary indices
     repeated TableGsiOptions gsi = 10;
 }
 
 // AttributeOptions provide options for fields that describe attributes
 message AttributeOptions {}
+
 // EntityOptions are options for entity
 message EntityOptions {
     // entity type attribute
     optional uint32 type_attr = 4;
+}
+// Options for configuring a access pattern
+message QueryOptions{
+    // name of the table the query is run on
+    required string table = 1;
+    // name of the index the query is run on
+    optional string index = 2;
 }
 
 extend google.protobuf.MessageOptions {
@@ -120,4 +129,7 @@ extend google.protobuf.FieldOptions {
 }
 extend google.protobuf.OneofOptions{
     optional EntityOptions entity = 1098;
+}
+extend google.protobuf.MethodOptions{
+    optional QueryOptions query = 1098;
 }

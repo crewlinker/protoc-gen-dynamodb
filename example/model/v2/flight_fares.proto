@@ -136,6 +136,7 @@ message Booking {
 // The single table design that describes the table structure for the example here:
 // https://dynobase.dev/dynamodb-single-table-design-examples/FlightFares/
 message FlightFares {
+    option (ddb.v1.table).name = "flight_fares"; // name of the table
     option (ddb.v1.table).pk = 1; // partition key attribute
     option (ddb.v1.table).sk = 2;  // sort key attribute
     
@@ -171,10 +172,24 @@ message FlightFares {
         // assignment of a passenger
         Assignment assignment = 102;
         // booking on a flight
-        Booking  booking = 103;
+        Booking booking = 103;
     }
 }
 
+// use service/rpc notation to model access patterns
+service FlightFareService{
+    // for example: "Flights to SFO from JFK in 2021"
+    rpc FlightsToFromInYear(FlightsToFromInYearRequest) returns(FlightsToFromInYearResponse){
+        option(ddb.v1.query).table = "flight_fares";
+        option(ddb.v1.query).index = "gsi1";
+    };
+
+    // for example: "Bookings for Smith,John in 2021"
+    rpc PassengerBookingsInYear(PassengerBookingsInYearRequest) returns (PassengerBookingsInYearResponse) {
+        option(ddb.v1.query).table = "flight_fares";
+        option(ddb.v1.query).index = "gsi1";
+    };
+}
 
 // Input into the access pattern. It will generate 
 message FlightsToFromInYearRequest{
@@ -207,10 +222,3 @@ message PassengerBookingsInYearResponse{
     repeated Booking bookings = 1;
 }
 
-// use service/rpc notation to model access patterns
-service FlightFareService{
-    // for example: "Flights to SFO from JFK in 2021"
-    rpc FlightsToFromInYear(FlightsToFromInYearRequest) returns(FlightsToFromInYearResponse);
-    // for example: "Bookings for Smith,John in 2021"
-    rpc PassengerBookingsInYear(PassengerBookingsInYearRequest) returns (PassengerBookingsInYearResponse);
-}
