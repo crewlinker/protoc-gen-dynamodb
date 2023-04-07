@@ -1,10 +1,70 @@
 package modelv2
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-type FlightFareService interface {
+// FlightFaresAccess interface must be implemented to support access patterns
+type FlightFaresAccess interface {
+	// this is implemented for the access pattern to turn typed access pattern input into expression for
+	// the query operation.
+	FlightsToFromInYearExpr(in *FlightsToFromInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error)
+	// this is implemented to allow query responses to be turned into typed output for the access pattern. It may be called
+	// multiple times as a query might iterate over multiple items, each of wich supply something different to the output.
+	FlightsToFromInYearOut(x *FlightFares, out *FlightsToFromInYearResponse) (err error)
+}
+
+// DynamoQuerier is provided by the dynamodb client of the v2 sdk
+type DynamoQuerier interface {
+	Query(ctx context.Context, params *dynamodb.QueryInput, optFns ...func(*dynamodb.Options)) (*dynamodb.QueryOutput, error)
+}
+
+// FlightFaresQuerier is generated from the flight fares access pattern definition
+type FlightFaresQuerier struct {
+	ap FlightFaresAccess
+	cl DynamoQuerier
+}
+
+// FlightsToFromInYear returns flight from and to an airport in a given year
+func (tbl *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *FlightsToFromInYearRequest) (out *FlightsToFromInYearResponse, err error) {
+	var qryin dynamodb.QueryInput
+	kb, fb, err := tbl.ap.FlightsToFromInYearExpr(in)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup expressions: %w", err)
+	}
+
+	expr, err := expression.NewBuilder().WithKeyCondition(kb).WithFilter(fb).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	qryin.ExpressionAttributeNames = expr.Names()
+	qryin.ExpressionAttributeValues = expr.Values()
+	qryin.KeyConditionExpression = expr.KeyCondition()
+	qryin.FilterExpression = expr.Filter()
+
+	qryout, err := tbl.cl.Query(ctx, &qryin)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query: %w", err)
+	}
+
+	out = &FlightsToFromInYearResponse{}
+	for _, it := range qryout.Items {
+		var x FlightFares
+		if err = x.UnmarshalDynamoItem(it); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal queried item: %w", err)
+		}
+
+		if err := tbl.ap.FlightsToFromInYearOut(&x, out); err != nil {
+			return nil, fmt.Errorf("failed to conver item into output: %w", err)
+		}
+	}
+
+	return
 }
 
 // FlightFaresEntity needs to be implemented by entities to allow marshalling for the

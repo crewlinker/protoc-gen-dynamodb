@@ -188,7 +188,8 @@ message FlightsToFromInYearRequest{
 
 // Output from the access pattern's execution
 message FlightsToFromInYearResponse{
-
+    // flights in the year
+    repeated Flight flights = 1;
 }
 
 // Input into the pattern
@@ -201,23 +202,15 @@ message PassengerBookingsInYearRequest{
     uint32 year = 3;
 }
 // Output from the pattern
-message PassengerBookingsInYearResponse{}
+message PassengerBookingsInYearResponse{
+    // names of the passengers
+    repeated Booking bookings = 1;
+}
 
-// IDEA 2: use rpc notation to model access patterns
+// use service/rpc notation to model access patterns
 service FlightFareService{
     // for example: "Flights to SFO from JFK in 2021"
     rpc FlightsToFromInYear(FlightsToFromInYearRequest) returns(FlightsToFromInYearResponse);
     // for example: "Bookings for Smith,John in 2021"
     rpc PassengerBookingsInYear(PassengerBookingsInYearRequest) returns (PassengerBookingsInYearResponse);
 }
-
-// IDEA 1: Access patterns as messages, fields define the input
-// e.g: Flights to SFO from JFK in 2021
-// message FlightsToFromInYear {
-//     // gsi: gsi1
-//     // pk: 1
-//     // sk: 2,3
-//     Airport to = 1;
-//     Airport from = 2;
-//     uint32 year = 3;
-// }
