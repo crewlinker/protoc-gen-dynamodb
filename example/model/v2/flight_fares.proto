@@ -189,6 +189,22 @@ service FlightFareService{
         option(ddb.v1.query).table = "flight_fares";
         option(ddb.v1.query).index = "gsi1";
     };
+
+    // for example: "Fares from SFO to JFK"
+    rpc FaresFromTo(FaresFromToRequest) returns (FaresFromToResponse);
+}
+
+// Request to get fares from to aiports
+message FaresFromToRequest {
+    // from the this airport, e.g: JFK
+    Airport from = 1;
+    // to this airport, e.g: SFO
+    Airport to = 2;
+}
+// Response with fares
+message FaresFromToResponse {
+    // zer or more fares
+    repeated Fare fares = 1;
 }
 
 // Input into the access pattern. It will generate 

@@ -360,6 +360,55 @@ func init() {
 	})
 }
 
+// FaresFromToRequestPath allows for constructing type-safe expression names
+type FaresFromToRequestPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p FaresFromToRequestPath) WithDynamoNameBuilder(n expression.NameBuilder) FaresFromToRequestPath {
+	p.NameBuilder = n
+	return p
+}
+
+// From appends the path being build
+func (p FaresFromToRequestPath) From() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// To appends the path being build
+func (p FaresFromToRequestPath) To() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+func init() {
+	ddbpath.Register(FaresFromToRequestPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// FaresFromToResponsePath allows for constructing type-safe expression names
+type FaresFromToResponsePath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p FaresFromToResponsePath) WithDynamoNameBuilder(n expression.NameBuilder) FaresFromToResponsePath {
+	p.NameBuilder = n
+	return p
+}
+
+// Fares returns 'p' appended with the attribute while allow indexing a nested message
+func (p FaresFromToResponsePath) Fares() ddbpath.ItemList[FarePath] {
+	return ddbpath.ItemList[FarePath]{NameBuilder: p.AppendName(expression.Name("1"))}
+}
+func init() {
+	ddbpath.Register(FaresFromToResponsePath{}, map[string]ddbpath.FieldInfo{"1": {
+		Kind:    ddbpath.FieldKindList,
+		Message: reflect.TypeOf(FarePath{}),
+	}})
+}
+
 // FlightsToFromInYearRequestPath allows for constructing type-safe expression names
 type FlightsToFromInYearRequestPath struct {
 	expression.NameBuilder

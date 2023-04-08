@@ -65,12 +65,9 @@ func (m FlightFaresModel) MapBooking(v *Booking) (km FlightFaresKeys, err error)
 }
 
 // FlightsToFromInYearExpr implements the access pattern
-func (m FlightFaresModel) FlightsToFromInYearExpr(in *FlightsToFromInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error) {
-	// @TODO we can provide the keyname builder for pk and sk to make expressions easier
-	// @TODO if gsi only provides a pk, only that should be provided.
-	// @TODO would be convenient if the right key/attr names where provided so we don't have to lookup "1"
-	kb = expression.Key("4").Equal(expression.Value(in.To.String())).And(
-		expression.Key("5").BeginsWith(fmt.Sprintf("%s#%d", in.From, in.Year)))
+func (m FlightFaresModel) FlightsToFromInYearExpr(pk, sk expression.KeyBuilder, in *FlightsToFromInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error) {
+	kb = pk.Equal(expression.Value(in.To.String())).And(
+		sk.BeginsWith(fmt.Sprintf("%s#%d", in.From, in.Year)))
 	fb = (modelv2ddbpath.FlightFaresPath{}).Type().Equal(expression.Value(FlightFareType_FLIGHT_FARE_TYPE_FLIGHT))
 	return
 }
@@ -81,18 +78,45 @@ func (m FlightFaresModel) FlightsToFromInYearOut(x *FlightFares, out *FlightsToF
 	return
 }
 
+// PassengerBookingsInYearExpr implements the access pattern
+func (m FlightFaresModel) PassengerBookingsInYearExpr(pk, sk expression.KeyBuilder, in *PassengerBookingsInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error) {
+	kb = pk.Equal(expression.Value(fmt.Sprintf("%s, %s", in.LastName, in.FirstName))).And(
+		sk.BeginsWith(fmt.Sprintf("%d", in.Year)))
+	fb = (modelv2ddbpath.FlightFaresPath{}).Type().Equal(expression.Value(FlightFareType_FLIGHT_FARE_TYPE_BOOKING))
+	return
+}
+
+// PassengerBookingsInYearOut implements reading the query output
+func (m FlightFaresModel) PassengerBookingsInYearOut(x *FlightFares, out *PassengerBookingsInYearResponse) (err error) {
+	out.Bookings = append(out.Bookings, x.GetBooking())
+	return
+}
+
+// FaresFromToExpr implements the access pattern for fetching fares
+func (m FlightFaresModel) FaresFromToExpr(pk, sk expression.KeyBuilder, in *FaresFromToRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error) {
+	kb = pk.Equal(expression.Value(in.From.String())).And(
+		sk.BeginsWith(in.To.String()))
+	return
+}
+
+// FaresFromToOut implements the access pattern for fetching fares
+func (m FlightFaresModel) FaresFromToOut(x *FlightFares, out *FaresFromToResponse) (err error) {
+	out.Fares = append(out.Fares, x.GetFare())
+	return
+}
+
 ////////
 /// Everything Below Will be Generated at some point
 ////////
 
 // FlightFaresAccess interface must be implemented to support access patterns
 type FlightFaresAccess interface {
-	// this is implemented for the access pattern to turn typed access pattern input into expression for
-	// the query operation.
-	FlightsToFromInYearExpr(in *FlightsToFromInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error)
-	// this is implemented to allow query responses to be turned into typed output for the access pattern. It may be called
-	// multiple times as a query might iterate over multiple items, each of wich supply something different to the output.
+	FlightsToFromInYearExpr(pk, sk expression.KeyBuilder, in *FlightsToFromInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error)
 	FlightsToFromInYearOut(x *FlightFares, out *FlightsToFromInYearResponse) (err error)
+	PassengerBookingsInYearExpr(pk, sk expression.KeyBuilder, in *PassengerBookingsInYearRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error)
+	PassengerBookingsInYearOut(x *FlightFares, out *PassengerBookingsInYearResponse) (err error)
+	FaresFromToExpr(pk, sk expression.KeyBuilder, in *FaresFromToRequest) (kb expression.KeyConditionBuilder, fb expression.ConditionBuilder, err error)
+	FaresFromToOut(x *FlightFares, out *FaresFromToResponse) (err error)
 }
 
 // DynamoQuerier is provided by the dynamodb client of the v2 sdk
@@ -117,15 +141,15 @@ func NewFlightFaresMutater(tn string, cl DynamoMutater, mpr FlightFaresKeyMapper
 	return &FlightFaresMutater{tn: tn, cl: cl, mpr: mpr}
 }
 
-// PutFlight will put a flight in the table
-func (m *FlightFaresMutater) PutFlight(ctx context.Context, x *Flight) (err error) {
+// PutEntity will put a flight in the table
+func (m *FlightFaresMutater) PutEntity(ctx context.Context, e isFlightFares_Entity) (err error) {
 	var tbx FlightFares
 
 	// @TODO should perform checks on 'x' to make sure we don't insert invalid values
 	// @TODO we could use the validation package for this.
 	// @TODO we could check that all values required for the keys are set explicitely
 
-	if err = tbx.FromDynamoEntity(&FlightFares_Flight{x}, m.mpr); err != nil {
+	if err = tbx.FromDynamoEntity(e, m.mpr); err != nil {
 		return fmt.Errorf("failed to create table message from entity message: %w", err)
 	}
 
@@ -153,15 +177,108 @@ type FlightFaresQuerier struct {
 	cl DynamoQuerier
 }
 
-// FlightsToFromInYear returns flight from and to an airport in a given year
-func (q *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *FlightsToFromInYearRequest) (out *FlightsToFromInYearResponse, err error) {
+// FaresFromTo returns flight from and to an airport in a given year
+func (q *FlightFaresQuerier) FaresFromTo(ctx context.Context, in *FaresFromToRequest) (out *FaresFromToResponse, err error) {
 	var qryin dynamodb.QueryInput
-	kb, fb, err := q.ap.FlightsToFromInYearExpr(in)
+	kb, fb, err := q.ap.FaresFromToExpr(expression.Key("1"), expression.Key("2"), in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup expressions: %w", err)
 	}
 
-	expr, err := expression.NewBuilder().WithKeyCondition(kb).WithFilter(fb).Build()
+	exprb := expression.NewBuilder().WithKeyCondition(kb)
+	if fb.IsSet() {
+		exprb = exprb.WithFilter(fb)
+	}
+
+	expr, err := exprb.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	qryin.TableName = &q.tn
+	qryin.ExpressionAttributeNames = expr.Names()
+	qryin.ExpressionAttributeValues = expr.Values()
+	qryin.KeyConditionExpression = expr.KeyCondition()
+	qryin.FilterExpression = expr.Filter()
+
+	qryout, err := q.cl.Query(ctx, &qryin)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query: %w", err)
+	}
+
+	out = &FaresFromToResponse{}
+	for _, it := range qryout.Items {
+		var x FlightFares
+		if err = x.UnmarshalDynamoItem(it); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal queried item: %w", err)
+		}
+
+		if err := q.ap.FaresFromToOut(&x, out); err != nil {
+			return nil, fmt.Errorf("failed to conver item into output: %w", err)
+		}
+	}
+
+	return
+}
+
+// PassengerBookingsInYear returns flight from and to an airport in a given year
+func (q *FlightFaresQuerier) PassengerBookingsInYear(ctx context.Context, in *PassengerBookingsInYearRequest) (out *PassengerBookingsInYearResponse, err error) {
+	var qryin dynamodb.QueryInput
+	kb, fb, err := q.ap.PassengerBookingsInYearExpr(expression.Key("1"), expression.Key("2"), in)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup expressions: %w", err)
+	}
+
+	exprb := expression.NewBuilder().WithKeyCondition(kb)
+	if fb.IsSet() {
+		exprb = exprb.WithFilter(fb)
+	}
+
+	expr, err := exprb.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	qryin.TableName = &q.tn
+	qryin.ExpressionAttributeNames = expr.Names()
+	qryin.ExpressionAttributeValues = expr.Values()
+	qryin.KeyConditionExpression = expr.KeyCondition()
+	qryin.FilterExpression = expr.Filter()
+
+	qryout, err := q.cl.Query(ctx, &qryin)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query: %w", err)
+	}
+
+	out = &PassengerBookingsInYearResponse{}
+	for _, it := range qryout.Items {
+		var x FlightFares
+		if err = x.UnmarshalDynamoItem(it); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal queried item: %w", err)
+		}
+
+		if err := q.ap.PassengerBookingsInYearOut(&x, out); err != nil {
+			return nil, fmt.Errorf("failed to conver item into output: %w", err)
+		}
+	}
+
+	return
+}
+
+// FlightsToFromInYear returns flight from and to an airport in a given year
+func (q *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *FlightsToFromInYearRequest) (out *FlightsToFromInYearResponse, err error) {
+	var qryin dynamodb.QueryInput
+	kb, fb, err := q.ap.FlightsToFromInYearExpr(expression.Key("4"), expression.Key("5"), in)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup expressions: %w", err)
+	}
+
+	exprb := expression.NewBuilder().WithKeyCondition(kb)
+	if fb.IsSet() {
+		exprb = exprb.WithFilter(fb)
+	}
+
+	expr, err := exprb.Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build expression: %w", err)
 	}

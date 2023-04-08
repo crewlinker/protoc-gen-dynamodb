@@ -562,6 +562,60 @@ func (x *FlightFares) UnmarshalDynamoItem(m map[string]types.AttributeValue) (er
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map
+func (x *FaresFromToRequest) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if x.From != 0 {
+		m["1"], err = ddb.Marshal(x.GetFrom(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'From': %w", err)
+		}
+	}
+	if x.To != 0 {
+		m["2"], err = ddb.Marshal(x.GetTo(), ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal field 'To': %w", err)
+		}
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *FaresFromToRequest) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	err = ddb.Unmarshal(m["1"], &x.From, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'From': %w", err)
+	}
+	err = ddb.Unmarshal(m["2"], &x.To, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal field 'To': %w", err)
+	}
+	return nil
+}
+
+// MarshalDynamoItem marshals data into a dynamodb attribute map
+func (x *FaresFromToResponse) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
+	m = make(map[string]types.AttributeValue)
+	if len(x.Fares) != 0 {
+		m["1"], err = ddb.MarshalRepeatedMessage(x.Fares, ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal repeated message field 'Fares': %w", err)
+		}
+	}
+	return m, nil
+}
+
+// UnmarshalDynamoItem unmarshals data from a dynamodb attribute map
+func (x *FaresFromToResponse) UnmarshalDynamoItem(m map[string]types.AttributeValue) (err error) {
+	if m["1"] != nil {
+		x.Fares, err = ddb.UnmarshalRepeatedMessage[Fare](m["1"], ddb.Embed(v1.Encoding_ENCODING_DYNAMO))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal repeated message field 'Fares': %w", err)
+		}
+	}
+	return nil
+}
+
+// MarshalDynamoItem marshals data into a dynamodb attribute map
 func (x *FlightsToFromInYearRequest) MarshalDynamoItem() (m map[string]types.AttributeValue, err error) {
 	m = make(map[string]types.AttributeValue)
 	if x.To != 0 {

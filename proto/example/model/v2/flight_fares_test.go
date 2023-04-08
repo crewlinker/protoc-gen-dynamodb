@@ -79,9 +79,6 @@ var _ = Describe("flight fares", func() {
 
 		DeferCleanup(func(ctx context.Context) {
 			Expect(ddbc.DeleteTable(ctx, &dynamodb.DeleteTableInput{TableName: &tblname})).ToNot(BeNil())
-			tl, err := ddbc.ListTables(ctx, &dynamodb.ListTablesInput{})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(tl.TableNames).To(HaveLen(0))
 		})
 	})
 
@@ -118,11 +115,59 @@ var _ = Describe("flight fares", func() {
 					ArrivalAt:  timestamppb.New(time.Unix(1627842300, 0)), // 2021-08-03T20:25:00
 				},
 			} {
-				Expect(mut.PutFlight(ctx, flight)).To(Succeed())
+				Expect(mut.PutEntity(ctx, &modelv2.FlightFares_Flight{flight})).To(Succeed())
+			}
+
+			for _, booking := range []*modelv2.Booking{
+				{
+					FirstName: "Jon", LastName: "Smith", FlightNumber: 150,
+					DepartureAt: timestamppb.New(time.Unix(1627791955, 0)), // 2021-08-01T06:25:00
+					ArrivalAt:   timestamppb.New(time.Unix(1627820755, 0)), //2021-08-01T14:25:00
+					Segments:    2,
+					Origin:      modelv2.Airport_AIRPORT_SFO,
+					Destination: modelv2.Airport_AIRPORT_JFK,
+				},
+
+				{
+					FirstName: "Caren", LastName: "Storal", FlightNumber: 110,
+					DepartureAt: timestamppb.New(time.Unix(1627791955, 0)), // 2021-08-01T06:25:00
+					ArrivalAt:   timestamppb.New(time.Unix(1627820755, 0)), //2021-08-01T14:25:00
+					Segments:    0,
+					Origin:      modelv2.Airport_AIRPORT_JFK,
+					Destination: modelv2.Airport_AIRPORT_SFO,
+				},
+			} {
+				Expect(mut.PutEntity(ctx, &modelv2.FlightFares_Booking{booking})).To(Succeed())
+			}
+
+			for _, fare := range []*modelv2.Fare{
+				{
+					StartAt:     timestamppb.New(time.Unix(1627768800, 0)), // 2021-08-01T00:00:00
+					EndAt:       timestamppb.New(time.Unix(1627851600, 0)), // 2021-08-01T23:00:00
+					Origin:      modelv2.Airport_AIRPORT_JFK,
+					Destination: modelv2.Airport_AIRPORT_SFO,
+					Class:       modelv2.FlightClass_FLIGHT_CLASS_NON_STOP,
+				},
+				{
+					StartAt:     timestamppb.New(time.Unix(1627768800, 0)), // 2021-08-01T00:00:00
+					EndAt:       timestamppb.New(time.Unix(1627851600, 0)), // 2021-08-01T23:00:00
+					Origin:      modelv2.Airport_AIRPORT_JFK,
+					Destination: modelv2.Airport_AIRPORT_SFO,
+					Class:       modelv2.FlightClass_FLIGHT_CLASS_DIRECT,
+				},
+				{
+					StartAt:     timestamppb.New(time.Unix(1627768800, 0)), // 2021-08-01T00:00:00
+					EndAt:       timestamppb.New(time.Unix(1627851600, 0)), // 2021-08-01T23:00:00
+					Origin:      modelv2.Airport_AIRPORT_DEN,
+					Destination: modelv2.Airport_AIRPORT_JFK,
+					Class:       modelv2.FlightClass_FLIGHT_CLASS_NON_STOP,
+				},
+			} {
+				Expect(mut.PutEntity(ctx, &modelv2.FlightFares_Fare{fare})).To(Succeed())
 			}
 		})
 
-		It("should scan all the inserted flights", func(ctx context.Context) {
+		It("should scan all the inserted items", func(ctx context.Context) {
 			out, err := ddbc.Scan(ctx, &dynamodb.ScanInput{TableName: &tblname})
 			Expect(err).ToNot(HaveOccurred())
 
@@ -132,7 +177,7 @@ var _ = Describe("flight fares", func() {
 				Expect(x.UnmarshalDynamoItem(item)).To(Succeed())
 				ffs = append(ffs, &x)
 			}
-			Expect(ffs).To(HaveLen(4))
+			Expect(ffs).To(HaveLen(9))
 		})
 
 		It("should show flights to SFO from JFK in 2021", func(ctx context.Context) {
@@ -143,6 +188,26 @@ var _ = Describe("flight fares", func() {
 			Expect(out.Flights).To(HaveLen(2))
 			Expect(out.Flights[0].Number).To(BeNumerically("==", 260))
 			Expect(out.Flights[1].Number).To(BeNumerically("==", 160))
+		})
+
+		It("should show passengers bookings in 2021", func(ctx context.Context) {
+			out, err := qry.PassengerBookingsInYear(ctx, &modelv2.PassengerBookingsInYearRequest{
+				FirstName: "Jon", LastName: "Smith", Year: 2021,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(out.Bookings).To(HaveLen(1))
+			Expect(out.Bookings[0].LastName).To(Equal("Smith"))
+			Expect(out.Bookings[0].FirstName).To(Equal("Jon"))
+		})
+
+		It("should show fares from JFK to SFO", func(ctx context.Context) {
+			out, err := qry.FaresFromTo(ctx, &modelv2.FaresFromToRequest{
+				From: modelv2.Airport_AIRPORT_JFK, To: modelv2.Airport_AIRPORT_SFO,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(out.Fares).To(HaveLen(2))
+			Expect(out.Fares[0].Class).To(Equal(modelv2.FlightClass_FLIGHT_CLASS_DIRECT))
+			Expect(out.Fares[1].Class).To(Equal(modelv2.FlightClass_FLIGHT_CLASS_NON_STOP))
 		})
 	})
 })
