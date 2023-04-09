@@ -55,7 +55,7 @@ message TableOptions {
 // EntityOptions are options for entity
 message EntityOptions {
     // entity type attribute
-    optional uint32 type_attr = 4;
+    required uint32 type_attr = 4;
 }
 
 // Options for configuring a access pattern

@@ -4,8 +4,10 @@ package modelv2
 
 import (
 	"fmt"
+	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	ddb "github.com/crewlinker/protoc-gen-dynamodb/ddb"
+	ddbtable "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbtable"
 	v1 "github.com/crewlinker/protoc-gen-dynamodb/proto/ddb/v1"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -559,6 +561,49 @@ func (x *FlightFares) UnmarshalDynamoItem(m map[string]types.AttributeValue) (er
 		x.Entity = &mo
 	}
 	return nil
+}
+
+// FlightFaresTableDefinition can be used to register the table in the ddbtable registry
+var FlightFaresTableDefinition = ddbtable.Table{
+	EntityType: &ddbtable.Attribute{
+		Name: "3",
+		Type: expression.String,
+	},
+	GlobalIndexes: []*ddbtable.GlobalIndex{{
+		Name: "gsi1",
+		PartitionKey: &ddbtable.Attribute{
+			Name: "4",
+			Type: expression.String,
+		},
+		SortKey: &ddbtable.Attribute{
+			Name: "5",
+			Type: expression.String,
+		},
+	}, {
+		Name: "gsi2",
+		PartitionKey: &ddbtable.Attribute{
+			Name: "6",
+			Type: expression.String,
+		},
+		SortKey: &ddbtable.Attribute{
+			Name: "7",
+			Type: expression.String,
+		},
+	}},
+	Name: "flight_fares",
+	PartitionKey: &ddbtable.Attribute{
+		Name: "1",
+		Type: expression.String,
+	},
+	SortKey: &ddbtable.Attribute{
+		Name: "2",
+		Type: expression.String,
+	},
+}
+
+// register table in the default registry
+func init() {
+	ddbtable.Register(&FlightFaresTableDefinition)
 }
 
 // MarshalDynamoItem marshals data into a dynamodb attribute map
