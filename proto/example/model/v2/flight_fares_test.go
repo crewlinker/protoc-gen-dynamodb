@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	ddbconversions "github.com/aereal/go-dynamodb-attribute-conversions/v2"
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -14,6 +16,33 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+var _ = Describe("stream parsing", func() {
+	It("should parse dynamodb streams", func() {
+		ev1 := &events.DynamoDBEvent{
+			Records: []events.DynamoDBEventRecord{
+				{Change: events.DynamoDBStreamRecord{
+					NewImage: map[string]events.DynamoDBAttributeValue{
+						"1": events.NewStringAttribute("foo"),
+						"2": events.NewStringAttribute("bar"),
+						"100": events.NewMapAttribute(map[string]events.DynamoDBAttributeValue{
+							"1": events.NewNumberAttribute("100"),
+						}),
+					},
+				}},
+			},
+		}
+		for _, rec := range ev1.Records {
+			m := ddbconversions.AttributeValueMapFrom(rec.Change.NewImage)
+
+			var x modelv2.FlightFares
+			Expect(x.UnmarshalDynamoItem(m)).To(Succeed())
+			Expect(x.Pk).To(Equal("foo"))
+			Expect(x.Sk).To(Equal("bar"))
+			Expect(x.GetFlight().Number).To(BeNumerically("==", 100))
+		}
+	})
+})
 
 var _ = Describe("flight fares", func() {
 	var tblname string

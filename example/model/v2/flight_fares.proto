@@ -183,15 +183,14 @@ service FlightFareService{
         option(ddb.v1.query).table = "flight_fares";
         option(ddb.v1.query).index = "gsi1";
     };
-
-    // for example: "Bookings for Smith,John in 2021"
+    // for example: "Bookings for Smith, John in 2021"
     rpc PassengerBookingsInYear(PassengerBookingsInYearRequest) returns (PassengerBookingsInYearResponse) {
         option(ddb.v1.query).table = "flight_fares";
-        option(ddb.v1.query).index = "gsi1";
     };
-
     // for example: "Fares from SFO to JFK"
-    rpc FaresFromTo(FaresFromToRequest) returns (FaresFromToResponse);
+    rpc FaresFromTo(FaresFromToRequest) returns (FaresFromToResponse) {
+        option(ddb.v1.query).table = "flight_fares";
+    };
 }
 
 // Request to get fares from to aiports
