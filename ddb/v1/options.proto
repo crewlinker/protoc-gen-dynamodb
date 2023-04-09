@@ -14,42 +14,6 @@ enum Encoding{
     ENCODING_DYNAMO = 2;
 }
 
-// Options for the local secondary index (lsi)
-message LsiOptions {
-    // name of the lsi the field is a part of
-    required string name = 1;
-    // indicate that the field is the sort key of the lsi, else it's part of the projection
-    optional bool sk = 3;
-}
-
-// Options for the global secondary index (lsi)
-message GsiOptions {
-    // name of the gsi the field is a part of
-    required string name = 1;
-    // indicate that the field is the partition key of the gsi
-    optional bool pk = 2;
-    // indicate that the field is the sort key of the gsi
-    optional bool sk = 3;
-}
-
-// New options for providing gsi options on the table
-message GsiOptionsV2 {
-    // name of the gsi
-    required string name = 1;
-    // primary key attribute for the gsi
-    required string pk = 2;
-    // optional sort key for the gsi
-    optional string sk = 3;
-}
-
-// New options for providing lsi options on the table
-message LsiOptionsV2 {
-    // name of the gsi
-    required string name = 1;
-    // optional sort key for the gsi
-    required string sk = 3;
-}
-
 // FieldOptions presents options to configure fields for DynamoDB 
 message FieldOptions {
     // specify the name of the DynamoDB attribute
@@ -64,24 +28,10 @@ message FieldOptions {
     optional bool set = 5;
     // allows for embedding the field's value as an encoded json or binary protobuf
     optional Encoding embed = 6; 
-    // configure the field as part of an lsi on the table it
-    repeated LsiOptions lsi = 8;
-    // configure the field as part of the gsi of a table
-    repeated GsiOptions gsi = 9;
-}
-
-// MessageOptions presents options to configure messages for DynamoDB 
-message MessageOptions {
-    // table name in which the message will be stored
-    repeated string table = 1;
-    // gsi allows global secondary indexes to be configured 
-    repeated GsiOptionsV2 gsi = 2;
-    // lsi allows local secondary indexes to be configured for the table
-    repeated LsiOptionsV2 lsi = 3;
 }
 
 // Configure a global secondary index
-message TableGsiOptions {
+message GsiOptions {
     // name of the gsi
     required string name = 1;
     // partition key for the gsi
@@ -99,17 +49,15 @@ message TableOptions {
     // field number of the sort key
     optional uint32 sk = 3;    
     // any global secondary indices
-    repeated TableGsiOptions gsi = 10;
+    repeated GsiOptions gsi = 10;
 }
-
-// AttributeOptions provide options for fields that describe attributes
-message AttributeOptions {}
 
 // EntityOptions are options for entity
 message EntityOptions {
     // entity type attribute
     optional uint32 type_attr = 4;
 }
+
 // Options for configuring a access pattern
 message QueryOptions{
     // name of the table the query is run on
@@ -119,13 +67,10 @@ message QueryOptions{
 }
 
 extend google.protobuf.MessageOptions {
-    optional MessageOptions msg = 1099;
     optional TableOptions table = 1098;
 }
-
 extend google.protobuf.FieldOptions {
     optional FieldOptions field = 1099;
-    optional AttributeOptions attr = 1098;
 }
 extend google.protobuf.OneofOptions{
     optional EntityOptions entity = 1098;

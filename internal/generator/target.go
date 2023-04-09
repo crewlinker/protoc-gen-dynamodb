@@ -264,12 +264,6 @@ func (tg *Target) GenerateMessageLogic(w io.Writer) error {
 		if err := tg.genMessageKeying(f, m); err != nil {
 			return fmt.Errorf("failed to generate key methods: %w", err)
 		}
-
-		// generate message table placement registration
-		if err := tg.genRegisterTablePlacement(f, m); err != nil {
-			return fmt.Errorf("failed to generate register table placement: %w", err)
-		}
-
 	}
 
 	return f.Render(w)

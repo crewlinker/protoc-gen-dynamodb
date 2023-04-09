@@ -1412,182 +1412,6 @@ func (*JsonOneofs_OneofStr) isJsonOneofs_JsonOo() {}
 
 func (*JsonOneofs_OneofMsg) isJsonOneofs_JsonOo() {}
 
-// Thread uses a local secondary index as described in the scenario here:
-// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LSI.html#LSI.Scenario
-type Thread struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// name of the forum this thread is a part of
-	ForumName string `protobuf:"bytes,1,opt,name=forum_name,json=forumName,proto3" json:"forum_name,omitempty"`
-	// subject of the forum thread, it is projected into the last post lsi
-	Subject string `protobuf:"bytes,2,opt,name=subject,proto3" json:"subject,omitempty"`
-	// field is updated when a post is made so a lsi can be queried for finding recently active threads
-	// it is the sort key of the lsi
-	LastPostDateTime string `protobuf:"bytes,3,opt,name=last_post_date_time,json=lastPostDateTime,proto3" json:"last_post_date_time,omitempty"`
-	// replies counts the number of replies in a thread, it is projected in the last_post_index
-	Replies int64 `protobuf:"varint,4,opt,name=replies,proto3" json:"replies,omitempty"`
-}
-
-func (x *Thread) Reset() {
-	*x = Thread{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_example_model_v1_message_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Thread) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Thread) ProtoMessage() {}
-
-func (x *Thread) ProtoReflect() protoreflect.Message {
-	mi := &file_example_model_v1_message_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Thread.ProtoReflect.Descriptor instead.
-func (*Thread) Descriptor() ([]byte, []int) {
-	return file_example_model_v1_message_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *Thread) GetForumName() string {
-	if x != nil {
-		return x.ForumName
-	}
-	return ""
-}
-
-func (x *Thread) GetSubject() string {
-	if x != nil {
-		return x.Subject
-	}
-	return ""
-}
-
-func (x *Thread) GetLastPostDateTime() string {
-	if x != nil {
-		return x.LastPostDateTime
-	}
-	return ""
-}
-
-func (x *Thread) GetReplies() int64 {
-	if x != nil {
-		return x.Replies
-	}
-	return 0
-}
-
-// GameScore stores the scores of a game, following the scenario for global secondary indexes:
-// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html#GSI.scenario
-type GameScore struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// user that owns the score
-	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	// game for which the score was achieved. Pk of the game_title index to easily get highest score for
-	// each game.
-	GameTitle string `protobuf:"bytes,2,opt,name=game_title,json=gameTitle,proto3" json:"game_title,omitempty"`
-	// highest score of the user in the game. It is included a gsi to allow querying for highest scores in
-	// each game title.
-	TopScore int64 `protobuf:"varint,3,opt,name=top_score,json=topScore,proto3" json:"top_score,omitempty"`
-	// date and time at which the score was achieved
-	TopScoreDateTime string `protobuf:"bytes,4,opt,name=top_score_date_time,json=topScoreDateTime,proto3" json:"top_score_date_time,omitempty"`
-	// total nr of wins of the user in the game, it's projected in to the gsi to allow to query wins/losses
-	// for each player that has the highest/lowest score
-	Wins int64 `protobuf:"varint,5,opt,name=wins,proto3" json:"wins,omitempty"`
-	// total nr of losses of the user in the game, projected in the gsi as well
-	Losses int64 `protobuf:"varint,6,opt,name=losses,proto3" json:"losses,omitempty"`
-}
-
-func (x *GameScore) Reset() {
-	*x = GameScore{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_example_model_v1_message_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GameScore) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GameScore) ProtoMessage() {}
-
-func (x *GameScore) ProtoReflect() protoreflect.Message {
-	mi := &file_example_model_v1_message_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GameScore.ProtoReflect.Descriptor instead.
-func (*GameScore) Descriptor() ([]byte, []int) {
-	return file_example_model_v1_message_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *GameScore) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *GameScore) GetGameTitle() string {
-	if x != nil {
-		return x.GameTitle
-	}
-	return ""
-}
-
-func (x *GameScore) GetTopScore() int64 {
-	if x != nil {
-		return x.TopScore
-	}
-	return 0
-}
-
-func (x *GameScore) GetTopScoreDateTime() string {
-	if x != nil {
-		return x.TopScoreDateTime
-	}
-	return ""
-}
-
-func (x *GameScore) GetWins() int64 {
-	if x != nil {
-		return x.Wins
-	}
-	return 0
-}
-
-func (x *GameScore) GetLosses() int64 {
-	if x != nil {
-		return x.Losses
-	}
-	return 0
-}
-
 var File_example_model_v1_message_proto protoreflect.FileDescriptor
 
 var file_example_model_v1_message_proto_rawDesc = []byte{
@@ -2093,60 +1917,25 @@ var file_example_model_v1_message_proto_rawDesc = []byte{
 	0x28, 0x0b, 0x32, 0x18, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x6d, 0x6f, 0x64,
 	0x65, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x6e, 0x67, 0x69, 0x6e, 0x65, 0x42, 0x05, 0xda, 0x44,
 	0x02, 0x30, 0x01, 0x48, 0x00, 0x52, 0x08, 0x6f, 0x6e, 0x65, 0x6f, 0x66, 0x4d, 0x73, 0x67, 0x42,
-	0x09, 0x0a, 0x07, 0x6a, 0x73, 0x6f, 0x6e, 0x5f, 0x6f, 0x6f, 0x22, 0xeb, 0x01, 0x0a, 0x06, 0x54,
-	0x68, 0x72, 0x65, 0x61, 0x64, 0x12, 0x24, 0x0a, 0x0a, 0x66, 0x6f, 0x72, 0x75, 0x6d, 0x5f, 0x6e,
-	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x05, 0xda, 0x44, 0x02, 0x10, 0x01,
-	0x52, 0x09, 0x66, 0x6f, 0x72, 0x75, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x32, 0x0a, 0x07, 0x73,
-	0x75, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xda, 0x44,
-	0x15, 0x18, 0x01, 0x42, 0x11, 0x0a, 0x0f, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x70, 0x6f, 0x73, 0x74,
-	0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x07, 0x73, 0x75, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x12,
-	0x47, 0x0a, 0x13, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x70, 0x6f, 0x73, 0x74, 0x5f, 0x64, 0x61, 0x74,
-	0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xda, 0x44,
-	0x15, 0x42, 0x13, 0x0a, 0x0f, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x70, 0x6f, 0x73, 0x74, 0x5f, 0x69,
-	0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x52, 0x10, 0x6c, 0x61, 0x73, 0x74, 0x50, 0x6f, 0x73, 0x74,
-	0x44, 0x61, 0x74, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x30, 0x0a, 0x07, 0x72, 0x65, 0x70, 0x6c,
-	0x69, 0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x42, 0x16, 0xda, 0x44, 0x13, 0x42, 0x11,
-	0x0a, 0x0f, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x70, 0x6f, 0x73, 0x74, 0x5f, 0x69, 0x6e, 0x64, 0x65,
-	0x78, 0x52, 0x07, 0x72, 0x65, 0x70, 0x6c, 0x69, 0x65, 0x73, 0x3a, 0x0c, 0xda, 0x44, 0x09, 0x0a,
-	0x07, 0x74, 0x68, 0x72, 0x65, 0x61, 0x64, 0x73, 0x22, 0xbe, 0x02, 0x0a, 0x09, 0x47, 0x61, 0x6d,
-	0x65, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x12, 0x1e, 0x0a, 0x07, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x05, 0xda, 0x44, 0x02, 0x10, 0x01, 0x52, 0x06,
-	0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x3a, 0x0a, 0x0a, 0x67, 0x61, 0x6d, 0x65, 0x5f, 0x74,
-	0x69, 0x74, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1b, 0xda, 0x44, 0x18, 0x18,
-	0x01, 0x4a, 0x14, 0x0a, 0x10, 0x67, 0x61, 0x6d, 0x65, 0x5f, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x5f,
-	0x69, 0x6e, 0x64, 0x65, 0x78, 0x10, 0x01, 0x52, 0x09, 0x67, 0x61, 0x6d, 0x65, 0x54, 0x69, 0x74,
-	0x6c, 0x65, 0x12, 0x36, 0x0a, 0x09, 0x74, 0x6f, 0x70, 0x5f, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x03, 0x42, 0x19, 0xda, 0x44, 0x16, 0x4a, 0x14, 0x0a, 0x10, 0x67, 0x61,
-	0x6d, 0x65, 0x5f, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01,
-	0x52, 0x08, 0x74, 0x6f, 0x70, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x12, 0x2d, 0x0a, 0x13, 0x74, 0x6f,
-	0x70, 0x5f, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x5f, 0x64, 0x61, 0x74, 0x65, 0x5f, 0x74, 0x69, 0x6d,
-	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x74, 0x6f, 0x70, 0x53, 0x63, 0x6f, 0x72,
-	0x65, 0x44, 0x61, 0x74, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x2b, 0x0a, 0x04, 0x77, 0x69, 0x6e,
-	0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x42, 0x17, 0xda, 0x44, 0x14, 0x4a, 0x12, 0x0a, 0x10,
-	0x67, 0x61, 0x6d, 0x65, 0x5f, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78,
-	0x52, 0x04, 0x77, 0x69, 0x6e, 0x73, 0x12, 0x2f, 0x0a, 0x06, 0x6c, 0x6f, 0x73, 0x73, 0x65, 0x73,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x42, 0x17, 0xda, 0x44, 0x14, 0x4a, 0x12, 0x0a, 0x10, 0x67,
-	0x61, 0x6d, 0x65, 0x5f, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x52,
-	0x06, 0x6c, 0x6f, 0x73, 0x73, 0x65, 0x73, 0x3a, 0x10, 0xda, 0x44, 0x0d, 0x0a, 0x0b, 0x67, 0x61,
-	0x6d, 0x65, 0x5f, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x73, 0x2a, 0x3b, 0x0a, 0x09, 0x44, 0x69, 0x72,
-	0x74, 0x79, 0x6e, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x15, 0x44, 0x49, 0x52, 0x54, 0x59, 0x4e,
-	0x45, 0x53, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10,
-	0x00, 0x12, 0x13, 0x0a, 0x0f, 0x44, 0x49, 0x52, 0x54, 0x59, 0x4e, 0x45, 0x53, 0x53, 0x5f, 0x43,
-	0x4c, 0x45, 0x41, 0x4e, 0x10, 0x01, 0x42, 0xd0, 0x01, 0x0a, 0x14, 0x63, 0x6f, 0x6d, 0x2e, 0x65,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2e, 0x76, 0x31, 0x42,
-	0x0c, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x48, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x72, 0x65, 0x77,
-	0x6c, 0x69, 0x6e, 0x6b, 0x65, 0x72, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x2d, 0x67, 0x65,
-	0x6e, 0x2d, 0x64, 0x79, 0x6e, 0x61, 0x6d, 0x6f, 0x64, 0x62, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2f, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f, 0x76,
-	0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x45, 0x4d, 0x58, 0xaa,
-	0x02, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x2e,
-	0x56, 0x31, 0xca, 0x02, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x5c, 0x4d, 0x6f, 0x64,
-	0x65, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x5c,
-	0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x12, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x3a, 0x3a,
-	0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x09, 0x0a, 0x07, 0x6a, 0x73, 0x6f, 0x6e, 0x5f, 0x6f, 0x6f, 0x2a, 0x3b, 0x0a, 0x09, 0x44, 0x69,
+	0x72, 0x74, 0x79, 0x6e, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x15, 0x44, 0x49, 0x52, 0x54, 0x59,
+	0x4e, 0x45, 0x53, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44,
+	0x10, 0x00, 0x12, 0x13, 0x0a, 0x0f, 0x44, 0x49, 0x52, 0x54, 0x59, 0x4e, 0x45, 0x53, 0x53, 0x5f,
+	0x43, 0x4c, 0x45, 0x41, 0x4e, 0x10, 0x01, 0x42, 0xd0, 0x01, 0x0a, 0x14, 0x63, 0x6f, 0x6d, 0x2e,
+	0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2e, 0x76, 0x31,
+	0x42, 0x0c, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x48, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x72, 0x65,
+	0x77, 0x6c, 0x69, 0x6e, 0x6b, 0x65, 0x72, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x2d, 0x67,
+	0x65, 0x6e, 0x2d, 0x64, 0x79, 0x6e, 0x61, 0x6d, 0x6f, 0x64, 0x62, 0x2f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2f, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x2f,
+	0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x45, 0x4d, 0x58,
+	0xaa, 0x02, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4d, 0x6f, 0x64, 0x65, 0x6c,
+	0x2e, 0x56, 0x31, 0xca, 0x02, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x5c, 0x4d, 0x6f,
+	0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x5c, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x12, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x3a,
+	0x3a, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -2162,7 +1951,7 @@ func file_example_model_v1_message_proto_rawDescGZIP() []byte {
 }
 
 var file_example_model_v1_message_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_example_model_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_example_model_v1_message_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_example_model_v1_message_proto_goTypes = []interface{}{
 	(Dirtyness)(0),                 // 0: example.model.v1.Dirtyness
 	(*Engine)(nil),                 // 1: example.model.v1.Engine
@@ -2176,118 +1965,116 @@ var file_example_model_v1_message_proto_goTypes = []interface{}{
 	(*FieldPresence)(nil),          // 9: example.model.v1.FieldPresence
 	(*JsonFields)(nil),             // 10: example.model.v1.JsonFields
 	(*JsonOneofs)(nil),             // 11: example.model.v1.JsonOneofs
-	(*Thread)(nil),                 // 12: example.model.v1.Thread
-	(*GameScore)(nil),              // 13: example.model.v1.GameScore
-	nil,                            // 14: example.model.v1.Kitchen.FurnitureEntry
-	nil,                            // 15: example.model.v1.Kitchen.CalendarEntry
-	nil,                            // 16: example.model.v1.Kitchen.MappedAnyEntry
-	nil,                            // 17: example.model.v1.Kitchen.MappedFmaskEntry
-	nil,                            // 18: example.model.v1.MapGalore.Int64int64Entry
-	nil,                            // 19: example.model.v1.MapGalore.Uint64uint64Entry
-	nil,                            // 20: example.model.v1.MapGalore.Fixed64fixed64Entry
-	nil,                            // 21: example.model.v1.MapGalore.Sint64sint64Entry
-	nil,                            // 22: example.model.v1.MapGalore.Sfixed64sfixed64Entry
-	nil,                            // 23: example.model.v1.MapGalore.Int32int32Entry
-	nil,                            // 24: example.model.v1.MapGalore.Uint32uint32Entry
-	nil,                            // 25: example.model.v1.MapGalore.Fixed32fixed32Entry
-	nil,                            // 26: example.model.v1.MapGalore.Sint32sint32Entry
-	nil,                            // 27: example.model.v1.MapGalore.Sfixed32sfixed32Entry
-	nil,                            // 28: example.model.v1.MapGalore.StringstringEntry
-	nil,                            // 29: example.model.v1.MapGalore.BoolboolEntry
-	nil,                            // 30: example.model.v1.MapGalore.StringbytesEntry
-	nil,                            // 31: example.model.v1.MapGalore.StringdoubleEntry
-	nil,                            // 32: example.model.v1.MapGalore.StringfloatEntry
-	nil,                            // 33: example.model.v1.MapGalore.StringdurationEntry
-	nil,                            // 34: example.model.v1.MapGalore.StringtimestampEntry
-	nil,                            // 35: example.model.v1.MapGalore.BoolengineEntry
-	nil,                            // 36: example.model.v1.MapGalore.UintengineEntry
-	nil,                            // 37: example.model.v1.FieldPresence.StrMapEntry
-	nil,                            // 38: example.model.v1.FieldPresence.MsgMapEntry
-	nil,                            // 39: example.model.v1.JsonFields.JsonIntMapEntry
-	nil,                            // 40: example.model.v1.JsonFields.JsonEngineMapEntry
-	(*durationpb.Duration)(nil),    // 41: google.protobuf.Duration
-	(*timestamppb.Timestamp)(nil),  // 42: google.protobuf.Timestamp
-	(*anypb.Any)(nil),              // 43: google.protobuf.Any
-	(*fieldmaskpb.FieldMask)(nil),  // 44: google.protobuf.FieldMask
-	(*structpb.Value)(nil),         // 45: google.protobuf.Value
-	(*wrapperspb.StringValue)(nil), // 46: google.protobuf.StringValue
-	(*wrapperspb.BytesValue)(nil),  // 47: google.protobuf.BytesValue
-	(*wrapperspb.BoolValue)(nil),   // 48: google.protobuf.BoolValue
-	(*wrapperspb.DoubleValue)(nil), // 49: google.protobuf.DoubleValue
-	(*wrapperspb.FloatValue)(nil),  // 50: google.protobuf.FloatValue
-	(*wrapperspb.Int32Value)(nil),  // 51: google.protobuf.Int32Value
-	(*wrapperspb.Int64Value)(nil),  // 52: google.protobuf.Int64Value
-	(*wrapperspb.UInt32Value)(nil), // 53: google.protobuf.UInt32Value
-	(*wrapperspb.UInt64Value)(nil), // 54: google.protobuf.UInt64Value
+	nil,                            // 12: example.model.v1.Kitchen.FurnitureEntry
+	nil,                            // 13: example.model.v1.Kitchen.CalendarEntry
+	nil,                            // 14: example.model.v1.Kitchen.MappedAnyEntry
+	nil,                            // 15: example.model.v1.Kitchen.MappedFmaskEntry
+	nil,                            // 16: example.model.v1.MapGalore.Int64int64Entry
+	nil,                            // 17: example.model.v1.MapGalore.Uint64uint64Entry
+	nil,                            // 18: example.model.v1.MapGalore.Fixed64fixed64Entry
+	nil,                            // 19: example.model.v1.MapGalore.Sint64sint64Entry
+	nil,                            // 20: example.model.v1.MapGalore.Sfixed64sfixed64Entry
+	nil,                            // 21: example.model.v1.MapGalore.Int32int32Entry
+	nil,                            // 22: example.model.v1.MapGalore.Uint32uint32Entry
+	nil,                            // 23: example.model.v1.MapGalore.Fixed32fixed32Entry
+	nil,                            // 24: example.model.v1.MapGalore.Sint32sint32Entry
+	nil,                            // 25: example.model.v1.MapGalore.Sfixed32sfixed32Entry
+	nil,                            // 26: example.model.v1.MapGalore.StringstringEntry
+	nil,                            // 27: example.model.v1.MapGalore.BoolboolEntry
+	nil,                            // 28: example.model.v1.MapGalore.StringbytesEntry
+	nil,                            // 29: example.model.v1.MapGalore.StringdoubleEntry
+	nil,                            // 30: example.model.v1.MapGalore.StringfloatEntry
+	nil,                            // 31: example.model.v1.MapGalore.StringdurationEntry
+	nil,                            // 32: example.model.v1.MapGalore.StringtimestampEntry
+	nil,                            // 33: example.model.v1.MapGalore.BoolengineEntry
+	nil,                            // 34: example.model.v1.MapGalore.UintengineEntry
+	nil,                            // 35: example.model.v1.FieldPresence.StrMapEntry
+	nil,                            // 36: example.model.v1.FieldPresence.MsgMapEntry
+	nil,                            // 37: example.model.v1.JsonFields.JsonIntMapEntry
+	nil,                            // 38: example.model.v1.JsonFields.JsonEngineMapEntry
+	(*durationpb.Duration)(nil),    // 39: google.protobuf.Duration
+	(*timestamppb.Timestamp)(nil),  // 40: google.protobuf.Timestamp
+	(*anypb.Any)(nil),              // 41: google.protobuf.Any
+	(*fieldmaskpb.FieldMask)(nil),  // 42: google.protobuf.FieldMask
+	(*structpb.Value)(nil),         // 43: google.protobuf.Value
+	(*wrapperspb.StringValue)(nil), // 44: google.protobuf.StringValue
+	(*wrapperspb.BytesValue)(nil),  // 45: google.protobuf.BytesValue
+	(*wrapperspb.BoolValue)(nil),   // 46: google.protobuf.BoolValue
+	(*wrapperspb.DoubleValue)(nil), // 47: google.protobuf.DoubleValue
+	(*wrapperspb.FloatValue)(nil),  // 48: google.protobuf.FloatValue
+	(*wrapperspb.Int32Value)(nil),  // 49: google.protobuf.Int32Value
+	(*wrapperspb.Int64Value)(nil),  // 50: google.protobuf.Int64Value
+	(*wrapperspb.UInt32Value)(nil), // 51: google.protobuf.UInt32Value
+	(*wrapperspb.UInt64Value)(nil), // 52: google.protobuf.UInt64Value
 }
 var file_example_model_v1_message_proto_depIdxs = []int32{
 	0,  // 0: example.model.v1.Engine.dirtyness:type_name -> example.model.v1.Dirtyness
 	1,  // 1: example.model.v1.Car.engine:type_name -> example.model.v1.Engine
 	0,  // 2: example.model.v1.Kitchen.dirtyness:type_name -> example.model.v1.Dirtyness
-	14, // 3: example.model.v1.Kitchen.furniture:type_name -> example.model.v1.Kitchen.FurnitureEntry
-	15, // 4: example.model.v1.Kitchen.calendar:type_name -> example.model.v1.Kitchen.CalendarEntry
+	12, // 3: example.model.v1.Kitchen.furniture:type_name -> example.model.v1.Kitchen.FurnitureEntry
+	13, // 4: example.model.v1.Kitchen.calendar:type_name -> example.model.v1.Kitchen.CalendarEntry
 	1,  // 5: example.model.v1.Kitchen.washer_engine:type_name -> example.model.v1.Engine
 	5,  // 6: example.model.v1.Kitchen.extra_kitchen:type_name -> example.model.v1.Kitchen
-	41, // 7: example.model.v1.Kitchen.timer:type_name -> google.protobuf.Duration
-	42, // 8: example.model.v1.Kitchen.wall_time:type_name -> google.protobuf.Timestamp
+	39, // 7: example.model.v1.Kitchen.timer:type_name -> google.protobuf.Duration
+	40, // 8: example.model.v1.Kitchen.wall_time:type_name -> google.protobuf.Timestamp
 	1,  // 9: example.model.v1.Kitchen.appliance_engines:type_name -> example.model.v1.Engine
-	43, // 10: example.model.v1.Kitchen.some_any:type_name -> google.protobuf.Any
-	44, // 11: example.model.v1.Kitchen.some_mask:type_name -> google.protobuf.FieldMask
-	45, // 12: example.model.v1.Kitchen.some_value:type_name -> google.protobuf.Value
-	46, // 13: example.model.v1.Kitchen.val_str:type_name -> google.protobuf.StringValue
-	47, // 14: example.model.v1.Kitchen.val_bytes:type_name -> google.protobuf.BytesValue
-	42, // 15: example.model.v1.Kitchen.list_of_ts:type_name -> google.protobuf.Timestamp
-	43, // 16: example.model.v1.Kitchen.repeated_any:type_name -> google.protobuf.Any
-	16, // 17: example.model.v1.Kitchen.mapped_any:type_name -> example.model.v1.Kitchen.MappedAnyEntry
-	44, // 18: example.model.v1.Kitchen.repeated_fmask:type_name -> google.protobuf.FieldMask
-	17, // 19: example.model.v1.Kitchen.mapped_fmask:type_name -> example.model.v1.Kitchen.MappedFmaskEntry
-	18, // 20: example.model.v1.MapGalore.int64int64:type_name -> example.model.v1.MapGalore.Int64int64Entry
-	19, // 21: example.model.v1.MapGalore.uint64uint64:type_name -> example.model.v1.MapGalore.Uint64uint64Entry
-	20, // 22: example.model.v1.MapGalore.fixed64fixed64:type_name -> example.model.v1.MapGalore.Fixed64fixed64Entry
-	21, // 23: example.model.v1.MapGalore.sint64sint64:type_name -> example.model.v1.MapGalore.Sint64sint64Entry
-	22, // 24: example.model.v1.MapGalore.sfixed64sfixed64:type_name -> example.model.v1.MapGalore.Sfixed64sfixed64Entry
-	23, // 25: example.model.v1.MapGalore.int32int32:type_name -> example.model.v1.MapGalore.Int32int32Entry
-	24, // 26: example.model.v1.MapGalore.uint32uint32:type_name -> example.model.v1.MapGalore.Uint32uint32Entry
-	25, // 27: example.model.v1.MapGalore.fixed32fixed32:type_name -> example.model.v1.MapGalore.Fixed32fixed32Entry
-	26, // 28: example.model.v1.MapGalore.sint32sint32:type_name -> example.model.v1.MapGalore.Sint32sint32Entry
-	27, // 29: example.model.v1.MapGalore.sfixed32sfixed32:type_name -> example.model.v1.MapGalore.Sfixed32sfixed32Entry
-	28, // 30: example.model.v1.MapGalore.stringstring:type_name -> example.model.v1.MapGalore.StringstringEntry
-	29, // 31: example.model.v1.MapGalore.boolbool:type_name -> example.model.v1.MapGalore.BoolboolEntry
-	30, // 32: example.model.v1.MapGalore.stringbytes:type_name -> example.model.v1.MapGalore.StringbytesEntry
-	31, // 33: example.model.v1.MapGalore.stringdouble:type_name -> example.model.v1.MapGalore.StringdoubleEntry
-	32, // 34: example.model.v1.MapGalore.stringfloat:type_name -> example.model.v1.MapGalore.StringfloatEntry
-	33, // 35: example.model.v1.MapGalore.stringduration:type_name -> example.model.v1.MapGalore.StringdurationEntry
-	34, // 36: example.model.v1.MapGalore.stringtimestamp:type_name -> example.model.v1.MapGalore.StringtimestampEntry
-	35, // 37: example.model.v1.MapGalore.boolengine:type_name -> example.model.v1.MapGalore.BoolengineEntry
-	36, // 38: example.model.v1.MapGalore.uintengine:type_name -> example.model.v1.MapGalore.UintengineEntry
-	45, // 39: example.model.v1.ValueGalore.some_value:type_name -> google.protobuf.Value
+	41, // 10: example.model.v1.Kitchen.some_any:type_name -> google.protobuf.Any
+	42, // 11: example.model.v1.Kitchen.some_mask:type_name -> google.protobuf.FieldMask
+	43, // 12: example.model.v1.Kitchen.some_value:type_name -> google.protobuf.Value
+	44, // 13: example.model.v1.Kitchen.val_str:type_name -> google.protobuf.StringValue
+	45, // 14: example.model.v1.Kitchen.val_bytes:type_name -> google.protobuf.BytesValue
+	40, // 15: example.model.v1.Kitchen.list_of_ts:type_name -> google.protobuf.Timestamp
+	41, // 16: example.model.v1.Kitchen.repeated_any:type_name -> google.protobuf.Any
+	14, // 17: example.model.v1.Kitchen.mapped_any:type_name -> example.model.v1.Kitchen.MappedAnyEntry
+	42, // 18: example.model.v1.Kitchen.repeated_fmask:type_name -> google.protobuf.FieldMask
+	15, // 19: example.model.v1.Kitchen.mapped_fmask:type_name -> example.model.v1.Kitchen.MappedFmaskEntry
+	16, // 20: example.model.v1.MapGalore.int64int64:type_name -> example.model.v1.MapGalore.Int64int64Entry
+	17, // 21: example.model.v1.MapGalore.uint64uint64:type_name -> example.model.v1.MapGalore.Uint64uint64Entry
+	18, // 22: example.model.v1.MapGalore.fixed64fixed64:type_name -> example.model.v1.MapGalore.Fixed64fixed64Entry
+	19, // 23: example.model.v1.MapGalore.sint64sint64:type_name -> example.model.v1.MapGalore.Sint64sint64Entry
+	20, // 24: example.model.v1.MapGalore.sfixed64sfixed64:type_name -> example.model.v1.MapGalore.Sfixed64sfixed64Entry
+	21, // 25: example.model.v1.MapGalore.int32int32:type_name -> example.model.v1.MapGalore.Int32int32Entry
+	22, // 26: example.model.v1.MapGalore.uint32uint32:type_name -> example.model.v1.MapGalore.Uint32uint32Entry
+	23, // 27: example.model.v1.MapGalore.fixed32fixed32:type_name -> example.model.v1.MapGalore.Fixed32fixed32Entry
+	24, // 28: example.model.v1.MapGalore.sint32sint32:type_name -> example.model.v1.MapGalore.Sint32sint32Entry
+	25, // 29: example.model.v1.MapGalore.sfixed32sfixed32:type_name -> example.model.v1.MapGalore.Sfixed32sfixed32Entry
+	26, // 30: example.model.v1.MapGalore.stringstring:type_name -> example.model.v1.MapGalore.StringstringEntry
+	27, // 31: example.model.v1.MapGalore.boolbool:type_name -> example.model.v1.MapGalore.BoolboolEntry
+	28, // 32: example.model.v1.MapGalore.stringbytes:type_name -> example.model.v1.MapGalore.StringbytesEntry
+	29, // 33: example.model.v1.MapGalore.stringdouble:type_name -> example.model.v1.MapGalore.StringdoubleEntry
+	30, // 34: example.model.v1.MapGalore.stringfloat:type_name -> example.model.v1.MapGalore.StringfloatEntry
+	31, // 35: example.model.v1.MapGalore.stringduration:type_name -> example.model.v1.MapGalore.StringdurationEntry
+	32, // 36: example.model.v1.MapGalore.stringtimestamp:type_name -> example.model.v1.MapGalore.StringtimestampEntry
+	33, // 37: example.model.v1.MapGalore.boolengine:type_name -> example.model.v1.MapGalore.BoolengineEntry
+	34, // 38: example.model.v1.MapGalore.uintengine:type_name -> example.model.v1.MapGalore.UintengineEntry
+	43, // 39: example.model.v1.ValueGalore.some_value:type_name -> google.protobuf.Value
 	1,  // 40: example.model.v1.FieldPresence.msg:type_name -> example.model.v1.Engine
 	1,  // 41: example.model.v1.FieldPresence.opt_msg:type_name -> example.model.v1.Engine
 	1,  // 42: example.model.v1.FieldPresence.msg_list:type_name -> example.model.v1.Engine
-	37, // 43: example.model.v1.FieldPresence.str_map:type_name -> example.model.v1.FieldPresence.StrMapEntry
-	38, // 44: example.model.v1.FieldPresence.msg_map:type_name -> example.model.v1.FieldPresence.MsgMapEntry
+	35, // 43: example.model.v1.FieldPresence.str_map:type_name -> example.model.v1.FieldPresence.StrMapEntry
+	36, // 44: example.model.v1.FieldPresence.msg_map:type_name -> example.model.v1.FieldPresence.MsgMapEntry
 	0,  // 45: example.model.v1.FieldPresence.enum:type_name -> example.model.v1.Dirtyness
 	0,  // 46: example.model.v1.FieldPresence.opt_enum:type_name -> example.model.v1.Dirtyness
 	1,  // 47: example.model.v1.FieldPresence.oneof_msg:type_name -> example.model.v1.Engine
-	46, // 48: example.model.v1.FieldPresence.str_val:type_name -> google.protobuf.StringValue
-	48, // 49: example.model.v1.FieldPresence.bool_val:type_name -> google.protobuf.BoolValue
-	47, // 50: example.model.v1.FieldPresence.bytes_val:type_name -> google.protobuf.BytesValue
-	49, // 51: example.model.v1.FieldPresence.double_val:type_name -> google.protobuf.DoubleValue
-	50, // 52: example.model.v1.FieldPresence.float_val:type_name -> google.protobuf.FloatValue
-	51, // 53: example.model.v1.FieldPresence.int32_val:type_name -> google.protobuf.Int32Value
-	52, // 54: example.model.v1.FieldPresence.int64_val:type_name -> google.protobuf.Int64Value
-	53, // 55: example.model.v1.FieldPresence.uint32_val:type_name -> google.protobuf.UInt32Value
-	54, // 56: example.model.v1.FieldPresence.uint64_val:type_name -> google.protobuf.UInt64Value
+	44, // 48: example.model.v1.FieldPresence.str_val:type_name -> google.protobuf.StringValue
+	46, // 49: example.model.v1.FieldPresence.bool_val:type_name -> google.protobuf.BoolValue
+	45, // 50: example.model.v1.FieldPresence.bytes_val:type_name -> google.protobuf.BytesValue
+	47, // 51: example.model.v1.FieldPresence.double_val:type_name -> google.protobuf.DoubleValue
+	48, // 52: example.model.v1.FieldPresence.float_val:type_name -> google.protobuf.FloatValue
+	49, // 53: example.model.v1.FieldPresence.int32_val:type_name -> google.protobuf.Int32Value
+	50, // 54: example.model.v1.FieldPresence.int64_val:type_name -> google.protobuf.Int64Value
+	51, // 55: example.model.v1.FieldPresence.uint32_val:type_name -> google.protobuf.UInt32Value
+	52, // 56: example.model.v1.FieldPresence.uint64_val:type_name -> google.protobuf.UInt64Value
 	1,  // 57: example.model.v1.JsonFields.json_engine:type_name -> example.model.v1.Engine
-	39, // 58: example.model.v1.JsonFields.json_int_map:type_name -> example.model.v1.JsonFields.JsonIntMapEntry
+	37, // 58: example.model.v1.JsonFields.json_int_map:type_name -> example.model.v1.JsonFields.JsonIntMapEntry
 	1,  // 59: example.model.v1.JsonFields.json_engine_list:type_name -> example.model.v1.Engine
-	40, // 60: example.model.v1.JsonFields.json_engine_map:type_name -> example.model.v1.JsonFields.JsonEngineMapEntry
+	38, // 60: example.model.v1.JsonFields.json_engine_map:type_name -> example.model.v1.JsonFields.JsonEngineMapEntry
 	1,  // 61: example.model.v1.JsonOneofs.oneof_msg:type_name -> example.model.v1.Engine
 	3,  // 62: example.model.v1.Kitchen.FurnitureEntry.value:type_name -> example.model.v1.Appliance
-	43, // 63: example.model.v1.Kitchen.MappedAnyEntry.value:type_name -> google.protobuf.Any
-	44, // 64: example.model.v1.Kitchen.MappedFmaskEntry.value:type_name -> google.protobuf.FieldMask
-	41, // 65: example.model.v1.MapGalore.StringdurationEntry.value:type_name -> google.protobuf.Duration
-	42, // 66: example.model.v1.MapGalore.StringtimestampEntry.value:type_name -> google.protobuf.Timestamp
+	41, // 63: example.model.v1.Kitchen.MappedAnyEntry.value:type_name -> google.protobuf.Any
+	42, // 64: example.model.v1.Kitchen.MappedFmaskEntry.value:type_name -> google.protobuf.FieldMask
+	39, // 65: example.model.v1.MapGalore.StringdurationEntry.value:type_name -> google.protobuf.Duration
+	40, // 66: example.model.v1.MapGalore.StringtimestampEntry.value:type_name -> google.protobuf.Timestamp
 	1,  // 67: example.model.v1.MapGalore.BoolengineEntry.value:type_name -> example.model.v1.Engine
 	1,  // 68: example.model.v1.MapGalore.UintengineEntry.value:type_name -> example.model.v1.Engine
 	1,  // 69: example.model.v1.FieldPresence.MsgMapEntry.value:type_name -> example.model.v1.Engine
@@ -2437,30 +2224,6 @@ func file_example_model_v1_message_proto_init() {
 				return nil
 			}
 		}
-		file_example_model_v1_message_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Thread); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_example_model_v1_message_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GameScore); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	file_example_model_v1_message_proto_msgTypes[4].OneofWrappers = []interface{}{}
 	file_example_model_v1_message_proto_msgTypes[8].OneofWrappers = []interface{}{
@@ -2477,7 +2240,7 @@ func file_example_model_v1_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_example_model_v1_message_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   40,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
