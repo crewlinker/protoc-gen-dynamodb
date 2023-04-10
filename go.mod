@@ -13,6 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.19.2
 	github.com/dave/jennifer v1.6.0
 	github.com/google/gofuzz v1.2.0
+	github.com/iancoleman/strcase v0.2.0
 	github.com/magefile/mage v1.14.0
 	github.com/onsi/ginkgo/v2 v2.9.1
 	github.com/onsi/gomega v1.27.3

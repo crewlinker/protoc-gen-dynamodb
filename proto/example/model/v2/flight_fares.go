@@ -22,15 +22,15 @@ type FlightFaresModel struct{}
 
 // MapFare maps a assignment record onto table keys
 func (m FlightFaresModel) MapFare(v *Fare) (km FlightFaresKeys, err error) {
-	km.PK = v.Origin.String()
-	km.SK = fmt.Sprintf("%s#%s#%s", v.Destination, FormatTimestamp(v.StartAt), v.Class)
+	km.Pk = v.Origin.String()
+	km.Sk = fmt.Sprintf("%s#%s#%s", v.Destination, FormatTimestamp(v.StartAt), v.Class)
 	return
 }
 
 // MapFlight maps a assignment record onto table keys
 func (m FlightFaresModel) MapFlight(v *Flight) (km FlightFaresKeys, err error) {
-	km.PK = v.Origin.String()
-	km.SK = fmt.Sprintf("%s#%s#%d#%d", // ${origin}#${depart}#${number}#${segId}
+	km.Pk = v.Origin.String()
+	km.Sk = fmt.Sprintf("%s#%s#%d#%d", // ${origin}#${depart}#${number}#${segId}
 		v.Origin, FormatTimestamp(v.DepatureAt), v.Number, v.SegmentId)
 	km.Gsi1Pk = aws.String(v.Destination.String())
 	km.Gsi1Sk = aws.String(fmt.Sprintf("%s#%s", // ${origin}#${arrive}
@@ -43,8 +43,8 @@ func (m FlightFaresModel) MapFlight(v *Flight) (km FlightFaresKeys, err error) {
 
 // MapAssignment maps a assignment record onto table keys
 func (m FlightFaresModel) MapAssignment(v *Assignment) (km FlightFaresKeys, err error) {
-	km.PK = fmt.Sprintf("%s, %s", v.LastName, v.FirstName)
-	km.SK = fmt.Sprintf("%s#%d#%d#%s", // ${depart}#${flight}#${segId}#${seat}
+	km.Pk = fmt.Sprintf("%s, %s", v.LastName, v.FirstName)
+	km.Sk = fmt.Sprintf("%s#%d#%d#%s", // ${depart}#${flight}#${segId}#${seat}
 		FormatTimestamp(v.DepartureAt),
 		v.FlightNumber,
 		v.SegmentId,
@@ -56,8 +56,8 @@ func (m FlightFaresModel) MapAssignment(v *Assignment) (km FlightFaresKeys, err 
 
 // MapBooking maps a booking record onto table keys
 func (m FlightFaresModel) MapBooking(v *Booking) (km FlightFaresKeys, err error) {
-	km.PK = fmt.Sprintf("%s, %s", v.LastName, v.FirstName)
-	km.SK = fmt.Sprintf("%s#%d", // ${depart}#${flight}
+	km.Pk = fmt.Sprintf("%s, %s", v.LastName, v.FirstName)
+	km.Sk = fmt.Sprintf("%s#%d", // ${depart}#${flight}
 		FormatTimestamp(v.DepartureAt),
 		v.FlightNumber,
 	)
@@ -310,24 +310,6 @@ func (q *FlightFaresQuerier) FlightsToFromInYear(ctx context.Context, in *Flight
 	return
 }
 
-// FlightFaresKeys describes key attributes the FlightFares table
-type FlightFaresKeys struct {
-	PK     string
-	SK     string
-	Gsi1Pk *string
-	Gsi1Sk *string
-	Gsi2Pk *string
-	Gsi2Sk *string
-}
-
-// FlightFaresKeyMapper can be implemented to map entities onto key values
-type FlightFaresKeyMapper interface {
-	MapFare(v *Fare) (FlightFaresKeys, error)
-	MapFlight(v *Flight) (FlightFaresKeys, error)
-	MapAssignment(v *Assignment) (FlightFaresKeys, error)
-	MapBooking(v *Booking) (FlightFaresKeys, error)
-}
-
 // FromDynamoEntity fills the flight vares message from an entity interface
 func (x *FlightFares) FromDynamoEntity(e isFlightFares_Entity, m FlightFaresKeyMapper) (err error) {
 	var keys FlightFaresKeys
@@ -358,7 +340,7 @@ func (x *FlightFares) FromDynamoEntity(e isFlightFares_Entity, m FlightFaresKeyM
 
 	// @TODO error if pk/sk key has zero values or keymap is otherwise invalid
 
-	x.Pk, x.Sk = keys.PK, keys.SK
+	x.Pk, x.Sk = keys.Pk, keys.Sk
 	if keys.Gsi1Pk != nil {
 		x.Gsi1Pk = *keys.Gsi1Pk
 		if keys.Gsi1Sk != nil {

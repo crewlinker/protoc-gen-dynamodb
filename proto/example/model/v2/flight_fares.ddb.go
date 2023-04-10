@@ -563,6 +563,24 @@ func (x *FlightFares) UnmarshalDynamoItem(m map[string]types.AttributeValue) (er
 	return nil
 }
 
+// FlightFaresKeys is populated by a key mapper to construct index values
+type FlightFaresKeys struct {
+	Pk     string
+	Sk     string
+	Gsi1Pk *string
+	Gsi1Sk *string
+	Gsi2Pk *string
+	Gsi2Sk *string
+}
+
+// FlightFaresKeyMapper interface can be implemented to customize how index attributes are build
+type FlightFaresKeyMapper interface {
+	MapFlight(*Flight) (FlightFaresKeys, error)
+	MapFare(*Fare) (FlightFaresKeys, error)
+	MapAssignment(*Assignment) (FlightFaresKeys, error)
+	MapBooking(*Booking) (FlightFaresKeys, error)
+}
+
 // FlightFaresTableDefinition can be used to register the table in the ddbtable registry
 var FlightFaresTableDefinition = ddbtable.Table{
 	EntityType: &ddbtable.Attribute{
