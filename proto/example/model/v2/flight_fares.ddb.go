@@ -581,6 +581,49 @@ type FlightFaresKeyMapper interface {
 	MapBooking(*Booking) (FlightFaresKeys, error)
 }
 
+// FromDynamoEntity propulates the table message from an entity message
+func (x *FlightFares) FromDynamoEntity(e isFlightFares_Entity, m FlightFaresKeyMapper) (err error) {
+	var keys FlightFaresKeys
+	switch et := e.(type) {
+	default:
+		return fmt.Errorf("unsupported entity: %T", et)
+	case *FlightFares_Flight:
+		x.Type = FlightFareType_FLIGHT_FARE_TYPE_FLIGHT
+		x.Entity = et
+		keys, err = m.MapFlight(et.Flight)
+	case *FlightFares_Fare:
+		x.Type = FlightFareType_FLIGHT_FARE_TYPE_FARE
+		x.Entity = et
+		keys, err = m.MapFare(et.Fare)
+	case *FlightFares_Assignment:
+		x.Type = FlightFareType_FLIGHT_FARE_TYPE_ASSIGNMENT
+		x.Entity = et
+		keys, err = m.MapAssignment(et.Assignment)
+	case *FlightFares_Booking:
+		x.Type = FlightFareType_FLIGHT_FARE_TYPE_BOOKING
+		x.Entity = et
+		keys, err = m.MapBooking(et.Booking)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to map keys: %w", err)
+	}
+	x.Pk = keys.Pk
+	x.Sk = keys.Sk
+	if keys.Gsi1Pk != nil {
+		x.Gsi1Pk = *keys.Gsi1Pk
+	}
+	if keys.Gsi1Sk != nil {
+		x.Gsi1Sk = *keys.Gsi1Sk
+	}
+	if keys.Gsi2Pk != nil {
+		x.Gsi2Pk = *keys.Gsi2Pk
+	}
+	if keys.Gsi2Sk != nil {
+		x.Gsi2Sk = *keys.Gsi2Sk
+	}
+	return
+}
+
 // FlightFaresTableDefinition can be used to register the table in the ddbtable registry
 var FlightFaresTableDefinition = ddbtable.Table{
 	EntityType: &ddbtable.Attribute{
