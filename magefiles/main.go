@@ -12,7 +12,7 @@ import (
 // Generate generates Go code from definition fiels
 func Generate() error {
 	if err := sh.Run("buf", "generate",
-		"--path", "example/message",
+		"--path", "example/model",
 		"--path", "ddb",
 	); err != nil {
 		return err
@@ -39,6 +39,10 @@ func Checks() error {
 
 	if err := sh.Run("go", "run", "-mod=readonly", "honnef.co/go/tools/cmd/staticcheck", "./..."); err != nil {
 		return fmt.Errorf("failed to run staticcheck: %w", err)
+	}
+
+	if err := sh.Run("buf", "lint"); err != nil {
+		return fmt.Errorf("failed to lint protobufs: %w", err)
 	}
 
 	return nil
@@ -88,6 +92,12 @@ func Release(version string) error {
 	}
 
 	return nil
+}
+
+// Dev sets up the dev environment using Docker compose
+func Dev() error {
+	return sh.Run("docker", "compose", "-f", "magefiles/docker-compose.dev.yml", "-p", "protocgenddb-dev", "up",
+		"-d", "--build", "--remove-orphans", "--force-recreate")
 }
 
 // init performs some sanity checks before running anything

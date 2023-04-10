@@ -1,0 +1,9 @@
+services:
+  dynamodb:
+    command: "-jar DynamoDBLocal.jar -inMemory"
+    ports:
+      - "8000:8000"
+    working_dir: /home/dynamodblocal
+    build:
+      context: ./dynamodblocal
+      dockerfile: Dockerfile

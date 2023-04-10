@@ -14,13 +14,13 @@ enum Encoding{
     ENCODING_DYNAMO = 2;
 }
 
-// FieldOptions presents options to configure fields to interact with protobuf powered rpc
+// FieldOptions presents options to configure fields for DynamoDB 
 message FieldOptions {
     // specify the name of the DynamoDB attribute
     optional string name = 1;
-    // indicate that the field represents the item's partition key
+    // indicate that the field represents the item's partition key in the table it is stored
     optional bool pk = 2;
-    // indicate that the field represents the item's sort key
+    // indicate that the field represents the item's sort key in the table it is stored
     optional bool sk = 3;
     // indicate that the field should be ignored by Dynamo code generation
     optional bool omit = 4;
@@ -30,6 +30,51 @@ message FieldOptions {
     optional Encoding embed = 6; 
 }
 
+// Configure a global secondary index
+message GsiOptions {
+    // name of the gsi
+    required string name = 1;
+    // partition key for the gsi
+    required uint32 pk = 2;
+    // sort key for the gsi
+    optional uint32 sk = 3;
+}
+
+// TableOptions provide options for messages that describe tables
+message TableOptions {
+    // name of the table
+    required string name = 1;
+    // field number of the partition key
+    required uint32 pk = 2;
+    // field number of the sort key
+    optional uint32 sk = 3;    
+    // any global secondary indices
+    repeated GsiOptions gsi = 10;
+}
+
+// EntityOptions are options for entity
+message EntityOptions {
+    // entity type attribute
+    required uint32 type_attr = 4;
+}
+
+// Options for configuring a access pattern
+message QueryOptions{
+    // name of the table the query is run on
+    required string table = 1;
+    // name of the index the query is run on
+    optional string index = 2;
+}
+
+extend google.protobuf.MessageOptions {
+    optional TableOptions table = 1098;
+}
 extend google.protobuf.FieldOptions {
-    optional FieldOptions field = 1098;
+    optional FieldOptions field = 1099;
+}
+extend google.protobuf.OneofOptions{
+    optional EntityOptions entity = 1098;
+}
+extend google.protobuf.MethodOptions{
+    optional QueryOptions query = 1098;
 }

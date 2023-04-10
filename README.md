@@ -22,3 +22,4 @@ Use Protobuf to define DynamoDB item encoding using Go (golang).
   - Structpb.Value is formatted in dynamodb
 - Does no logic to support formatting pk/sk, instead supports the use code to do this
 - Support of embedding fields as json
+- Tap into the protobuf ecosystem, such as validation before inserting into dynamodb

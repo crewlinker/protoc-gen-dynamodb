@@ -6,6 +6,7 @@ package ddbv1ddbpath
 import (
 	expression "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	ddbpath "github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbpath"
+	"reflect"
 )
 
 // FieldOptionsPath allows for constructing type-safe expression names
@@ -56,5 +57,126 @@ func init() {
 		"4": {Kind: ddbpath.FieldKindSingle},
 		"5": {Kind: ddbpath.FieldKindSingle},
 		"6": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// GsiOptionsPath allows for constructing type-safe expression names
+type GsiOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p GsiOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) GsiOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Name appends the path being build
+func (p GsiOptionsPath) Name() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Pk appends the path being build
+func (p GsiOptionsPath) Pk() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+
+// Sk appends the path being build
+func (p GsiOptionsPath) Sk() expression.NameBuilder {
+	return p.AppendName(expression.Name("3"))
+}
+func init() {
+	ddbpath.Register(GsiOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// TableOptionsPath allows for constructing type-safe expression names
+type TableOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p TableOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) TableOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Name appends the path being build
+func (p TableOptionsPath) Name() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Pk appends the path being build
+func (p TableOptionsPath) Pk() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+
+// Sk appends the path being build
+func (p TableOptionsPath) Sk() expression.NameBuilder {
+	return p.AppendName(expression.Name("3"))
+}
+
+// Gsi returns 'p' appended with the attribute while allow indexing a nested message
+func (p TableOptionsPath) Gsi() ddbpath.ItemList[GsiOptionsPath] {
+	return ddbpath.ItemList[GsiOptionsPath]{NameBuilder: p.AppendName(expression.Name("10"))}
+}
+func init() {
+	ddbpath.Register(TableOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"10": {
+			Kind:    ddbpath.FieldKindList,
+			Message: reflect.TypeOf(GsiOptionsPath{}),
+		},
+		"2": {Kind: ddbpath.FieldKindSingle},
+		"3": {Kind: ddbpath.FieldKindSingle},
+	})
+}
+
+// EntityOptionsPath allows for constructing type-safe expression names
+type EntityOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p EntityOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) EntityOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// TypeAttr appends the path being build
+func (p EntityOptionsPath) TypeAttr() expression.NameBuilder {
+	return p.AppendName(expression.Name("4"))
+}
+func init() {
+	ddbpath.Register(EntityOptionsPath{}, map[string]ddbpath.FieldInfo{"4": {Kind: ddbpath.FieldKindSingle}})
+}
+
+// QueryOptionsPath allows for constructing type-safe expression names
+type QueryOptionsPath struct {
+	expression.NameBuilder
+}
+
+// WithDynamoNameBuilder allows generic types to overwrite the path
+func (p QueryOptionsPath) WithDynamoNameBuilder(n expression.NameBuilder) QueryOptionsPath {
+	p.NameBuilder = n
+	return p
+}
+
+// Table appends the path being build
+func (p QueryOptionsPath) Table() expression.NameBuilder {
+	return p.AppendName(expression.Name("1"))
+}
+
+// Index appends the path being build
+func (p QueryOptionsPath) Index() expression.NameBuilder {
+	return p.AppendName(expression.Name("2"))
+}
+func init() {
+	ddbpath.Register(QueryOptionsPath{}, map[string]ddbpath.FieldInfo{
+		"1": {Kind: ddbpath.FieldKindSingle},
+		"2": {Kind: ddbpath.FieldKindSingle},
 	})
 }

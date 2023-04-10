@@ -84,7 +84,7 @@ func (Encoding) EnumDescriptor() ([]byte, []int) {
 	return file_ddb_v1_options_proto_rawDescGZIP(), []int{0}
 }
 
-// FieldOptions presents options to configure fields to interact with protobuf powered rpc
+// FieldOptions presents options to configure fields for DynamoDB
 type FieldOptions struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -92,9 +92,9 @@ type FieldOptions struct {
 
 	// specify the name of the DynamoDB attribute
 	Name *string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	// indicate that the field represents the item's partition key
+	// indicate that the field represents the item's partition key in the table it is stored
 	Pk *bool `protobuf:"varint,2,opt,name=pk" json:"pk,omitempty"`
-	// indicate that the field represents the item's sort key
+	// indicate that the field represents the item's sort key in the table it is stored
 	Sk *bool `protobuf:"varint,3,opt,name=sk" json:"sk,omitempty"`
 	// indicate that the field should be ignored by Dynamo code generation
 	Omit *bool `protobuf:"varint,4,opt,name=omit" json:"omit,omitempty"`
@@ -178,21 +178,313 @@ func (x *FieldOptions) GetEmbed() Encoding {
 	return Encoding_ENCODING_UNSPECIFIED
 }
 
+// Configure a global secondary index
+type GsiOptions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// name of the gsi
+	Name *string `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
+	// partition key for the gsi
+	Pk *uint32 `protobuf:"varint,2,req,name=pk" json:"pk,omitempty"`
+	// sort key for the gsi
+	Sk *uint32 `protobuf:"varint,3,opt,name=sk" json:"sk,omitempty"`
+}
+
+func (x *GsiOptions) Reset() {
+	*x = GsiOptions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ddb_v1_options_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GsiOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GsiOptions) ProtoMessage() {}
+
+func (x *GsiOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_ddb_v1_options_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GsiOptions.ProtoReflect.Descriptor instead.
+func (*GsiOptions) Descriptor() ([]byte, []int) {
+	return file_ddb_v1_options_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GsiOptions) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
+	}
+	return ""
+}
+
+func (x *GsiOptions) GetPk() uint32 {
+	if x != nil && x.Pk != nil {
+		return *x.Pk
+	}
+	return 0
+}
+
+func (x *GsiOptions) GetSk() uint32 {
+	if x != nil && x.Sk != nil {
+		return *x.Sk
+	}
+	return 0
+}
+
+// TableOptions provide options for messages that describe tables
+type TableOptions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// name of the table
+	Name *string `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
+	// field number of the partition key
+	Pk *uint32 `protobuf:"varint,2,req,name=pk" json:"pk,omitempty"`
+	// field number of the sort key
+	Sk *uint32 `protobuf:"varint,3,opt,name=sk" json:"sk,omitempty"`
+	// any global secondary indices
+	Gsi []*GsiOptions `protobuf:"bytes,10,rep,name=gsi" json:"gsi,omitempty"`
+}
+
+func (x *TableOptions) Reset() {
+	*x = TableOptions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ddb_v1_options_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TableOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TableOptions) ProtoMessage() {}
+
+func (x *TableOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_ddb_v1_options_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TableOptions.ProtoReflect.Descriptor instead.
+func (*TableOptions) Descriptor() ([]byte, []int) {
+	return file_ddb_v1_options_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *TableOptions) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
+	}
+	return ""
+}
+
+func (x *TableOptions) GetPk() uint32 {
+	if x != nil && x.Pk != nil {
+		return *x.Pk
+	}
+	return 0
+}
+
+func (x *TableOptions) GetSk() uint32 {
+	if x != nil && x.Sk != nil {
+		return *x.Sk
+	}
+	return 0
+}
+
+func (x *TableOptions) GetGsi() []*GsiOptions {
+	if x != nil {
+		return x.Gsi
+	}
+	return nil
+}
+
+// EntityOptions are options for entity
+type EntityOptions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// entity type attribute
+	TypeAttr *uint32 `protobuf:"varint,4,req,name=type_attr,json=typeAttr" json:"type_attr,omitempty"`
+}
+
+func (x *EntityOptions) Reset() {
+	*x = EntityOptions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ddb_v1_options_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EntityOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EntityOptions) ProtoMessage() {}
+
+func (x *EntityOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_ddb_v1_options_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EntityOptions.ProtoReflect.Descriptor instead.
+func (*EntityOptions) Descriptor() ([]byte, []int) {
+	return file_ddb_v1_options_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *EntityOptions) GetTypeAttr() uint32 {
+	if x != nil && x.TypeAttr != nil {
+		return *x.TypeAttr
+	}
+	return 0
+}
+
+// Options for configuring a access pattern
+type QueryOptions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// name of the table the query is run on
+	Table *string `protobuf:"bytes,1,req,name=table" json:"table,omitempty"`
+	// name of the index the query is run on
+	Index *string `protobuf:"bytes,2,opt,name=index" json:"index,omitempty"`
+}
+
+func (x *QueryOptions) Reset() {
+	*x = QueryOptions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ddb_v1_options_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryOptions) ProtoMessage() {}
+
+func (x *QueryOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_ddb_v1_options_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryOptions.ProtoReflect.Descriptor instead.
+func (*QueryOptions) Descriptor() ([]byte, []int) {
+	return file_ddb_v1_options_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *QueryOptions) GetTable() string {
+	if x != nil && x.Table != nil {
+		return *x.Table
+	}
+	return ""
+}
+
+func (x *QueryOptions) GetIndex() string {
+	if x != nil && x.Index != nil {
+		return *x.Index
+	}
+	return ""
+}
+
 var file_ddb_v1_options_proto_extTypes = []protoimpl.ExtensionInfo{
+	{
+		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
+		ExtensionType: (*TableOptions)(nil),
+		Field:         1098,
+		Name:          "ddb.v1.table",
+		Tag:           "bytes,1098,opt,name=table",
+		Filename:      "ddb/v1/options.proto",
+	},
 	{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
 		ExtensionType: (*FieldOptions)(nil),
-		Field:         1098,
+		Field:         1099,
 		Name:          "ddb.v1.field",
-		Tag:           "bytes,1098,opt,name=field",
+		Tag:           "bytes,1099,opt,name=field",
+		Filename:      "ddb/v1/options.proto",
+	},
+	{
+		ExtendedType:  (*descriptorpb.OneofOptions)(nil),
+		ExtensionType: (*EntityOptions)(nil),
+		Field:         1098,
+		Name:          "ddb.v1.entity",
+		Tag:           "bytes,1098,opt,name=entity",
+		Filename:      "ddb/v1/options.proto",
+	},
+	{
+		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
+		ExtensionType: (*QueryOptions)(nil),
+		Field:         1098,
+		Name:          "ddb.v1.query",
+		Tag:           "bytes,1098,opt,name=query",
 		Filename:      "ddb/v1/options.proto",
 	},
 }
 
+// Extension fields to descriptorpb.MessageOptions.
+var (
+	// optional ddb.v1.TableOptions table = 1098;
+	E_Table = &file_ddb_v1_options_proto_extTypes[0]
+)
+
 // Extension fields to descriptorpb.FieldOptions.
 var (
-	// optional ddb.v1.FieldOptions field = 1098;
-	E_Field = &file_ddb_v1_options_proto_extTypes[0]
+	// optional ddb.v1.FieldOptions field = 1099;
+	E_Field = &file_ddb_v1_options_proto_extTypes[1]
+)
+
+// Extension fields to descriptorpb.OneofOptions.
+var (
+	// optional ddb.v1.EntityOptions entity = 1098;
+	E_Entity = &file_ddb_v1_options_proto_extTypes[2]
+)
+
+// Extension fields to descriptorpb.MethodOptions.
+var (
+	// optional ddb.v1.QueryOptions query = 1098;
+	E_Query = &file_ddb_v1_options_proto_extTypes[3]
 )
 
 var File_ddb_v1_options_proto protoreflect.FileDescriptor
@@ -211,16 +503,48 @@ var file_ddb_v1_options_proto_rawDesc = []byte{
 	0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x73, 0x65, 0x74, 0x12, 0x26, 0x0a, 0x05, 0x65,
 	0x6d, 0x62, 0x65, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x64, 0x64, 0x62,
 	0x2e, 0x76, 0x31, 0x2e, 0x45, 0x6e, 0x63, 0x6f, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x65, 0x6d,
-	0x62, 0x65, 0x64, 0x2a, 0x4c, 0x0a, 0x08, 0x45, 0x6e, 0x63, 0x6f, 0x64, 0x69, 0x6e, 0x67, 0x12,
-	0x18, 0x0a, 0x14, 0x45, 0x4e, 0x43, 0x4f, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x55, 0x4e, 0x53, 0x50,
-	0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x11, 0x0a, 0x0d, 0x45, 0x4e, 0x43,
-	0x4f, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x4a, 0x53, 0x4f, 0x4e, 0x10, 0x01, 0x12, 0x13, 0x0a, 0x0f,
-	0x45, 0x4e, 0x43, 0x4f, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x44, 0x59, 0x4e, 0x41, 0x4d, 0x4f, 0x10,
-	0x02, 0x3a, 0x4a, 0x0a, 0x05, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x1d, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x46, 0x69, 0x65,
-	0x6c, 0x64, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0xca, 0x08, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x14, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4f,
-	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x05, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x42, 0x91, 0x01,
+	0x62, 0x65, 0x64, 0x22, 0x40, 0x0a, 0x0a, 0x47, 0x73, 0x69, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x02, 0x28, 0x09, 0x52,
+	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x70, 0x6b, 0x18, 0x02, 0x20, 0x02, 0x28,
+	0x0d, 0x52, 0x02, 0x70, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x73, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0d, 0x52, 0x02, 0x73, 0x6b, 0x22, 0x68, 0x0a, 0x0c, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x4f, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20,
+	0x02, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x70, 0x6b, 0x18,
+	0x02, 0x20, 0x02, 0x28, 0x0d, 0x52, 0x02, 0x70, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x73, 0x6b, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x73, 0x6b, 0x12, 0x24, 0x0a, 0x03, 0x67, 0x73, 0x69,
+	0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76, 0x31, 0x2e,
+	0x47, 0x73, 0x69, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x03, 0x67, 0x73, 0x69, 0x22,
+	0x2c, 0x0a, 0x0d, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x12, 0x1b, 0x0a, 0x09, 0x74, 0x79, 0x70, 0x65, 0x5f, 0x61, 0x74, 0x74, 0x72, 0x18, 0x04, 0x20,
+	0x02, 0x28, 0x0d, 0x52, 0x08, 0x74, 0x79, 0x70, 0x65, 0x41, 0x74, 0x74, 0x72, 0x22, 0x3a, 0x0a,
+	0x0c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x14, 0x0a,
+	0x05, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x02, 0x28, 0x09, 0x52, 0x05, 0x74, 0x61,
+	0x62, 0x6c, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x2a, 0x4c, 0x0a, 0x08, 0x45, 0x6e, 0x63,
+	0x6f, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x18, 0x0a, 0x14, 0x45, 0x4e, 0x43, 0x4f, 0x44, 0x49, 0x4e,
+	0x47, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
+	0x11, 0x0a, 0x0d, 0x45, 0x4e, 0x43, 0x4f, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x4a, 0x53, 0x4f, 0x4e,
+	0x10, 0x01, 0x12, 0x13, 0x0a, 0x0f, 0x45, 0x4e, 0x43, 0x4f, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x44,
+	0x59, 0x4e, 0x41, 0x4d, 0x4f, 0x10, 0x02, 0x3a, 0x4c, 0x0a, 0x05, 0x74, 0x61, 0x62, 0x6c, 0x65,
+	0x12, 0x1f, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x18, 0xca, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76,
+	0x31, 0x2e, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x05,
+	0x74, 0x61, 0x62, 0x6c, 0x65, 0x3a, 0x4a, 0x0a, 0x05, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x12, 0x1d,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0xcb, 0x08,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x69,
+	0x65, 0x6c, 0x64, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x05, 0x66, 0x69, 0x65, 0x6c,
+	0x64, 0x3a, 0x4d, 0x0a, 0x06, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x1d, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x4f, 0x6e,
+	0x65, 0x6f, 0x66, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0xca, 0x08, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x15, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x6e, 0x74, 0x69, 0x74,
+	0x79, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x06, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79,
+	0x3a, 0x4b, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x12, 0x1e, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x4d, 0x65, 0x74, 0x68,
+	0x6f, 0x64, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0xca, 0x08, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x14, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f,
+	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x42, 0x91, 0x01,
 	0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x64, 0x64, 0x62, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x4f, 0x70,
 	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x3c, 0x67, 0x69,
 	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x72, 0x65, 0x77, 0x6c, 0x69, 0x6e,
@@ -246,21 +570,35 @@ func file_ddb_v1_options_proto_rawDescGZIP() []byte {
 }
 
 var file_ddb_v1_options_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_ddb_v1_options_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ddb_v1_options_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_ddb_v1_options_proto_goTypes = []interface{}{
-	(Encoding)(0),                     // 0: ddb.v1.Encoding
-	(*FieldOptions)(nil),              // 1: ddb.v1.FieldOptions
-	(*descriptorpb.FieldOptions)(nil), // 2: google.protobuf.FieldOptions
+	(Encoding)(0),                       // 0: ddb.v1.Encoding
+	(*FieldOptions)(nil),                // 1: ddb.v1.FieldOptions
+	(*GsiOptions)(nil),                  // 2: ddb.v1.GsiOptions
+	(*TableOptions)(nil),                // 3: ddb.v1.TableOptions
+	(*EntityOptions)(nil),               // 4: ddb.v1.EntityOptions
+	(*QueryOptions)(nil),                // 5: ddb.v1.QueryOptions
+	(*descriptorpb.MessageOptions)(nil), // 6: google.protobuf.MessageOptions
+	(*descriptorpb.FieldOptions)(nil),   // 7: google.protobuf.FieldOptions
+	(*descriptorpb.OneofOptions)(nil),   // 8: google.protobuf.OneofOptions
+	(*descriptorpb.MethodOptions)(nil),  // 9: google.protobuf.MethodOptions
 }
 var file_ddb_v1_options_proto_depIdxs = []int32{
-	0, // 0: ddb.v1.FieldOptions.embed:type_name -> ddb.v1.Encoding
-	2, // 1: ddb.v1.field:extendee -> google.protobuf.FieldOptions
-	1, // 2: ddb.v1.field:type_name -> ddb.v1.FieldOptions
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	2, // [2:3] is the sub-list for extension type_name
-	1, // [1:2] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0,  // 0: ddb.v1.FieldOptions.embed:type_name -> ddb.v1.Encoding
+	2,  // 1: ddb.v1.TableOptions.gsi:type_name -> ddb.v1.GsiOptions
+	6,  // 2: ddb.v1.table:extendee -> google.protobuf.MessageOptions
+	7,  // 3: ddb.v1.field:extendee -> google.protobuf.FieldOptions
+	8,  // 4: ddb.v1.entity:extendee -> google.protobuf.OneofOptions
+	9,  // 5: ddb.v1.query:extendee -> google.protobuf.MethodOptions
+	3,  // 6: ddb.v1.table:type_name -> ddb.v1.TableOptions
+	1,  // 7: ddb.v1.field:type_name -> ddb.v1.FieldOptions
+	4,  // 8: ddb.v1.entity:type_name -> ddb.v1.EntityOptions
+	5,  // 9: ddb.v1.query:type_name -> ddb.v1.QueryOptions
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	6,  // [6:10] is the sub-list for extension type_name
+	2,  // [2:6] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_ddb_v1_options_proto_init() }
@@ -281,6 +619,54 @@ func file_ddb_v1_options_proto_init() {
 				return nil
 			}
 		}
+		file_ddb_v1_options_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GsiOptions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ddb_v1_options_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TableOptions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ddb_v1_options_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EntityOptions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ddb_v1_options_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryOptions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -288,8 +674,8 @@ func file_ddb_v1_options_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_ddb_v1_options_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   1,
-			NumExtensions: 1,
+			NumMessages:   5,
+			NumExtensions: 4,
 			NumServices:   0,
 		},
 		GoTypes:           file_ddb_v1_options_proto_goTypes,

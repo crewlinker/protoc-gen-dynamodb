@@ -21,6 +21,9 @@ jobs:
       - name: Install tooling
         run: |
           go install -mod=readonly github.com/magefile/mage
+      - name: Start dev containers
+        run: |
+          mage -v dev
       - name: Run all tests
         run: |
           mage -v test

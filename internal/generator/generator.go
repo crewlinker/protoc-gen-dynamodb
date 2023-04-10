@@ -44,6 +44,7 @@ func (g Generator) CreateTarget(pf *protogen.File, ddbimport string) *Target {
 	// tg idents provides various identifiers
 	tg.idents.ddb = path.Join(bi.Path, "ddb")
 	tg.idents.ddbpath = path.Join(bi.Path, "ddb", "ddbpath")
+	tg.idents.ddbtable = path.Join(bi.Path, "ddb", "ddbtable")
 	tg.idents.ddbv1 = path.Join(bi.Path, "proto", "ddb", "v1")
 	tg.idents.ddbimp = ddbimport
 	return tg

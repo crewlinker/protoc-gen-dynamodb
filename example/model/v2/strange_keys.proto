@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package example.model.v2;
+import "ddb/v1/options.proto";
+import "google/protobuf/timestamp.proto";
+
+// Room in the hospital
+message Room {
+    // room number
+    uint64 number = 1;
+}
+
+// EntityKind describes the kind stored in the single-table design
+enum EntityKind{
+    // when nothing is specified
+    ENTITY_KIND_UNSPECIFIED=0;
+    // room kind
+    ENTITY_KIND_ROOM = 1;
+}
+
+// StrangeKeys is a made-up single table design with some weird key types and numbers
+message StrangeKeys {
+    option (ddb.v1.table).name = "strange_keys";
+    option (ddb.v1.table).pk = 23;
+    option (ddb.v1.table).sk = 1;
+    // hash key for the table
+    bytes hash = 23;
+    // range key
+    int64 range = 1;
+    // kind of entity 
+    EntityKind kind = 300;
+
+    // partition key for the first gsi
+    string gsi1pk = 34;
+    // index that allows listing all entities by their kind
+    option (ddb.v1.table).gsi = {name:"by_kind", pk:34};
+
+    // any of these entities maybe stored in the table
+    oneof entity {
+        option (ddb.v1.entity).type_attr = 300;        
+        // room value
+        Room room = 400;
+    }
+}
