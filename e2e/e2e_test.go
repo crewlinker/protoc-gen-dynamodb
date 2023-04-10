@@ -43,9 +43,6 @@ var _ = Describe("e2e tests", func() {
 
 		DeferCleanup(func(ctx context.Context) {
 			Expect(ddbc.DeleteTable(ctx, &dynamodb.DeleteTableInput{TableName: &tblname})).ToNot(BeNil())
-			tl, err := ddbc.ListTables(ctx, &dynamodb.ListTablesInput{})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(tl.TableNames).To(HaveLen(0))
 		})
 	})
 

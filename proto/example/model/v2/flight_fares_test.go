@@ -2,14 +2,14 @@ package modelv2_test
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"time"
 
 	ddbconversions "github.com/aereal/go-dynamodb-attribute-conversions/v2"
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbtable"
 	"github.com/crewlinker/protoc-gen-dynamodb/ddb/ddbtest"
 	modelv2 "github.com/crewlinker/protoc-gen-dynamodb/proto/example/model/v2"
 	. "github.com/onsi/ginkgo/v2"
@@ -54,57 +54,17 @@ var _ = Describe("flight fares", func() {
 		var err error
 		ddbc, err = ddbtest.NewLocalClient()
 		Expect(err).ToNot(HaveOccurred())
+		var rng [8]byte
+		rand.Read(rng[:])
 
-		tblname = fmt.Sprintf("flight_fares_%d", time.Now().UnixNano())
+		tblname = fmt.Sprintf("flight_fares_%x", rng)
 		mdl = &modelv2.FlightFaresModel{}
 		mut = modelv2.NewFlightFaresMutater(tblname, ddbc, mdl)
 		qry = modelv2.NewFlightFaresQuerier(tblname, ddbc, mdl)
 
-		Expect(ddbc.CreateTable(ctx, &dynamodb.CreateTableInput{
-			TableName: aws.String(tblname),
-			KeySchema: []types.KeySchemaElement{
-				{KeyType: types.KeyTypeHash, AttributeName: aws.String("1")},
-				{KeyType: types.KeyTypeRange, AttributeName: aws.String("2")},
-			},
-			GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
-				{
-					IndexName:  aws.String("gsi1"),
-					Projection: &types.Projection{ProjectionType: types.ProjectionTypeAll},
-					ProvisionedThroughput: &types.ProvisionedThroughput{
-						ReadCapacityUnits:  aws.Int64(1),
-						WriteCapacityUnits: aws.Int64(1),
-					},
-					KeySchema: []types.KeySchemaElement{
-						{AttributeName: aws.String("4"), KeyType: types.KeyTypeHash},
-						{AttributeName: aws.String("5"), KeyType: types.KeyTypeRange},
-					},
-				},
-				{
-					IndexName:  aws.String("gsi2"),
-					Projection: &types.Projection{ProjectionType: types.ProjectionTypeAll},
-					ProvisionedThroughput: &types.ProvisionedThroughput{
-						ReadCapacityUnits:  aws.Int64(1),
-						WriteCapacityUnits: aws.Int64(1),
-					},
-					KeySchema: []types.KeySchemaElement{
-						{AttributeName: aws.String("6"), KeyType: types.KeyTypeHash},
-						{AttributeName: aws.String("7"), KeyType: types.KeyTypeRange},
-					},
-				},
-			},
-			AttributeDefinitions: []types.AttributeDefinition{
-				{AttributeType: types.ScalarAttributeTypeS, AttributeName: aws.String("1")},
-				{AttributeType: types.ScalarAttributeTypeS, AttributeName: aws.String("2")},
-				{AttributeType: types.ScalarAttributeTypeS, AttributeName: aws.String("4")},
-				{AttributeType: types.ScalarAttributeTypeS, AttributeName: aws.String("5")},
-				{AttributeType: types.ScalarAttributeTypeS, AttributeName: aws.String("6")},
-				{AttributeType: types.ScalarAttributeTypeS, AttributeName: aws.String("7")},
-			},
-			ProvisionedThroughput: &types.ProvisionedThroughput{
-				WriteCapacityUnits: aws.Int64(1),
-				ReadCapacityUnits:  aws.Int64(1),
-			},
-		})).ToNot(BeNil())
+		Expect(ddbc.CreateTable(ctx,
+			ddbtable.TableCreate("flight_fares", ddbtable.WithTableName(tblname)),
+		)).ToNot(BeNil())
 
 		DeferCleanup(func(ctx context.Context) {
 			Expect(ddbc.DeleteTable(ctx, &dynamodb.DeleteTableInput{TableName: &tblname})).ToNot(BeNil())

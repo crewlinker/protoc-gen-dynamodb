@@ -1,7 +1,12 @@
 // Package ddbtable allows generated code to register table structure
 package ddbtable
 
-import "github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+import (
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+)
 
 // GlobalIndex describes a Global Secondary Index (GSI) on a DynamoDB table
 type GlobalIndex struct {
@@ -52,6 +57,11 @@ func TableDef(name string) (tbl *Table, ok bool) {
 	return defaultRegistry.TableDef(name)
 }
 
+// TableCreate returns a table creation definition for a table that is registered
+func TableCreate(name string, opts ...CreateTableOption) (cti *dynamodb.CreateTableInput) {
+	return defaultRegistry.TableCreate(name, opts...)
+}
+
 // Register a table description with the default registry
 func Register(tbl *Table) {
 	defaultRegistry.Register(tbl)
@@ -59,3 +69,28 @@ func Register(tbl *Table) {
 
 // default registry
 var defaultRegistry = NewRegistry()
+
+// toAttrDefinition helps building table create definitions
+func toAttrDefinition(attr *Attribute) types.AttributeDefinition {
+	def := types.AttributeDefinition{AttributeName: aws.String(attr.Name)}
+	switch attr.Type {
+	case expression.String:
+		def.AttributeType = types.ScalarAttributeTypeS
+	case expression.Binary:
+		def.AttributeType = types.ScalarAttributeTypeB
+	case expression.Number:
+		def.AttributeType = types.ScalarAttributeTypeN
+	default:
+		panic("unsupported attribute type: " + attr.Type)
+	}
+	return def
+}
+
+// helper for to extends slices of key definitions
+func withKeyAttr(ks []types.KeySchemaElement, defs []types.AttributeDefinition, attr *Attribute, kt types.KeyType) (
+	[]types.KeySchemaElement, []types.AttributeDefinition) {
+	ks = append(ks, types.KeySchemaElement{
+		KeyType: kt, AttributeName: aws.String(attr.Name)})
+	defs = append(defs, toAttrDefinition(attr))
+	return ks, defs
+}
